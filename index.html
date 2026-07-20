@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Matemagics">
+<meta name="theme-color" content="#1B2A4A">
+<title>Melissa Matemagics</title>
+<style>
+:root{
+  --accent:#4F8FE8; --accent2:#9B51E0; --good:#27AE60; --bad:#EB5757;
+  --card:#ffffff; --ink:#1B1B2F; --ink-soft:#5b5b72; --bg1:#0B1026; --bg2:#1B2A4A;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+html,body{height:100%; margin:0; overflow:hidden; overscroll-behavior:none;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  color:var(--ink); touch-action:manipulation;
+}
+#app{position:fixed; inset:0; display:flex; flex-direction:column;}
+.screen{display:none; flex-direction:column; height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:22px 18px 40px;}
+.screen.active{display:flex;}
+.center{align-items:center; justify-content:center; text-align:center;}
+
+h1,h2,h3,p{margin:0;}
+.mascot-big{font-size:72px; line-height:1; filter:drop-shadow(0 6px 10px rgba(0,0,0,.35)); animation:bob 2.4s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.title-app{color:#fff; font-size:26px; font-weight:800; margin-top:10px;}
+.subtitle{color:#cfd6f5; font-size:16px; margin-top:8px; max-width:320px;}
+
+.btn{
+  border:none; border-radius:20px; padding:18px 22px; font-size:19px; font-weight:800;
+  cursor:pointer; width:100%; max-width:420px; margin-top:16px; transition:transform .08s ease, box-shadow .08s ease;
+  box-shadow:0 8px 0 rgba(0,0,0,.18);
+}
+.btn:active{transform:translateY(6px); box-shadow:0 2px 0 rgba(0,0,0,.18);}
+.btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent2)); color:#fff;}
+.btn-secondary{background:#ffffff22; color:#fff; border:2px solid #ffffff55;}
+.btn-good{background:linear-gradient(180deg,#6FCF97,var(--good)); color:#fff;}
+.btn-warn{background:linear-gradient(180deg,#F2C94C,#F2994A); color:#3a2a00;}
+
+.card{background:var(--card); border-radius:22px; padding:18px; box-shadow:0 10px 24px rgba(0,0,0,.25);}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; max-width:460px;}
+.grid1{display:flex; flex-direction:column; gap:12px; width:100%; max-width:460px;}
+
+.topbar{display:flex; align-items:center; justify-content:space-between; color:#fff; margin-bottom:14px;}
+.pill{background:#ffffff22; border-radius:999px; padding:8px 14px; font-weight:800; font-size:15px; display:flex; align-items:center; gap:6px;}
+.backbtn{background:#ffffff22; color:#fff; border:none; border-radius:14px; padding:8px 12px; font-size:18px; font-weight:800;}
+
+.theme-card{border-radius:20px; padding:16px; display:flex; flex-direction:column; align-items:center; gap:8px; border:3px solid transparent; background:#ffffff14; color:#fff;}
+.theme-card.selected{border-color:#fff; background:#ffffff33;}
+.theme-card .emoji{font-size:42px;}
+
+.chip{border-radius:18px; padding:14px 12px; background:#ffffff14; color:#fff; display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; border:3px solid transparent;}
+.chip.selected{border-color:#fff; background:#ffffff33;}
+.chip .emoji{font-size:26px;}
+
+.progress-dots{display:flex; gap:8px; justify-content:center; margin:10px 0 6px;}
+.dot{width:12px; height:12px; border-radius:50%; background:#ffffff33;}
+.dot.filled{background:#fff;}
+.dot.current{background:#F2C94C; transform:scale(1.3);}
+
+.q-prompt{color:#fff; font-size:21px; font-weight:800; text-align:center; margin:6px 0 14px; line-height:1.35;}
+.q-visual{display:flex; align-items:center; justify-content:center; margin-bottom:14px; min-height:70px;}
+.option-btn{
+  background:#fff; border:3px solid #e6e6f0; border-radius:18px; padding:16px; font-size:19px; font-weight:800;
+  color:var(--ink); width:100%; text-align:center; box-shadow:0 6px 0 #d8d8e6;
+}
+.option-btn:active{transform:translateY(4px); box-shadow:0 2px 0 #d8d8e6;}
+.option-btn.correct{background:#E9F9EF; border-color:var(--good); color:var(--good);}
+.option-btn.incorrect{background:#FDECEC; border-color:var(--bad); color:var(--bad);}
+.option-btn.disabled{opacity:.55;}
+
+.hintbar{margin-top:8px; text-align:center;}
+.hint-btn{background:#ffffff22; color:#fff; border:none; border-radius:14px; padding:10px 16px; font-weight:800; font-size:15px;}
+.hint-text{color:#FFF3C4; font-size:15px; margin-top:10px; background:#00000030; border-radius:14px; padding:12px; display:none;}
+.hint-text.show{display:block;}
+
+.feedback-banner{color:#fff; font-weight:900; font-size:20px; text-align:center; min-height:28px; margin-top:10px;}
+
+.strand-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; width:100%; max-width:460px;}
+.strand-card{background:#ffffff14; border-radius:20px; padding:14px; color:#fff; display:flex; flex-direction:column; align-items:center; gap:6px; border:3px solid #ffffff20;}
+.strand-card .emoji{font-size:34px;}
+.strand-card .lvl-dots{display:flex; gap:4px;}
+.strand-card .lvl-dots .d{width:8px; height:8px; border-radius:50%; background:#ffffff30;}
+.strand-card .lvl-dots .d.on{background:#F2C94C;}
+
+.fbar{display:flex; gap:3px; align-items:center; justify-content:center;}
+.fseg{width:26px; height:26px; border-radius:6px; background:#eee; border:2px solid #ccc;}
+.fseg.on{background:var(--accent); border-color:var(--accent2);}
+
+.shape2d{width:70px; height:70px;}
+.shape2d.circle{border-radius:50%; background:var(--accent);}
+.shape2d.square{background:var(--accent);}
+.shape2d.rectangle{width:96px; height:56px; background:var(--accent);}
+.shape2d.triangle{width:0;height:0;border-left:35px solid transparent;border-right:35px solid transparent;border-bottom:64px solid var(--accent);}
+.shape2d.pentagon{background:var(--accent); clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);}
+.shape2d.hexagon{background:var(--accent); clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);}
+
+.bar-wrap{display:flex; align-items:flex-end; gap:10px; height:110px;}
+.bar-col{display:flex; flex-direction:column; align-items:center; gap:4px; color:#fff; font-size:13px; font-weight:700;}
+.bar-rect{width:34px; border-radius:6px 6px 0 0; background:linear-gradient(180deg,var(--accent),var(--accent2));}
+
+.clockface{width:130px; height:130px; border-radius:50%; background:#fff; position:relative; box-shadow:0 6px 16px rgba(0,0,0,.3); border:6px solid #eee;}
+.clock-hand{position:absolute; left:50%; top:50%; transform-origin:50% 100%; background:#1B1B2F; border-radius:4px;}
+.clock-center{position:absolute; left:50%; top:50%; width:10px; height:10px; background:#EB5757; border-radius:50%; transform:translate(-50%,-50%); z-index:2;}
+
+.coin{width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; color:#5a4200; background:radial-gradient(circle at 35% 30%,#FFE9A6,#E8B800); box-shadow:inset 0 0 0 3px #C79A00; margin:0 4px;}
+
+.arrow-box{font-size:52px; display:inline-block;}
+
+.mood-row{display:flex; gap:18px; justify-content:center; margin-top:18px;}
+.mood-btn{font-size:52px; background:#ffffff14; border:3px solid transparent; border-radius:20px; padding:10px 16px;}
+.mood-btn:active{transform:scale(.92);}
+
+.badgebar{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:10px;}
+.badge{background:#ffffff22; color:#fff; border-radius:14px; padding:8px 10px; font-size:13px; font-weight:800;}
+
+.parent-row{display:flex; justify-content:space-between; align-items:center; background:#ffffff14; border-radius:14px; padding:12px 14px; color:#fff; margin-bottom:10px; gap:8px;}
+.parent-bar-bg{background:#ffffff20; border-radius:8px; height:10px; width:100px; overflow:hidden; flex-shrink:0;}
+.parent-bar-fill{height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2));}
+.loglist{width:100%; max-width:460px;}
+.logrow{display:flex; justify-content:space-between; color:#fff; font-size:13px; padding:8px 4px; border-bottom:1px solid #ffffff22;}
+
+.confetti{position:fixed; top:-20px; width:10px; height:16px; border-radius:2px; z-index:999; animation:fall 1.8s linear forwards;}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg); opacity:0;}}
+
+.smallnote{color:#cfd6f5; font-size:13px; margin-top:10px; max-width:380px;}
+input[type=file]{color:#fff;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section class="screen center" id="screen-welcome">
+    <div class="mascot-big" id="welcome-mascot">🦄</div>
+    <div class="title-app">Melissa Matemagics</div>
+    <p class="subtitle">Hi Melissa! This summer we're going to play with numbers, shapes and puzzles to get you feeling like a Year 3 champion. ✨</p>
+    <button class="btn btn-primary" onclick="goFromWelcome()">Start the adventure! 🚀</button>
+  </section>
+
+  <section class="screen center" id="screen-theme">
+    <h2 class="title-app" style="font-size:22px;">Choose your magic world</h2>
+    <p class="subtitle">You can change it anytime.</p>
+    <div class="grid2" id="theme-list" style="margin-top:16px;"></div>
+    <button class="btn btn-primary" onclick="goFromTheme()">Continue</button>
+  </section>
+
+  <section class="screen center" id="screen-likes">
+    <h2 class="title-app" style="font-size:22px;">What do you like MOST? 😄</h2>
+    <p class="subtitle">Tap all the ones you like.</p>
+    <div class="grid1" id="likes-list" style="margin-top:14px;"></div>
+    <button class="btn btn-primary" onclick="goFromLikes()">Continue</button>
+  </section>
+
+  <section class="screen center" id="screen-dislikes">
+    <h2 class="title-app" style="font-size:22px;">What do you like LEAST? 😐</h2>
+    <p class="subtitle">Tap all the ones you want.</p>
+    <div class="grid1" id="dislikes-list" style="margin-top:14px;"></div>
+    <button class="btn btn-primary" onclick="goFromDislikes()">Continue</button>
+  </section>
+
+  <section class="screen center" id="screen-diag-intro">
+    <div class="mascot-big" id="diagintro-mascot">🦄</div>
+    <h2 class="title-app" style="font-size:22px;">A mini-challenge to get to know you!</h2>
+    <p class="subtitle">Just 8 short questions. No need to study first — just answer what you think! That way I can build your perfect summer plan.</p>
+    <button class="btn btn-primary" onclick="startDiagnostic()">Let's go! 🧠</button>
+  </section>
+
+  <section class="screen" id="screen-diag">
+    <div class="topbar"><span class="pill" id="diag-counter">1 / 8</span><span class="pill">🧠 Challenge</span></div>
+    <div class="progress-dots" id="diag-dots"></div>
+    <div class="q-visual" id="diag-visual"></div>
+    <div class="q-prompt" id="diag-prompt"></div>
+    <div class="grid1" id="diag-options"></div>
+  </section>
+
+  <section class="screen center" id="screen-plan">
+    <div class="mascot-big" id="plan-mascot">🦄</div>
+    <h2 class="title-app" style="font-size:22px;">Your magic plan is ready!</h2>
+    <div class="card" style="margin-top:14px; width:100%; max-width:420px;">
+      <div id="plan-list"></div>
+    </div>
+    <button class="btn btn-primary" onclick="finishOnboarding()">Start playing! 🎉</button>
+  </section>
+
+  <section class="screen" id="screen-hub">
+    <div class="topbar">
+      <span class="pill">⭐ <span id="hub-stars">0</span></span>
+      <span class="pill">🔥 <span id="hub-streak">0</span></span>
+      <button class="backbtn" onclick="goToParentGate()">👩‍👧</button>
+    </div>
+    <div class="center" style="gap:2px;">
+      <div class="mascot-big" id="hub-mascot" style="font-size:54px;">🦄</div>
+      <h2 class="title-app" style="font-size:20px; color:#fff;" id="hub-greeting">Hi Melissa!</h2>
+    </div>
+    <button class="btn btn-warn" style="max-width:460px;" onclick="playQuick()">🎲 Quick Play</button>
+    <div class="strand-grid" id="strand-grid" style="margin-top:16px; align-self:center;"></div>
+  </section>
+
+  <section class="screen" id="screen-game">
+    <div class="topbar">
+      <button class="backbtn" onclick="quitToHub()">✕</button>
+      <span class="pill" id="game-strand-label">🔢 Numbers</span>
+      <span class="pill">⭐ <span id="game-stars-live">0</span></span>
+    </div>
+    <div class="progress-dots" id="game-dots"></div>
+    <div class="q-visual" id="game-visual"></div>
+    <div class="q-prompt" id="game-prompt"></div>
+    <div class="grid1" id="game-options"></div>
+    <div class="feedback-banner" id="game-feedback"></div>
+    <div class="hintbar">
+      <button class="hint-btn" id="hint-toggle" onclick="toggleHint()">💡 Hint</button>
+      <div class="hint-text" id="hint-text"></div>
+    </div>
+  </section>
+
+  <section class="screen center" id="screen-results">
+    <div class="mascot-big" id="results-mascot">🦄</div>
+    <h2 class="title-app" id="results-title" style="font-size:22px;">Round complete!</h2>
+    <p class="subtitle" id="results-detail">You got 4 out of 5.</p>
+    <div class="pill" style="font-size:20px; margin-top:10px;">⭐ +<span id="results-stars">0</span></div>
+    <div class="badgebar" id="results-badges"></div>
+    <button class="btn btn-primary" onclick="goToMood()">Continue</button>
+  </section>
+
+  <section class="screen center" id="screen-mood">
+    <h2 class="title-app" style="font-size:22px;">How did that feel?</h2>
+    <div class="mood-row">
+      <button class="mood-btn" onclick="chooseMood('😄')">😄</button>
+      <button class="mood-btn" onclick="chooseMood('😐')">😐</button>
+      <button class="mood-btn" onclick="chooseMood('😖')">😖</button>
+    </div>
+  </section>
+
+  <section class="screen center" id="screen-continue">
+    <div class="mascot-big" id="continue-mascot">🦄</div>
+    <p class="subtitle" id="continue-msg">Want to play another round or take a break?</p>
+    <button class="btn btn-good" onclick="continueRound()">Another round 🔁</button>
+    <button class="btn btn-secondary" onclick="takeBreak()">Take a break 🌙</button>
+  </section>
+
+  <section class="screen center" id="screen-parent-pin">
+    <h2 class="title-app" style="font-size:20px;">Zona de papás 👩‍👧</h2>
+    <p class="subtitle" id="pin-question">¿Cuánto es 4 + 5?</p>
+    <div class="grid2" id="pin-options" style="margin-top:10px;"></div>
+    <button class="btn btn-secondary" onclick="showScreen('screen-hub')">Volver</button>
+  </section>
+
+  <section class="screen" id="screen-parent-dash">
+    <div class="topbar">
+      <h2 style="color:#fff; font-size:20px;">Panel de progreso</h2>
+      <button class="backbtn" onclick="showScreen('screen-hub')">✕</button>
+    </div>
+    <div id="parent-overview" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;"></div>
+    <div id="parent-strands"></div>
+    <div class="card" style="margin:14px 0; width:100%;">
+      <b id="parent-weak-title">Área para reforzar</b>
+      <p class="smallnote" id="parent-weak-text" style="margin-top:6px;"></p>
+    </div>
+    <b style="color:#fff;">Historial reciente</b>
+    <div class="loglist" id="parent-log"></div>
+    <div class="grid1" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="exportProgress()">📤 Exportar progreso</button>
+      <label class="btn btn-secondary" style="display:flex; align-items:center; justify-content:center;">
+        📥 Importar progreso
+        <input type="file" accept="application/json" style="display:none;" id="import-file" onchange="importProgress(event)">
+      </label>
+      <button class="btn btn-warn" onclick="resetProgress()">🔄 Reiniciar todo</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ============================= UTILITIES ============================= */
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function pick(arr){ return arr[randInt(0,arr.length-1)]; }
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=randInt(0,i); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtDateEs(iso){ const parts=iso.split('-'); return parts[2]+'/'+parts[1]; }
+function pad2(n){ return String(n).padStart(2,'0'); }
+
+// Generates up to `count` values distinct from `correct` and from each other,
+// by trying an ordered list of deltas and skipping any collision. Never fabricates
+// a fake/invisible duplicate — if not enough distinct values exist, it simply
+// returns fewer (the UI renders however many unique options come back).
+function distinctNumbers(correct, deltas, validFn, count){
+  count = count || 3;
+  const out=[];
+  for(let i=0;i<deltas.length && out.length<count;i++){
+    const v = correct+deltas[i];
+    if(v===correct) continue;
+    if(validFn && !validFn(v)) continue;
+    if(out.includes(v)) continue;
+    out.push(v);
+  }
+  return out;
+}
+const STD_DELTAS=[1,-1,2,-2,3,-3,5,-5,4,-4,10,-10,6,-6,7,-7,8,-8,9,-9,20,-20,15,-15];
+
+function shuffleWithCorrect(values, correctValue){
+  const arr = shuffle(values);
+  return { options: arr.map(function(v){ return String(v); }), correct: arr.indexOf(correctValue) };
+}
+// Builds the final option list. Deduplicates by EXACT string (never pads with
+// whitespace tricks or fake near-duplicates) — if fewer than maxOpts unique
+// candidates exist, it returns fewer options rather than inventing a look-alike.
+function finalizeOptions(correctLabel, candidateLabels, maxOpts){
+  maxOpts = maxOpts || 4;
+  const set=[String(correctLabel)];
+  for(let i=0;i<candidateLabels.length;i++){
+    const label=String(candidateLabels[i]);
+    if(set.indexOf(label)===-1) set.push(label);
+    if(set.length>=maxOpts) break;
+  }
+  return shuffleWithCorrect(set, String(correctLabel));
+}
+function q(prompt, visual, correctLabel, candidateLabels, hint, maxOpts){
+  const built = finalizeOptions(correctLabel, candidateLabels, maxOpts);
+  return { prompt: prompt, visual: visual||'', options: built.options, correct: built.correct, hint: hint||'' };
+}
+function q2(prompt, visual, correctLabel, otherLabel, hint){
+  const built = shuffleWithCorrect([String(correctLabel), String(otherLabel)], String(correctLabel));
+  return { prompt: prompt, visual: visual||'', options: built.options, correct: built.correct, hint: hint||'' };
+}
+
+/* ============================= VISUAL RENDERERS ============================= */
+function renderFractionBar(num, den){
+  let html='<div class="fbar">';
+  for(let i=0;i<den;i++){ html += '<div class="fseg'+(i<num?' on':'')+'"></div>'; }
+  html+='</div>';
+  return html;
+}
+function renderEmojiGroup(emoji, count){
+  let html='<div style="font-size:26px; max-width:260px; display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">';
+  for(let i=0;i<count;i++) html+=emoji;
+  html+='</div>';
+  return html;
+}
+function renderNumberLineFraction(den, k){
+  let html='<div style="width:280px;"><div style="display:flex; justify-content:space-between; position:relative; border-top:4px solid #fff; padding-top:14px;">';
+  for(let i=0;i<=den;i++){
+    const isMark = (i===k);
+    html += '<div style="position:relative; text-align:center; width:2px;">'+
+      '<div style="position:absolute; top:-18px; left:50%; transform:translateX(-50%); width:2px; height:14px; background:#fff;"></div>'+
+      (isMark? '<div style="position:absolute; top:2px; left:50%; transform:translateX(-50%); font-size:22px;">📍</div>' : '')+
+      '</div>';
+  }
+  html+='</div></div>';
+  return html;
+}
+function renderTwoBars(len1,len2){
+  return '<div style="display:flex; flex-direction:column; gap:10px; align-items:flex-start;">'+
+    '<div style="display:flex; align-items:center; gap:8px; color:#fff; font-weight:800;">A <div style="height:22px; width:'+(len1*14)+'px; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:8px;"></div></div>'+
+    '<div style="display:flex; align-items:center; gap:8px; color:#fff; font-weight:800;">B <div style="height:22px; width:'+(len2*14)+'px; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:8px;"></div></div>'+
+    '</div>';
+}
+function renderRulerMark(value){
+  let ticks='';
+  for(let i=0;i<=10;i++){
+    ticks += '<div style="width:2px; height:'+(i%5===0?'18px':'10px')+'; background:#fff;"></div>';
+  }
+  const pos = (value/10)*260;
+  return '<div style="width:280px;"><div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:4px solid #fff; padding-bottom:2px;">'+ticks+'</div>'+
+    '<div style="position:relative; height:24px;"><div style="position:absolute; left:'+pos+'px; transform:translateX(-50%); font-size:22px;">🔻</div></div></div>';
+}
+// Clock hands: each hand's box has its BOTTOM edge shifted (via negative margin)
+// onto the clock's exact center, and rotates around that bottom-center point
+// (transform-origin:50% 100%). So rotate(0deg) points straight up to 12 —
+// matching the 0=12-o'clock, clockwise-positive angle math below.
+function renderClock(hour, minute){
+  const hourAngle = (hour%12)*30 + minute*0.5;
+  const minAngle = minute*6;
+  return '<div class="clockface">'+
+    '<div class="clock-hand" style="width:5px; height:34px; margin-left:-2.5px; margin-top:-34px; transform:rotate('+hourAngle+'deg);"></div>'+
+    '<div class="clock-hand" style="width:4px; height:50px; margin-left:-2px; margin-top:-50px; background:#4F8FE8; transform:rotate('+minAngle+'deg);"></div>'+
+    '<div class="clock-center"></div>'+
+    '</div>';
+}
+// Distinct clock-time distractors computed in encoded minutes-since-12, so every
+// generated option is mathematically guaranteed to be a different time from the
+// correct one and from every other option (never a visually-identical duplicate).
+function clockDistractorLabels(hour, minute, stepMinutes, howMany){
+  const correctEnc = ((hour%12)*60+minute+720)%720;
+  const deltas=[stepMinutes,-stepMinutes,stepMinutes*2,-stepMinutes*2,stepMinutes*3,-stepMinutes*3,stepMinutes*4,-stepMinutes*4];
+  const encs = distinctNumbers(correctEnc, deltas, function(v){ return true; }, howMany);
+  return encs.map(function(enc){
+    const norm=((enc%720)+720)%720;
+    let h=Math.floor(norm/60); const m=norm%60;
+    if(h===0) h=12;
+    return h+':'+pad2(m);
+  });
+}
+function renderShape2D(name){
+  return '<div class="shape2d '+name+'"></div>';
+}
+function renderBars(items){
+  let html='<div class="bar-wrap">';
+  const maxV = Math.max.apply(null, items.map(function(i){ return i.value; }));
+  items.forEach(function(it){
+    const h = 16 + (it.value/maxV)*84;
+    html += '<div class="bar-col"><div>'+it.value+'</div><div class="bar-rect" style="height:'+h+'px;"></div><div>'+it.label+'</div></div>';
+  });
+  html+='</div>';
+  return html;
+}
+function renderPictogram(items){
+  let html='<div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">';
+  items.forEach(function(it){
+    html += '<div style="color:#fff; font-weight:800; display:flex; gap:6px; align-items:center;"><span style="width:70px;">'+it.label+'</span><span style="font-size:20px;">'+it.emoji.repeat(it.value)+'</span></div>';
+  });
+  html+='</div>';
+  return html;
+}
+function renderTally(n){
+  const groups = Math.floor(n/5), rem = n%5;
+  let html='<div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">';
+  for(let g=0; g<groups; g++){
+    html += '<div style="position:relative; display:flex; gap:3px;">'+
+      '<div style="width:3px; height:26px; background:#fff;"></div>'.repeat(4)+
+      '<div style="position:absolute; width:34px; height:3px; background:#F2C94C; top:12px; left:-2px; transform:rotate(-35deg);"></div>'+
+      '</div>';
+  }
+  if(rem>0){ html += '<div style="display:flex; gap:3px;">'+'<div style="width:3px; height:26px; background:#fff;"></div>'.repeat(rem)+'</div>'; }
+  html+='</div>';
+  return html;
+}
+function renderCoins(values){
+  let html='<div style="display:flex; flex-wrap:wrap; justify-content:center;">';
+  values.forEach(function(v){ html += '<div class="coin">'+(v>=100? '£'+(v/100) : v+'p')+'</div>'; });
+  html+='</div>';
+  return html;
+}
+function renderArrow(direction){
+  const map={up:0, right:90, down:180, left:270};
+  return '<div class="arrow-box" style="transform:rotate('+map[direction]+'deg);">⬆️</div>';
+}
+
+/* ============================= CONTENT: THEMES & PREFERENCES ============================= */
+const THEMES = {
+  space:   {label:'Space',    emoji:'🚀', mascot:'👩‍🚀', c1:'#0B1026', c2:'#4F8FE8'},
+  unicorn: {label:'Unicorn',  emoji:'🦄', mascot:'🦄',   c1:'#3a1f39', c2:'#F2A6D8'},
+  dino:    {label:'Dinosaurs',emoji:'🦖', mascot:'🦕',   c1:'#0f2a1a', c2:'#6FCF97'},
+  ocean:   {label:'Ocean',    emoji:'🐬', mascot:'🐠',   c1:'#04213a', c2:'#56CCF2'},
+  rainbow: {label:'Rainbow',  emoji:'🌈', mascot:'⭐',   c1:'#2d1b4a', c2:'#F2994A'}
+};
+const LIKES = [
+  {id:'contar', label:'Counting and numbers', emoji:'🔢'},
+  {id:'formas', label:'Shapes and drawings', emoji:'🔺'},
+  {id:'acertijos', label:'Mysteries and riddles', emoji:'🕵️'},
+  {id:'dinero', label:'Money and shops', emoji:'💰'},
+  {id:'carreras', label:'Racing against the clock', emoji:'⏱️'},
+  {id:'rompecabezas', label:'Puzzles and patterns', emoji:'🧩'}
+];
+const DISLIKES = [
+  {id:'multiplicar', label:'Multiplying', emoji:'🧮'},
+  {id:'fracciones', label:'Fractions', emoji:'🍕'},
+  {id:'problemas_largos', label:'Long word problems', emoji:'📖'},
+  {id:'esperar', label:'Waiting my turn', emoji:'⏳'},
+  {id:'dificil', label:'Hard questions', emoji:'😖'},
+  {id:'escribir', label:'Writing a lot', emoji:'✍️'}
+];
+const STRAND_META = {
+  numeros:     {name:'Numbers',       icon:'🔢'},
+  calculo:     {name:'Calculation',   icon:'➕'},
+  fracciones:  {name:'Fractions',     icon:'🍕'},
+  medidas:     {name:'Measurement',   icon:'📏'},
+  geometria:   {name:'Shapes',        icon:'🔺'},
+  estadistica: {name:'Data & Graphs', icon:'📊'},
+  dinero:      {name:'Money',         icon:'💰'},
+  logica:      {name:'Logic',         icon:'🧩'}
+};
+const STRAND_ORDER = ['numeros','calculo','fracciones','medidas','geometria','estadistica','dinero','logica'];
+const LEVEL_LABELS = {1:'Review', 2:'Bridge to Year 3', 3:'Year 3 · Starting', 4:'Year 3 · Secure', 5:'Year 3 · Challenge'};
+const CORRECT_PHRASES = ['Great job!','You got it!','You are a star!','Excellent!','Perfect!','Way to go!','Awesome!','Amazing!'];
+const INCORRECT_PHRASES = ['Almost!','Nice try!','On to the next one','Keep going!','You will get the next one'];
+
+/* ============================= QUESTION GENERATORS ============================= */
+const GEN = {};
+
+GEN.numeros = [
+  function(){ // L1: compare two numbers
+    let a=randInt(10,99), b=randInt(10,99); while(b===a) b=randInt(10,99);
+    const bigger=Math.max(a,b);
+    return q2('Which number is bigger?', '', bigger, Math.min(a,b), 'Look at the tens digit first — more tens means a bigger number.');
+  },
+  function(){ // L2: tens and ones
+    const n=randInt(21,98);
+    function decompose(v){ const dd=Math.floor(v/10), uu=v%10; return dd+' tens and '+uu+' ones'; }
+    const correct=decompose(n);
+    const wrongTotals=distinctNumbers(n, STD_DELTAS, function(v){ return v>=10 && v<=99; }, 3);
+    const cands=wrongTotals.map(decompose);
+    return q('How many tens and ones does the number '+n+' have?', '', correct, cands, 'Tens = first digit, Ones = second digit.');
+  },
+  function(){ // L3: +/- 100
+    const n=randInt(300,799); const dir=pick(['more','less']);
+    const correct = dir==='more'? n+100 : n-100;
+    let cands=[];
+    if(n!==correct) cands.push(n); // common slip: forgetting to change the hundreds
+    cands = cands.concat(distinctNumbers(correct, STD_DELTAS, function(v){ return v>=0 && v<=999 && v!==n; }, 3));
+    cands = cands.slice(0,3);
+    return q('What number is 100 '+dir+' than '+n+'?', '', correct, cands, 'Only the hundreds digit changes — everything else stays the same!');
+  },
+  function(){ // L4: rounding
+    const n=randInt(100,899); const target=pick(['ten','hundred']);
+    const step = target==='ten'?10:100;
+    const correct = Math.round(n/step)*step;
+    let cands=[];
+    if(n!==correct) cands.push(n);
+    cands = cands.concat(distinctNumbers(correct, [step,-step,2*step,-2*step,1,-1], function(v){ return v>=0; }, 3));
+    cands = cands.slice(0,3);
+    return q('Round '+n+' to the nearest '+target+'.', '', correct, cands, target==='ten' ? 'Look at the ones digit: 5 or more means round up.' : 'Look at the tens digit: 5 or more means round up.');
+  },
+  function(){ // L5: sequence with a gap
+    const step=pick([2,3,4,5,8,10,50]); const start=randInt(1,15)*step;
+    const seq=[start, start+step, start+2*step, start+3*step];
+    const correct=seq[2];
+    const cands=distinctNumbers(correct, [step,-step,1,-1,2*step,-2*step], function(){ return true; }, 3);
+    const visual='<div style="color:#fff; font-size:26px; font-weight:800;">'+seq[0]+', '+seq[1]+', __, '+seq[3]+'</div>';
+    return q('What number is missing in the sequence?', visual, correct, cands, 'Check how much the numbers jump each time.');
+  }
+];
+
+GEN.calculo = [
+  function(){ // L1: +/- within 20
+    const op=pick(['+','-']); let a,b,correct;
+    if(op==='+'){ a=randInt(1,15); b=randInt(1,20-a); correct=a+b; } else { a=randInt(5,20); b=randInt(1,a); correct=a-b; }
+    const cands=distinctNumbers(correct, STD_DELTAS, function(v){ return v>=0 && v<=40; }, 3);
+    return q('What is '+a+' '+op+' '+b+'?', '', correct, cands, 'You can use your fingers or count '+(op==='+'?'forward':'backward')+'.');
+  },
+  function(){ // L2: 2-digit +/- within 100
+    const op=pick(['+','-']); let a=randInt(10,89), b=randInt(1,20);
+    if(op==='-') b=Math.min(b,a);
+    const correct = op==='+'? a+b : a-b;
+    const cands=distinctNumbers(correct, STD_DELTAS, function(v){ return v>=0 && v<=150; }, 3);
+    return q('What is '+a+' '+op+' '+b+'?', '', correct, cands, 'Add or subtract the ones first, then the tens.');
+  },
+  function(){ // L3: 2-digit columns OR 2/5/10 times tables
+    if(Math.random()<0.5){
+      const a=randInt(15,79), b=randInt(10,60);
+      const op=pick(['+','-']); const bb= op==='-'? Math.min(b,a-1) : b;
+      const correct = op==='+'? a+bb : a-bb;
+      const cands=distinctNumbers(correct, STD_DELTAS, function(v){ return v>=0 && v<=200; }, 3);
+      return q('What is '+a+' '+op+' '+bb+'?', '', correct, cands, 'Line up the tens and ones in columns, like at school.');
+    } else {
+      const t=pick([2,5,10]); const b=randInt(1,12); const correct=t*b;
+      const cands=distinctNumbers(correct, [t,-t,2*t,-2*t,1,-1], function(v){ return v>=0; }, 3);
+      return q('What is '+t+' x '+b+'?', '', correct, cands, 'Count in '+t+'s, '+b+' times.');
+    }
+  },
+  function(){ // L4: 3/4/8 times tables and division
+    if(Math.random()<0.5){
+      const t=pick([3,4,8]); const b=randInt(1,12); const correct=t*b;
+      const cands=distinctNumbers(correct, [t,-t,2*t,-2*t,1,-1], function(v){ return v>=0; }, 3);
+      return q('What is '+t+' x '+b+'?', '', correct, cands, 'Count in '+t+'s, '+b+' times.');
+    } else {
+      const t=pick([3,4,8]); const b=randInt(1,12); const total=t*b;
+      const cands=distinctNumbers(b, [1,-1,2,-2,3,-3], function(v){ return v>=1 && v<=12; }, 3);
+      return q('What is '+total+' ÷ '+t+'?', '', b, cands, 'Think: '+t+' times what number gives '+total+'?');
+    }
+  },
+  function(){ // L5: short word problems
+    if(Math.random()<0.5){
+      const t=pick([3,4,8]); const b=randInt(2,10); const total=t*b;
+      const cands=distinctNumbers(b, [1,-1,2,-2,3,-3], function(v){ return v>=1 && v<=12; }, 3);
+      return q('You share '+total+' sweets into '+t+' equal bags. How many are in each bag?', '🍬', b, cands, 'This is a division: '+total+' ÷ '+t+'.');
+    } else {
+      const a=randInt(150,850), b=randInt(20,300); const op=pick(['+','-']); const bb= op==='-'? Math.min(b,a-1): b;
+      const correct = op==='+'? a+bb : a-bb;
+      const cands=distinctNumbers(correct, STD_DELTAS, function(v){ return v>=0 && v<=1200; }, 3);
+      return q('What is '+a+' '+op+' '+bb+'?', '', correct, cands, 'Add or subtract in parts: hundreds first, then tens, then ones.');
+    }
+  }
+];
+
+GEN.fracciones = [
+  function(){ // L1: shaded fraction — pool-based distractors (never collapse)
+    const FRACTION_POOL=['1/2','1/3','2/3','1/4','2/4','3/4','1/5','2/5','3/5','1/6','2/6'];
+    const den=pick([2,3,4,5]); const num=randInt(1,den-1);
+    const visual=renderFractionBar(num,den);
+    const correct=num+'/'+den;
+    const cands=shuffle(FRACTION_POOL.filter(function(f){ return f!==correct; })).slice(0,3);
+    return q('Which fraction is shaded?', visual, correct, cands, 'Count how many parts there are in total, and how many are colored.');
+  },
+  function(){ // L2: unit fraction of a set
+    const den=pick([2,3,4]); const total=den*randInt(2,6);
+    const correct=total/den;
+    const visual=renderEmojiGroup('🍎', total);
+    let cands=[total]; // common slip: giving the whole amount
+    cands = cands.concat(distinctNumbers(correct, [1,-1,2,-2,3,-3], function(v){ return v>=1 && v!==total; }, 3));
+    cands = cands.slice(0,3);
+    return q('What is 1/'+den+' of '+total+' apples?', visual, correct, cands, 'Split the total into '+den+' equal groups.');
+  },
+  function(){ // L3: unit fraction on a number line — pool-based, den restricted to avoid degenerate cases
+    const den=pick([3,4,5]); const k=randInt(1,den-1);
+    const visual=renderNumberLineFraction(den,k);
+    const correct=k+'/'+den;
+    const pool=[];
+    for(let m=1;m<den;m++){ if(m!==k) pool.push(m+'/'+den); }
+    pool.push(k+'/'+(den+1));
+    pool.push(k+'/'+(den-1));
+    pool.push((den-k)+'/'+den);
+    const cands=shuffle(pool.filter(function(f){ return f!==correct; })).slice(0,3);
+    return q('What fraction does the 📍 mark on the number line from 0 to 1?', visual, correct, cands, 'Count how many equal spaces up to the mark, out of '+den+' total.');
+  },
+  function(){ // L4: equivalent fractions — disjoint hardcoded pools
+    const table=[
+      {base:'1/2', eq:['2/4','3/6','4/8'], fake:['1/3','2/3','1/4','3/4']},
+      {base:'1/3', eq:['2/6','3/9'], fake:['1/2','2/4','1/4']},
+      {base:'1/4', eq:['2/8','3/12'], fake:['1/2','1/3','2/3']}
+    ];
+    const item=pick(table); const correct=pick(item.eq);
+    return q('Which fraction equals '+item.base+'?', '', correct, shuffle(item.fake), 'Multiply the top and bottom by the same number.');
+  },
+  function(){ // L5: non-unit fraction of a quantity
+    const den=pick([3,4,5]); const num=randInt(2,den-1); const total=den*randInt(2,5);
+    const unit=total/den;
+    const correct=unit*num;
+    let cands=[unit]; // common slip: stopping after finding the unit fraction
+    cands = cands.concat(distinctNumbers(correct, [den,-den,1,-1,2,-2,3,-3], function(v){ return v>=1 && v!==unit; }, 3));
+    cands = cands.slice(0,3);
+    return q('What is '+num+'/'+den+' of '+total+'?', '', correct, cands, 'First find 1/'+den+' of '+total+', then multiply it by '+num+'.');
+  }
+];
+
+GEN.medidas = [
+  function(){ // L1: compare lengths
+    let len1=randInt(3,12), len2=randInt(3,12); while(len2===len1) len2=randInt(3,12);
+    const visual=renderTwoBars(len1,len2);
+    const longer = len1>len2 ? 'Bar A' : 'Bar B';
+    const other = len1>len2 ? 'Bar B' : 'Bar A';
+    return q2('Which bar is longer?', visual, longer, other, 'Compare them from end to end.');
+  },
+  function(){ // L2: read a scale
+    const value=randInt(1,9);
+    const visual=renderRulerMark(value);
+    const cands=distinctNumbers(value, [1,-1,2,-2], function(v){ return v>=0 && v<=10; }, 3);
+    return q('What number does the arrow point to on the ruler?', visual, value, cands, 'Count the marks starting from 0.');
+  },
+  function(){ // L3: o'clock / quarter / half past
+    const hour=randInt(1,12); const minute=pick([0,15,30,45]);
+    const visual=renderClock(hour,minute);
+    const correct=hour+':'+pad2(minute);
+    const cands=clockDistractorLabels(hour, minute, 15, 3);
+    return q('What time does the clock show?', visual, correct, cands, 'The short hand points to the hour, the long hand points to the minutes.');
+  },
+  function(){ // L4: time to the nearest 5 minutes
+    const hour=randInt(1,12); const minute=randInt(1,11)*5;
+    const visual=renderClock(hour,minute);
+    const correct=hour+':'+pad2(minute);
+    const cands=clockDistractorLabels(hour, minute, 5, 3);
+    return q('What time does the clock show?', visual, correct, cands, 'Each small tick of the long hand is 5 minutes.');
+  },
+  function(){ // L5: perimeter or elapsed time
+    if(Math.random()<0.5){
+      const a=randInt(2,12), b=randInt(2,12); const correct=2*(a+b);
+      const visual='<div style="color:#fff; font-size:18px; font-weight:800;">Rectangle: '+a+' cm x '+b+' cm</div>';
+      let cands=[a*b, a+b, correct+2, correct-2>0?correct-2:correct+4];
+      cands = cands.filter(function(v,i){ return v!==correct && cands.indexOf(v)===i; }).slice(0,3);
+      return q('What is the perimeter of the rectangle?', visual, correct, cands, 'Add up all 4 sides: '+a+'+'+b+'+'+a+'+'+b+'.');
+    } else {
+      const start=randInt(1,9); const dur=randInt(1,3); const correct=start+dur;
+      const cands=distinctNumbers(correct, [1,-1,2,-2], function(v){ return v>=1 && v<=12 && v!==start; }, 3);
+      return q('You start playing at '+start+' o’clock and play for '+dur+' hours. What time do you finish?', '⏰', correct, cands, 'Add the hours you played to the start time.');
+    }
+  }
+];
+
+GEN.geometria = [
+  function(){ // L1: name the shape
+    const shapes=[{n:'circle',c:'circle'},{n:'square',c:'square'},{n:'triangle',c:'triangle'},{n:'rectangle',c:'rectangle'},{n:'pentagon',c:'pentagon'},{n:'hexagon',c:'hexagon'}];
+    const s=pick(shapes);
+    const visual=renderShape2D(s.c);
+    const others=shapes.filter(function(x){ return x.n!==s.n; }).map(function(x){ return x.n; });
+    return q('What is this shape called?', visual, s.n, shuffle(others).slice(0,3), 'Count its sides to help you recognize it.');
+  },
+  function(){ // L2: count sides/vertices
+    const shapes=[{n:'triangle',c:'triangle',sides:3},{n:'square',c:'square',sides:4},{n:'rectangle',c:'rectangle',sides:4},{n:'pentagon',c:'pentagon',sides:5},{n:'hexagon',c:'hexagon',sides:6}];
+    const s=pick(shapes); const visual=renderShape2D(s.c);
+    const prop=pick(['sides','vertices']);
+    const correct=s.sides;
+    const cands=distinctNumbers(correct, [1,-1,2,-2], function(v){ return v>=1; }, 3);
+    return q('How many '+prop+' does this shape have?', visual, correct, cands, 'Trace the shape with your finger and count.');
+  },
+  function(){ // L3: 3D shape properties
+    const shapes3d=[
+      {n:'cube', emoji:'📦', faces:6, vertices:8, edges:12},
+      {n:'sphere', emoji:'⚽', faces:1, vertices:0, edges:0},
+      {n:'cylinder', emoji:'🥫', faces:3, vertices:0, edges:2},
+      {n:'cone', emoji:'🍦', faces:2, vertices:1, edges:1},
+      {n:'pyramid', emoji:'🔺', faces:5, vertices:5, edges:8}
+    ];
+    const s=pick(shapes3d); const prop=pick(['faces','vertices','edges']);
+    const correct=s[prop];
+    const cands=distinctNumbers(correct, [1,-1,2,-2], function(v){ return v>=0; }, 3);
+    const visual='<div style="font-size:60px;">'+s.emoji+'</div>';
+    return q('How many '+prop+' does a '+s.n+' have?', visual, correct, cands, 'Picture the real object and count carefully.');
+  },
+  function(){ // L4: symmetry (fixed presets, always safe)
+    const presets=[
+      {shapes:['⬜','🔺','⭐','🍃'], correctIdx:3},
+      {shapes:['⚪','🔷','🍃','⬡'], correctIdx:2},
+      {shapes:['⬜','⭐','🔺','🥾'], correctIdx:3},
+      {shapes:['⚪','⬜','🔺','👞'], correctIdx:3}
+    ];
+    const p=pick(presets);
+    const visual='<div style="font-size:40px; display:flex; gap:14px;">'+p.shapes.map(function(s){ return '<span>'+s+'</span>'; }).join('')+'</div>';
+    const correctLabel = p.shapes[p.correctIdx];
+    const cands = p.shapes.filter(function(s,i){ return i!==p.correctIdx; });
+    return q('Which shape does NOT have a line of symmetry?', visual, correctLabel, cands, 'Imagine a mirror down the middle — are both halves the same?');
+  },
+  function(){ // L5: turns
+    const dirs=['up','right','down','left'];
+    const angles={up:0,right:90,down:180,left:270};
+    const start=pick(dirs);
+    const turn=pick([{label:'a quarter turn clockwise', deg:90},{label:'a half turn', deg:180},{label:'three-quarters turn clockwise', deg:270}]);
+    const newAngle=(angles[start]+turn.deg)%360;
+    const inv = Object.keys(angles).find(function(k){ return angles[k]===newAngle; });
+    const visual=renderArrow(start);
+    const others=dirs.filter(function(d){ return d!==inv; });
+    return q('The arrow points '+start+'. If it turns '+turn.label+', where does it point now?', visual, inv, others, 'Think of a clock face: clockwise is the way its hands move.');
+  }
+];
+
+GEN.estadistica = [
+  function(){ // L1: pictogram most/least
+    const cats=[{label:'Apple',emoji:'🍎'},{label:'Banana',emoji:'🍌'},{label:'Grape',emoji:'🍇'}];
+    let vals = cats.map(function(c){ return {label:c.label, emoji:c.emoji, value:randInt(1,6)}; });
+    while(new Set(vals.map(function(v){ return v.value; })).size < vals.length){ vals = cats.map(function(c){ return {label:c.label, emoji:c.emoji, value:randInt(1,6)}; }); }
+    const which=pick(['most','least']);
+    const sorted=vals.slice().sort(function(a,b){ return which==='most'? b.value-a.value : a.value-b.value; });
+    const correct=sorted[0].label;
+    const visual=renderPictogram(vals);
+    const cands=vals.filter(function(v){ return v.label!==correct; }).map(function(v){ return v.label; });
+    return q('Which fruit has the '+which+'?', visual, correct, cands, 'Count the pictures in each row.', 3);
+  },
+  function(){ // L2: read a bar
+    const cats=['Red','Blue','Green','Yellow'];
+    let items = cats.map(function(c){ return {label:c, value:randInt(1,10)}; });
+    while(new Set(items.map(function(i){ return i.value; })).size < items.length){ items = cats.map(function(c){ return {label:c, value:randInt(1,10)}; }); }
+    const target=pick(items);
+    const visual=renderBars(items);
+    const cands=items.filter(function(i){ return i.label!==target.label; }).map(function(i){ return i.value; });
+    return q('How many votes does "'+target.label+'" have?', visual, target.value, cands, 'Find the bar with that label and read its height.');
+  },
+  function(){ // L3: difference between two bars — always names the actually-bigger category first
+    const cats=['Dogs','Cats','Fish'];
+    let items = cats.map(function(c){ return {label:c, value:randInt(2,12)}; });
+    while(new Set(items.map(function(i){ return i.value; })).size < items.length){ items = cats.map(function(c){ return {label:c, value:randInt(2,12)}; }); }
+    const visual=renderBars(items);
+    const idxPair = shuffle([0,1,2]).slice(0,2);
+    const itemA=items[idxPair[0]], itemB=items[idxPair[1]];
+    const bigger = itemA.value>itemB.value ? itemA : itemB;
+    const smaller = itemA.value>itemB.value ? itemB : itemA;
+    const correct = bigger.value - smaller.value;
+    let cands=[bigger.value+smaller.value];
+    cands = cands.concat(distinctNumbers(correct, [1,-1,2,-2], function(v){ return v>=1 && v!==(bigger.value+smaller.value); }, 3));
+    cands = cands.slice(0,3);
+    return q('How many more "'+bigger.label+'" are there than "'+smaller.label+'"?', visual, correct, cands, 'Subtract the smaller value from the bigger value.');
+  },
+  function(){ // L4: tally count
+    const n=randInt(3,18);
+    const visual=renderTally(n);
+    const cands=distinctNumbers(n, [1,-1,2,-2], function(v){ return v>=0; }, 3);
+    return q('How many tally marks are there in total?', visual, n, cands, 'Each group with a diagonal line crossing it is 5.');
+  },
+  function(){ // L5: combine categories — sum, or difference (always naming the bigger one first)
+    const cats=['Monday','Tuesday','Wednesday'];
+    let items = cats.map(function(c){ return {label:c, value:randInt(2,10)}; });
+    while(new Set(items.map(function(i){ return i.value; })).size < items.length){ items = cats.map(function(c){ return {label:c, value:randInt(2,10)}; }); }
+    const visual=renderBars(items);
+    const mode=pick(['sum','difference']);
+    const idxPair = shuffle([0,1,2]).slice(0,2);
+    if(mode==='sum'){
+      const thirdIdx = [0,1,2].filter(function(i){ return idxPair.indexOf(i)===-1; })[0];
+      const correct=items[idxPair[0]].value+items[idxPair[1]].value;
+      let cands=[items[thirdIdx].value];
+      cands = cands.concat(distinctNumbers(correct, [1,-1,2,-2], function(v){ return v>=0 && v!==items[thirdIdx].value; }, 3));
+      cands = cands.slice(0,3);
+      return q('How many are there for "'+items[idxPair[0]].label+'" and "'+items[idxPair[1]].label+'" together?', visual, correct, cands, 'Add the two values together.');
+    } else {
+      const itemA=items[idxPair[0]], itemB=items[idxPair[1]];
+      const bigger = itemA.value>itemB.value ? itemA : itemB;
+      const smaller = itemA.value>itemB.value ? itemB : itemA;
+      const correct=bigger.value-smaller.value;
+      let cands=[bigger.value+smaller.value];
+      cands = cands.concat(distinctNumbers(correct, [1,-1,2,-2], function(v){ return v>=0 && v!==(bigger.value+smaller.value); }, 3));
+      cands = cands.slice(0,3);
+      return q('How many more does "'+bigger.label+'" have than "'+smaller.label+'"?', visual, correct, cands, 'Subtract the smaller value from the bigger value.');
+    }
+  }
+];
+
+const COIN_SET=[1,2,5,10,20,50];
+function coinPairLabel(c1,c2){ const lo=Math.min(c1,c2), hi=Math.max(c1,c2); return lo+'p + '+hi+'p'; }
+GEN.dinero = [
+  function(){ // L1: add 2 coins
+    const a=pick(COIN_SET), b=pick(COIN_SET); const correct=a+b;
+    const visual=renderCoins([a,b]);
+    const cands=distinctNumbers(correct, [5,-5,10,-10,2,-2], function(v){ return v>=1; }, 3);
+    return q('How much do these coins add up to?', visual, correct+'p', cands.map(function(c){ return c+'p'; }), 'Add up the value of each coin.');
+  },
+  function(){ // L2: which pair of coins makes the target
+    const TARGETS=[{target:10,pair:[5,5]},{target:15,pair:[10,5]},{target:20,pair:[10,10]},{target:25,pair:[20,5]},{target:22,pair:[20,2]},{target:30,pair:[20,10]},{target:12,pair:[10,2]},{target:7,pair:[5,2]}];
+    const item=pick(TARGETS);
+    const correct=coinPairLabel(item.pair[0], item.pair[1]);
+    const cands=[]; let tries=0;
+    while(cands.length<3 && tries<60){
+      tries++;
+      const c1=pick(COIN_SET), c2=pick(COIN_SET);
+      if(c1+c2===item.target) continue;
+      const label=coinPairLabel(c1,c2);
+      if(label===correct) continue;
+      if(cands.indexOf(label)!==-1) continue;
+      cands.push(label);
+    }
+    return q('Which pair of coins makes exactly '+item.target+'p?', '🎯 '+item.target+'p', correct, cands, 'Add the two coin values together.');
+  },
+  function(){ // L3: change
+    const price=randInt(2,19)*5; const paid=100;
+    const correct=paid-price;
+    const cands=distinctNumbers(correct, [5,-5,10,-10], function(v){ return v>=0 && v<=100; }, 3);
+    return q('You pay with £1 (100p) for something that costs '+price+'p. How much change do you get?', '💷', correct+'p', cands.map(function(c){ return c+'p'; }), '100 minus the price of the item.');
+  },
+  function(){ // L4: sum of two prices
+    const p1=randInt(2,15)*5, p2=randInt(2,15)*5; const correct=p1+p2;
+    const cands=distinctNumbers(correct, [5,-5,10,-10], function(v){ return v>=0; }, 3);
+    return q('You buy one thing for '+p1+'p and another for '+p2+'p. How much do you spend in total?', '🛍️', correct+'p', cands.map(function(c){ return c+'p'; }), 'Add the two prices together.');
+  },
+  function(){ // L5: budget yes/no
+    const budget=randInt(20,40)*5;
+    const item1=randInt(5,25)*5, item2=randInt(5,25)*5;
+    const total=item1+item2;
+    const correct = total<=budget? 'Yes' : 'No';
+    const visual='<div style="color:#fff; font-weight:800;">Budget: '+budget+'p<br>Item 1: '+item1+'p · Item 2: '+item2+'p</div>';
+    return q2('Is there enough money to buy both things?', visual, correct, correct==='Yes'?'No':'Yes', 'Add both items together and compare it to the budget.');
+  }
+];
+
+const NAME_POOL = ['Ana','Marcus','Sophie','Ivan','Lucy','Diego','Ellen','Tom'];
+GEN.logica = [
+  function(){ // L1: odd one out (fixed, all-distinct groups)
+    const groups=[
+      {items:['🐶','🐱','🐰','🍎'], oddIdx:3},
+      {items:['🔴','🔵','🟢','🐟'], oddIdx:3},
+      {items:['2','4','6','7'], oddIdx:3},
+      {items:['🍎','🍌','🍇','🚗'], oddIdx:3},
+      {items:['⚽','🏀','🎾','🍕'], oddIdx:3},
+      {items:['1','3','5','8'], oddIdx:3}
+    ];
+    const g=pick(groups);
+    const visual='<div style="font-size:38px; display:flex; gap:14px;">'+g.items.map(function(i){ return '<span>'+i+'</span>'; }).join('')+'</div>';
+    const correct=g.items[g.oddIdx];
+    const cands=g.items.filter(function(it,i){ return i!==g.oddIdx; });
+    return q('Which one does NOT belong?', visual, correct, cands, 'Think about what the other three have in common.');
+  },
+  function(){ // L2: AB pattern
+    const sets=[['🔴','🔵'],['⭐','🌙'],['🟩','🟨'],['🔺','⬜']];
+    const s=pick(sets);
+    const seq=[s[0],s[1],s[0],s[1],s[0]];
+    const correct=s[1];
+    const visual='<div style="font-size:34px;">'+seq.join(' ')+' <b>?</b></div>';
+    return q2('What comes next in the pattern?', visual, correct, s[0], 'Look at how the pattern repeats in twos.');
+  },
+  function(){ // L3: number sequence
+    const step=pick([2,3,4,5]); const start=randInt(1,10);
+    const seq=[start,start+step,start+2*step,start+3*step];
+    const correct=start+4*step;
+    const cands=distinctNumbers(correct, [step,-step,1,-1], function(){ return true; }, 3);
+    const visual='<div style="color:#fff; font-size:26px; font-weight:800;">'+seq.join(', ')+', __</div>';
+    return q('What number comes next in the sequence?', visual, correct, cands, 'Check how much the numbers increase each time.');
+  },
+  function(){ // L4: ordering riddle
+    const names=shuffle(NAME_POOL).slice(0,3);
+    const order=shuffle([0,1,2]);
+    const tallest=names[order.indexOf(0)], middle=names[order.indexOf(1)], shortest=names[order.indexOf(2)];
+    const askShortest = Math.random()<0.5;
+    const prompt = askShortest
+      ? (tallest+' is taller than '+middle+', and '+middle+' is taller than '+shortest+'. Who is the shortest?')
+      : (shortest+' is shorter than '+middle+', and '+middle+' is shorter than '+tallest+'. Who is the tallest?');
+    const correct = askShortest? shortest : tallest;
+    const others = names.filter(function(n){ return n!==correct; });
+    return q(prompt, '🕵️', correct, others, 'Carefully order all three from tallest to shortest.');
+  },
+  function(){ // L5: mini logic grid (3x3 Latin square — always solvable)
+    const symbols=['🔴','🔵','🟢'];
+    const rows=[0,1,2].map(function(r){ return [0,1,2].map(function(c){ return symbols[(c+r)%3]; }); });
+    const hideR=randInt(0,2), hideC=randInt(0,2);
+    const correct=rows[hideR][hideC];
+    let visual='<div style="display:inline-grid; grid-template-columns:repeat(3,44px); gap:6px;">';
+    for(let r=0;r<3;r++){
+      for(let c=0;c<3;c++){
+        const isHidden = (r===hideR && c===hideC);
+        visual += '<div style="width:44px; height:44px; background:#ffffff22; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:24px;">'+(isHidden?'❓':rows[r][c])+'</div>';
+      }
+    }
+    visual+='</div>';
+    const others=symbols.filter(function(s){ return s!==correct; });
+    return q('Each row and column cannot repeat a color. What color goes in the ❓?', visual, correct, others, 'Check which colors are already in that row and that column.');
+  }
+];
+
+/* ============================= STATE ============================= */
+const STATE_KEY='melissaMathState_v2';
+function defaultState(){
+  const strands={};
+  STRAND_ORDER.forEach(function(s){ strands[s]={level:1, stars:0, attempts:0, correct:0, accuracyHistory:[]}; });
+  return {
+    onboardingDone:false,
+    theme:'unicorn',
+    preferences:{likes:[], dislikes:[]},
+    diagnostic:{done:false},
+    strands: strands, totalStars:0, badges:[],
+    streak:{count:0, lastPlayDate:null},
+    sessionLog:[]
+  };
+}
+function mergeDefaults(loaded){
+  const d=defaultState();
+  const merged=Object.assign({}, d, loaded||{});
+  merged.strands={};
+  STRAND_ORDER.forEach(function(s){ merged.strands[s]=Object.assign({}, d.strands[s], (loaded&&loaded.strands&&loaded.strands[s])||{}); });
+  merged.preferences=Object.assign({}, d.preferences, (loaded&&loaded.preferences)||{});
+  merged.diagnostic=Object.assign({}, d.diagnostic, (loaded&&loaded.diagnostic)||{});
+  merged.streak=Object.assign({}, d.streak, (loaded&&loaded.streak)||{});
+  merged.badges=(loaded&&loaded.badges)||[];
+  merged.sessionLog=(loaded&&loaded.sessionLog)||[];
+  return merged;
+}
+function loadState(){
+  try{ const raw=localStorage.getItem(STATE_KEY); if(!raw) return defaultState(); return mergeDefaults(JSON.parse(raw)); }
+  catch(e){ return defaultState(); }
+}
+function saveState(){ try{ localStorage.setItem(STATE_KEY, JSON.stringify(state)); }catch(e){} }
+
+let state = loadState();
+let tempPrefs = {likes:new Set(state.preferences.likes||[]), dislikes:new Set(state.preferences.dislikes||[])};
+let diag = {index:0, results:{}, questions:[]};
+let session = null; // {strand, level, qIndex, total, correctCount, log:[]}
+let lastSessionMeta = null;
+
+/* ============================= AUDIO ============================= */
+let audioCtx=null;
+function ensureAudio(){ if(!audioCtx){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return audioCtx; }
+function playTone(freqs,dur){
+  const ctx=ensureAudio(); if(!ctx) return;
+  try{
+    let t=ctx.currentTime;
+    freqs.forEach(function(f,i){
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.type='sine'; o.frequency.value=f; g.gain.value=0.16;
+      o.connect(g); g.connect(ctx.destination);
+      const start=t+i*dur;
+      g.gain.setValueAtTime(0.16,start);
+      g.gain.exponentialRampToValueAtTime(0.001,start+dur*0.9);
+      o.start(start); o.stop(start+dur);
+    });
+  }catch(e){}
+}
+function playCorrect(){ playTone([523.25,659.25,783.99],0.12); }
+function playIncorrect(){ playTone([311.13,277.18],0.18); }
+
+/* ============================= NAVIGATION ============================= */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+function applyTheme(themeId){
+  const t=THEMES[themeId]||THEMES.unicorn;
+  document.documentElement.style.setProperty('--bg1', t.c1);
+  document.documentElement.style.setProperty('--bg2', t.c2);
+  document.documentElement.style.setProperty('--accent', t.c2);
+  ['welcome-mascot','diagintro-mascot','plan-mascot','hub-mascot','results-mascot','continue-mascot'].forEach(function(id){
+    const el=document.getElementById(id); if(el) el.textContent=t.mascot;
+  });
+}
+
+/* ============================= ONBOARDING ============================= */
+function initApp(){
+  applyTheme(state.theme);
+  if(state.onboardingDone){ showScreen('screen-hub'); renderHub(); }
+  else { renderThemeList(); renderLikesList(); renderDislikesList(); showScreen('screen-welcome'); }
+}
+function goFromWelcome(){ showScreen('screen-theme'); }
+
+function renderThemeList(){
+  const wrap=document.getElementById('theme-list'); wrap.innerHTML='';
+  Object.keys(THEMES).forEach(function(key){
+    const t=THEMES[key];
+    const div=document.createElement('div');
+    div.className='theme-card'+(state.theme===key?' selected':'');
+    div.innerHTML='<div class="emoji">'+t.emoji+'</div><div>'+t.label+'</div>';
+    div.onclick=function(){ state.theme=key; applyTheme(key); renderThemeList(); };
+    wrap.appendChild(div);
+  });
+}
+function goFromTheme(){ saveState(); showScreen('screen-likes'); }
+
+function renderLikesList(){
+  const wrap=document.getElementById('likes-list'); wrap.innerHTML='';
+  LIKES.forEach(function(item){
+    const div=document.createElement('div');
+    div.className='chip'+(tempPrefs.likes.has(item.id)?' selected':'');
+    div.innerHTML='<span class="emoji">'+item.emoji+'</span><span>'+item.label+'</span>';
+    div.onclick=function(){
+      if(tempPrefs.likes.has(item.id)) tempPrefs.likes.delete(item.id); else tempPrefs.likes.add(item.id);
+      renderLikesList();
+    };
+    wrap.appendChild(div);
+  });
+}
+function goFromLikes(){
+  state.preferences.likes=Array.from(tempPrefs.likes);
+  saveState();
+  showScreen('screen-dislikes');
+}
+function renderDislikesList(){
+  const wrap=document.getElementById('dislikes-list'); wrap.innerHTML='';
+  DISLIKES.forEach(function(item){
+    const div=document.createElement('div');
+    div.className='chip'+(tempPrefs.dislikes.has(item.id)?' selected':'');
+    div.innerHTML='<span class="emoji">'+item.emoji+'</span><span>'+item.label+'</span>';
+    div.onclick=function(){
+      if(tempPrefs.dislikes.has(item.id)) tempPrefs.dislikes.delete(item.id); else tempPrefs.dislikes.add(item.id);
+      renderDislikesList();
+    };
+    wrap.appendChild(div);
+  });
+}
+function goFromDislikes(){
+  state.preferences.dislikes=Array.from(tempPrefs.dislikes);
+  saveState();
+  showScreen('screen-diag-intro');
+}
+
+/* ============================= DIAGNOSTIC ============================= */
+function startDiagnostic(){
+  diag={index:0, results:{}, questions: STRAND_ORDER.map(function(s){ return {strand:s, q:GEN[s][2]()}; })};
+  showScreen('screen-diag');
+  renderDiagQuestion();
+}
+function renderDiagDots(){
+  const wrap=document.getElementById('diag-dots'); wrap.innerHTML='';
+  for(let i=0;i<diag.questions.length;i++){
+    const d=document.createElement('div');
+    d.className='dot'+(i<diag.index?' filled':'')+(i===diag.index?' current':'');
+    wrap.appendChild(d);
+  }
+}
+function renderDiagQuestion(){
+  renderDiagDots();
+  document.getElementById('diag-counter').textContent=(diag.index+1)+' / '+diag.questions.length;
+  const current=diag.questions[diag.index];
+  document.getElementById('diag-visual').innerHTML=current.q.visual;
+  document.getElementById('diag-prompt').textContent=current.q.prompt;
+  const wrap=document.getElementById('diag-options'); wrap.innerHTML='';
+  current.q.options.forEach(function(opt,idx){
+    const btn=document.createElement('button');
+    btn.className='option-btn'; btn.innerHTML=opt;
+    btn.onclick=function(){ answerDiag(idx); };
+    wrap.appendChild(btn);
+  });
+}
+function answerDiag(idx){
+  const current=diag.questions[diag.index];
+  diag.results[current.strand] = (idx===current.q.correct);
+  diag.index++;
+  if(diag.index>=diag.questions.length){ computePlan(); }
+  else { renderDiagQuestion(); }
+}
+function computePlan(){
+  STRAND_ORDER.forEach(function(s){
+    state.strands[s].level = diag.results[s] ? 3 : 1;
+  });
+  state.diagnostic={done:true, date:todayStr()};
+  saveState();
+  renderPlan();
+  showScreen('screen-plan');
+}
+function renderPlan(){
+  const wrap=document.getElementById('plan-list'); wrap.innerHTML='';
+  STRAND_ORDER.forEach(function(s){
+    const lvl=state.strands[s].level;
+    const row=document.createElement('div');
+    row.style.cssText='display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee;';
+    row.innerHTML='<span>'+STRAND_META[s].icon+' '+STRAND_META[s].name+'</span><b style="color:var(--accent2);">'+LEVEL_LABELS[lvl]+'</b>';
+    wrap.appendChild(row);
+  });
+}
+function finishOnboarding(){ state.onboardingDone=true; saveState(); showScreen('screen-hub'); renderHub(); }
+
+/* ============================= HUB ============================= */
+function weightForStrand(s){
+  let w=1;
+  const likes=new Set(state.preferences.likes||[]);
+  const dislikes=new Set(state.preferences.dislikes||[]);
+  if(s==='numeros' && likes.has('contar')) w+=1;
+  if(s==='geometria' && likes.has('formas')) w+=1;
+  if(s==='logica' && (likes.has('acertijos')||likes.has('rompecabezas'))) w+=1.5;
+  if(s==='dinero' && likes.has('dinero')) w+=1;
+  if(s==='calculo' && dislikes.has('multiplicar')) w+=1.2;
+  if(s==='fracciones' && dislikes.has('fracciones')) w+=1.2;
+  const acc=strandAvgAccuracy(s);
+  if(acc!==null && acc<0.6) w+=1.5;
+  return w;
+}
+function pickWeightedStrand(){
+  const weights=STRAND_ORDER.map(weightForStrand);
+  const total=weights.reduce(function(a,b){ return a+b; },0);
+  let r=Math.random()*total;
+  for(let i=0;i<STRAND_ORDER.length;i++){ r-=weights[i]; if(r<=0) return STRAND_ORDER[i]; }
+  return STRAND_ORDER[STRAND_ORDER.length-1];
+}
+function strandAvgAccuracy(s){
+  const hist=state.strands[s].accuracyHistory;
+  if(!hist || hist.length===0) return null;
+  return hist.reduce(function(a,b){ return a+b; },0)/hist.length;
+}
+function renderHub(){
+  document.getElementById('hub-stars').textContent=state.totalStars;
+  document.getElementById('hub-streak').textContent=state.streak.count;
+  document.getElementById('hub-mascot').textContent=THEMES[state.theme].mascot;
+  const wrap=document.getElementById('strand-grid'); wrap.innerHTML='';
+  STRAND_ORDER.forEach(function(s){
+    const meta=STRAND_META[s]; const lvl=state.strands[s].level;
+    const card=document.createElement('div');
+    card.className='strand-card';
+    let dots=''; for(let i=1;i<=5;i++){ dots+='<div class="d'+(i<=lvl?' on':'')+'"></div>'; }
+    card.innerHTML='<div class="emoji">'+meta.icon+'</div><div>'+meta.name+'</div><div class="lvl-dots">'+dots+'</div>';
+    card.onclick=function(){ startSession(s); };
+    wrap.appendChild(card);
+  });
+}
+function playQuick(){ startSession(pickWeightedStrand()); }
+function goToParentGate(){
+  const a=randInt(2,9), b=randInt(2,9); const correct=a+b;
+  document.getElementById('pin-question').textContent='¿Cuánto es '+a+' + '+b+'?';
+  const cands=distinctNumbers(correct, [1,-1,2,-2], function(v){ return v>=0; }, 3);
+  const built=finalizeOptions(correct, cands, 4);
+  const wrap=document.getElementById('pin-options'); wrap.innerHTML='';
+  built.options.forEach(function(opt,idx){
+    const btn=document.createElement('button'); btn.className='option-btn'; btn.textContent=opt;
+    btn.onclick=function(){ if(idx===built.correct){ showScreen('screen-parent-dash'); renderParentDash(); } else { btn.classList.add('incorrect'); setTimeout(function(){ btn.classList.remove('incorrect'); },400); } };
+    wrap.appendChild(btn);
+  });
+  showScreen('screen-parent-pin');
+}
+
+/* ============================= GAMEPLAY ============================= */
+function startSession(strandId){
+  const level=state.strands[strandId].level;
+  const questions=[]; for(let i=0;i<5;i++) questions.push(GEN[strandId][level-1]());
+  session={strand:strandId, level:level, qIndex:0, total:5, correctCount:0, log:[]};
+  document.getElementById('game-strand-label').textContent=STRAND_META[strandId].icon+' '+STRAND_META[strandId].name;
+  document.getElementById('game-stars-live').textContent=state.totalStars;
+  session.questions=questions;
+  showScreen('screen-game');
+  renderGameQuestion();
+}
+function renderGameDots(){
+  const wrap=document.getElementById('game-dots'); wrap.innerHTML='';
+  for(let i=0;i<session.total;i++){
+    const d=document.createElement('div');
+    d.className='dot'+(i<session.qIndex?' filled':'')+(i===session.qIndex?' current':'');
+    wrap.appendChild(d);
+  }
+}
+function renderGameQuestion(){
+  renderGameDots();
+  document.getElementById('game-feedback').textContent='';
+  const hintText=document.getElementById('hint-text'); hintText.classList.remove('show'); hintText.textContent='';
+  const current=session.questions[session.qIndex];
+  document.getElementById('game-visual').innerHTML=current.visual;
+  document.getElementById('game-prompt').textContent=current.prompt;
+  document.getElementById('hint-text').textContent=current.hint;
+  const wrap=document.getElementById('game-options'); wrap.innerHTML='';
+  current.options.forEach(function(opt,idx){
+    const btn=document.createElement('button'); btn.className='option-btn'; btn.innerHTML=opt;
+    btn.onclick=function(){ checkAnswer(idx, btn); };
+    wrap.appendChild(btn);
+  });
+}
+function toggleHint(){ document.getElementById('hint-text').classList.toggle('show'); }
+function checkAnswer(idx, btnEl){
+  const current=session.questions[session.qIndex];
+  const isCorrect = idx===current.correct;
+  const allBtns=document.querySelectorAll('#game-options .option-btn');
+  allBtns.forEach(function(b){ b.classList.add('disabled'); });
+  if(isCorrect){
+    btnEl.classList.add('correct'); btnEl.classList.remove('disabled');
+    playCorrect();
+    document.getElementById('game-feedback').textContent=pick(CORRECT_PHRASES)+' ⭐';
+    session.correctCount++;
+  } else {
+    btnEl.classList.add('incorrect'); btnEl.classList.remove('disabled');
+    allBtns[current.correct].classList.add('correct');
+    playIncorrect();
+    document.getElementById('game-feedback').textContent=pick(INCORRECT_PHRASES);
+  }
+  session.log.push({prompt:current.prompt, correct:isCorrect});
+  setTimeout(function(){
+    session.qIndex++;
+    if(session.qIndex>=session.total) endSession(); else renderGameQuestion();
+  }, 1100);
+}
+function quitToHub(){ session=null; showScreen('screen-hub'); renderHub(); }
+
+function endSession(){
+  const s=session.strand;
+  const accuracy=session.correctCount/session.total;
+  let starsEarned=session.correctCount;
+  if(accuracy===1) starsEarned+=2;
+  state.strands[s].attempts+=session.total;
+  state.strands[s].correct+=session.correctCount;
+  state.strands[s].stars+=starsEarned;
+  const hist=state.strands[s].accuracyHistory; hist.push(accuracy); if(hist.length>10) hist.shift();
+  state.totalStars+=starsEarned;
+  state.sessionLog.push({date:todayStr(), strand:s, level:session.level, correct:session.correctCount, total:session.total, mood:null});
+  saveState();
+  lastSessionMeta={strand:s, accuracy:accuracy, starsEarned:starsEarned};
+  document.getElementById('results-mascot').textContent=THEMES[state.theme].mascot;
+  document.getElementById('results-title').textContent = accuracy>=0.8 ? 'Amazing round!' : (accuracy>=0.5 ? 'Great round!' : 'Round complete!');
+  document.getElementById('results-detail').textContent='You got '+session.correctCount+' out of '+session.total+' in '+STRAND_META[s].name+'.';
+  document.getElementById('results-stars').textContent=starsEarned;
+  const newBadges=checkBadges();
+  const badgeWrap=document.getElementById('results-badges'); badgeWrap.innerHTML='';
+  newBadges.forEach(function(b){ const el=document.createElement('div'); el.className='badge'; el.textContent=b.emoji+' '+b.label; badgeWrap.appendChild(el); });
+  spawnConfetti(accuracy>=0.8 ? 26 : 10);
+  showScreen('screen-results');
+}
+function spawnConfetti(n){
+  const colors=['#F2C94C','#EB5757','#6FCF97','#56CCF2','#9B51E0'];
+  for(let i=0;i<n;i++){
+    const el=document.createElement('div'); el.className='confetti';
+    el.style.left=Math.random()*100+'vw';
+    el.style.background=colors[randInt(0,colors.length-1)];
+    el.style.animationDelay=(Math.random()*0.3)+'s';
+    document.body.appendChild(el);
+    setTimeout(function(){ el.remove(); }, 2200);
+  }
+}
+function goToMood(){ showScreen('screen-mood'); }
+function chooseMood(mood){
+  const lastLog=state.sessionLog[state.sessionLog.length-1];
+  if(lastLog) lastLog.mood=mood;
+  const s=session ? session.strand : lastSessionMeta.strand;
+  const accuracy=lastSessionMeta.accuracy;
+  let lvl=state.strands[s].level;
+  if(accuracy>=0.8 && mood!=='😖') lvl=Math.min(5, lvl+1);
+  else if(accuracy<=0.4 || mood==='😖') lvl=Math.max(1, lvl-1);
+  state.strands[s].level=lvl;
+  updateStreakOnPlay();
+  saveState();
+  document.getElementById('continue-mascot').textContent=THEMES[state.theme].mascot;
+  document.getElementById('continue-msg').textContent = mood==='😖'
+    ? 'Want to try something a bit easier, or take a break?'
+    : 'Want to play another round or take a break?';
+  showScreen('screen-continue');
+}
+function continueRound(){ const s=session?session.strand:lastSessionMeta.strand; startSession(s); }
+function takeBreak(){ session=null; showScreen('screen-hub'); renderHub(); }
+
+/* ============================= STREAK & BADGES ============================= */
+function updateStreakOnPlay(){
+  const today=todayStr();
+  if(state.streak.lastPlayDate===today) return;
+  if(state.streak.lastPlayDate){
+    const prev=new Date(state.streak.lastPlayDate);
+    const now=new Date(today);
+    const diffDays=Math.round((now-prev)/86400000);
+    state.streak.count = diffDays===1 ? state.streak.count+1 : 1;
+  } else {
+    state.streak.count=1;
+  }
+  state.streak.lastPlayDate=today;
+}
+const BADGE_DEFS=[
+  {id:'primer_dia', label:'First day', emoji:'🌟', test:function(s){ return s.sessionLog.length>=1; }},
+  {id:'racha3', label:'3-day streak', emoji:'🔥', test:function(s){ return s.streak.count>=3; }},
+  {id:'racha7', label:'7-day streak', emoji:'🔥', test:function(s){ return s.streak.count>=7; }},
+  {id:'estrellas50', label:'50 stars', emoji:'⭐', test:function(s){ return s.totalStars>=50; }},
+  {id:'estrellas150', label:'150 stars', emoji:'🌠', test:function(s){ return s.totalStars>=150; }},
+  {id:'diagnostico', label:'Challenge complete', emoji:'🧠', test:function(s){ return s.diagnostic.done; }}
+];
+STRAND_ORDER.forEach(function(s){
+  BADGE_DEFS.push({id:'maestro_'+s, label:STRAND_META[s].name+' Master', emoji:'🏆', test:function(st){ return st.strands[s].level>=5; }});
+});
+function checkBadges(){
+  const newly=[];
+  BADGE_DEFS.forEach(function(b){
+    if(state.badges.indexOf(b.id)===-1 && b.test(state)){ state.badges.push(b.id); newly.push(b); }
+  });
+  if(newly.length) saveState();
+  return newly;
+}
+
+/* ============================= PARENT DASHBOARD (Spanish, adults only) ============================= */
+function renderParentDash(){
+  const totalSessions=state.sessionLog.length;
+  const daysActive=new Set(state.sessionLog.map(function(l){ return l.date; })).size;
+  const overview=document.getElementById('parent-overview');
+  overview.innerHTML=
+    '<div class="pill">🗓️ '+daysActive+' días</div>'+
+    '<div class="pill">🎮 '+totalSessions+' rondas</div>'+
+    '<div class="pill">⭐ '+state.totalStars+'</div>'+
+    '<div class="pill">🔥 '+state.streak.count+'</div>';
+
+  const strandsWrap=document.getElementById('parent-strands'); strandsWrap.innerHTML='';
+  let weakest=null, weakestAcc=2;
+  STRAND_ORDER.forEach(function(s){
+    const acc=strandAvgAccuracy(s);
+    const pct = acc===null ? 0 : Math.round(acc*100);
+    if(acc!==null && acc<weakestAcc){ weakestAcc=acc; weakest=s; }
+    const row=document.createElement('div'); row.className='parent-row';
+    row.innerHTML='<span>'+STRAND_META[s].icon+' '+STRAND_META[s].name+' · <b>'+LEVEL_LABELS[state.strands[s].level]+'</b></span>'+
+      '<span class="parent-bar-bg"><span class="parent-bar-fill" style="width:'+pct+'%;"></span></span>'+
+      '<span>'+(acc===null?'—':pct+'%')+'</span>';
+    strandsWrap.appendChild(row);
+  });
+  const weakTitle=document.getElementById('parent-weak-title');
+  const weakText=document.getElementById('parent-weak-text');
+  if(weakest){
+    weakTitle.textContent='Área para reforzar: '+STRAND_META[weakest].name;
+    weakText.textContent='Su precisión reciente ahí es '+Math.round(weakestAcc*100)+'%. "Quick Play" ya le da más prioridad a esta franja automáticamente.';
+  } else {
+    weakTitle.textContent='Área para reforzar';
+    weakText.textContent='Todavía no hay suficientes rondas jugadas para detectar un área débil.';
+  }
+
+  const logWrap=document.getElementById('parent-log'); logWrap.innerHTML='';
+  const recent=state.sessionLog.slice(-15).reverse();
+  recent.forEach(function(l){
+    const row=document.createElement('div'); row.className='logrow';
+    row.innerHTML='<span>'+fmtDateEs(l.date)+' · '+STRAND_META[l.strand].icon+'</span><span>'+l.correct+'/'+l.total+'</span><span>'+(l.mood||'')+'</span>';
+    logWrap.appendChild(row);
+  });
+}
+function exportProgress(){
+  try{
+    const blob=new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='melissa_progreso_'+todayStr()+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }catch(e){ alert('No se pudo exportar el archivo.'); }
+}
+function importProgress(evt){
+  const file=evt.target.files && evt.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(){
+    try{
+      const parsed=JSON.parse(reader.result);
+      if(!parsed || typeof parsed!=='object' || !parsed.strands){ alert('Este archivo no parece un progreso válido.'); return; }
+      if(confirm('¿Reemplazar el progreso actual con este archivo?')){
+        state=mergeDefaults(parsed);
+        saveState();
+        applyTheme(state.theme);
+        renderParentDash();
+        alert('¡Progreso importado!');
+      }
+    }catch(e){ alert('No se pudo leer el archivo. Asegúrate de elegir un .json exportado desde esta misma app.'); }
+    evt.target.value='';
+  };
+  reader.readAsText(file);
+}
+function resetProgress(){
+  if(confirm('Esto borrará TODO el progreso de Melissa. ¿Seguro?')){
+    if(confirm('Última confirmación: ¿reiniciar todo desde cero?')){
+      state=defaultState();
+      tempPrefs={likes:new Set(), dislikes:new Set()};
+      saveState();
+      showScreen('screen-welcome');
+    }
+  }
+}
+
+/* ============================= HOME SCREEN ICON ============================= */
+function roundRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function setAppleTouchIcon(){
+  try{
+    const c=document.createElement('canvas'); c.width=180; c.height=180;
+    const ctx=c.getContext('2d');
+    const grad=ctx.createLinearGradient(0,0,180,180);
+    grad.addColorStop(0,'#4F8FE8'); grad.addColorStop(1,'#9B51E0');
+    ctx.fillStyle=grad; roundRectPath(ctx,0,0,180,180,36); ctx.fill();
+    ctx.font='108px system-ui, -apple-system, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🦄',90,98);
+    let link=document.querySelector('link[rel="apple-touch-icon"]');
+    if(!link){ link=document.createElement('link'); link.rel='apple-touch-icon'; document.head.appendChild(link); }
+    link.href=c.toDataURL('image/png');
+  }catch(e){}
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  setAppleTouchIcon();
+  initApp();
+});
+</script>
+</body>
+</html>
