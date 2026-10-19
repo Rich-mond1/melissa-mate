@@ -33,7 +33,8 @@ function confetti(n){
     document.body.appendChild(c); setTimeout(function(){ c.remove(); }, 3200);
   }
 }
-function go(name, p){ if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
+let LAST_GO = 0;
+function go(name, p){ LAST_GO = Date.now(); if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
 function R(html){ const a = $app(); a.innerHTML = '<div class="wrap">' + html + '</div>'; a.scrollTop = 0; }
 function topbar(title, back){
   return '<div class="topbar"><button class="icon-btn" data-act="go" data-to="' + (back || 'hub') + '" aria-label="Back">←</button><h2 class="white grow center">' + title + '</h2><span class="pill">⭐ ' + S.starBalance + '</span></div>';
@@ -45,7 +46,7 @@ const KIND_ES = { guided: 'Guiada', practice: 'Práctica', challenge: 'Reto', re
 /* ---------------- sticker drawing ---------------- */
 function stickerHTML(s, big){
   const bg = STICKER_BGS[s.bg % STICKER_BGS.length] || STICKER_BGS[0];
-  return '<div class="sticker ' + s.rarity + (big ? ' big' : '') + '" style="background:linear-gradient(145deg,' + bg[0] + ',' + bg[1] + ')">' + esc(s.base) + (s.acc ? '<span class="acc">' + esc(s.acc) + '</span>' : '') + (s.n > 1 ? '<span class="cnt">×' + s.n + '</span>' : '') + '</div>';
+  return '<div class="sticker ' + s.rarity + (big ? ' big' : '') + '" style="background:linear-gradient(145deg,' + bg[0] + ',' + bg[1] + ')">' + esc(s.base) + (s.acc ? '<span class="acc">' + esc(s.acc) + '</span>' : '') + (s.n > 1 ? '<span class="cnt">×' + (Number(s.n) | 0) + '</span>' : '') + '</div>';
 }
 
 /* ---------------- render dispatcher ---------------- */
@@ -81,6 +82,7 @@ SCREENS.placementIntro = function(){
 };
 
 /* ---------------- hub ---------------- */
+function liveStreak(){ return (S.streak.lastPlayDate && daysBetween(S.streak.lastPlayDate, todayStr()) <= 1) ? S.streak.count : 0; }
 function dailyDone(){ const d = S.daily; return (d.warmup ? 1 : 0) + (d.learn ? 1 : 0) + (d.boss ? 1 : 0); }
 SCREENS.hub = function(){
   if(!S.placement.done && !placementDone(S)){ /* quest unfinished */ }
@@ -90,7 +92,7 @@ SCREENS.hub = function(){
   const goal = S.goalReward ? S.rewards.filter(function(r){ return r.id === S.goalReward; })[0] : null;
   const d = S.daily;
   let h = '<div class="hero"><div class="mascot">' + mascot() + '</div><div class="grow"><b style="font-size:20px">' + esc(S.name) + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
-    '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + S.streak.count + '</div></div>';
+    '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + liveStreak() + '</div></div>';
   if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
   else {
     h += '<div class="gap"></div>';
@@ -122,6 +124,7 @@ function openSkillStep(sk, step){
   startSession(step, sk.id);
 }
 ACT.claimDaily = function(){
+  ensureDaily(S);
   if(S.daily.claimed || dailyDone() < 3) return;
   S.daily.claimed = true; S.starBalance += 10; S.totalStars += 10; S.packs += 1; save(); confetti(); toast('+10 ⭐ and a sticker pack!'); render();
 };
@@ -155,7 +158,7 @@ SCREENS.skill = function(p){
   h += ['guided', 'practice', 'challenge'].map(function(k){ return '<button class="btn block' + (nxt === k ? '' : ' small') + '" style="margin-bottom:8px' + (nxt === k ? '' : ';background:#ffffffcc;color:var(--ink)') + '" data-act="startSess" data-k="' + k + '" data-id="' + sk.id + '">' + { guided: '🌱 Guided (easy start)', practice: '🏃 Practice', challenge: '⚡ Challenge' }[k] + '</button>'; }).join('');
   R(h);
 };
-ACT.lesson = function(d){ go('lesson', { id: d.id, i: 0 }); };
+ACT.lesson = function(d){ if(timeIsUp()) return go('timeup'); go('lesson', { id: d.id, i: 0 }); };
 ACT.startSess = function(d){ startSession(d.k, d.id); };
 ACT.testout = function(d){ startSession('testout', d.id); };
 ACT.trick = function(d){ go('trick', { id: d.id }); };
@@ -187,6 +190,7 @@ ACT.lquiz = function(d, el){
   }
 };
 ACT.lnext = function(){
+  ensureDaily(S);
   const sk = skillById(scr.p.id); const i = scr.p.i;
   if(i < sk.lesson.steps.length - 1) return go('lesson', { id: sk.id, i: i + 1 });
   const st = skillState(S, sk.id); const first = !st.lessonDone; st.lessonDone = true;

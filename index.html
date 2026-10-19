@@ -9,6 +9,7 @@
   --vis-ink:#1B1B2F; --vis-a:#4F8FE8; --vis-b:#9B51E0; --vis-warm:#F2C94C; --vis-soft:#EEF1FB; --vis-good:#27AE60; --vis-bad:#EB5757;
   --radius:22px; --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
 }
+[data-act]{cursor:pointer;}
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{height:100%; margin:0; overscroll-behavior:none;}
 body{
@@ -16368,7 +16369,7 @@ function defaultState(){
     claims: [], rewards: DEFAULT_REWARDS.map(function(r){ return Object.assign({}, r); }), goalReward: null,
     timer: { mode: 'free', minutes: 20, debtSeconds: 0 },
     streak: { count: 0, lastPlayDate: null },
-    sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false },
+    sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 },
     focus: null, legacy: null
   };
 }
@@ -16385,9 +16386,15 @@ function mergeState(loaded){
   m.streak = Object.assign({}, d.streak, L.streak || {});
   m.daily = Object.assign({}, d.daily, L.daily || {});
   m.skills = L.skills || {}; m.errors = L.errors || {};
-  m.stickers = Array.isArray(L.stickers) ? L.stickers : []; m.tricks = L.tricks || []; m.badges = L.badges || []; m.claims = L.claims || [];
-  m.sessionLog = L.sessionLog || [];
-  m.rewards = (Array.isArray(L.rewards) && L.rewards.length) ? L.rewards.map(function(r){ return { id: String(r.id), emoji: String(r.emoji || '🎁'), title: String(r.title || 'Prize'), cost: Math.max(1, parseInt(r.cost, 10) || 10) }; }) : d.rewards;
+  const num = function(x, dflt){ x = Number(x); return isFinite(x) ? x : (dflt || 0); };
+  const objs = function(a){ return Array.isArray(a) ? a.filter(function(x){ return x && typeof x === 'object'; }) : []; };
+  m.stickers = objs(L.stickers).filter(function(s){ return typeof s.base === 'string'; }).map(function(s){ return { id: String(s.id), base: String(s.base), acc: String(s.acc || ''), bg: num(s.bg) | 0, rarity: RARITIES.indexOf(s.rarity) > -1 ? s.rarity : 'common', n: Math.max(1, num(s.n, 1) | 0), date: s.date ? String(s.date) : null, legacy: !!s.legacy }; });
+  m.tricks = Array.isArray(L.tricks) ? L.tricks.map(String) : []; m.badges = Array.isArray(L.badges) ? L.badges.map(String) : [];
+  m.claims = objs(L.claims).map(function(c){ return { id: String(c.id || ''), title: String(c.title || ''), emoji: String(c.emoji || ''), cost: num(c.cost), date: c.date ? String(c.date) : '' }; });
+  m.sessionLog = objs(L.sessionLog).filter(function(l){ return typeof l.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(l.date); }).map(function(l){ return { date: l.date, kind: String(l.kind || 'practice'), strand: String(l.strand || ''), skill: l.skill ? String(l.skill) : null, correct: num(l.correct), total: num(l.total), credit: num(l.credit), mood: l.mood ? String(l.mood) : null }; });
+  ['totalStars', 'starBalance', 'xp', 'packs'].forEach(function(k){ m[k] = Math.max(0, num(L[k])); });
+  m.level = Math.max(1, num(L.level, 1) | 0); m.streak.count = Math.max(0, num(m.streak.count) | 0);
+  m.rewards = (Array.isArray(L.rewards) && L.rewards.filter(Boolean).length) ? L.rewards.filter(Boolean).map(function(r){ return { id: String(r.id), emoji: String(r.emoji || '🎁'), title: String(r.title || 'Prize'), cost: Math.max(1, parseInt(r.cost, 10) || 10) }; }) : d.rewards;
   m.v = 4;
   return m;
 }
@@ -16398,7 +16405,8 @@ function migrateV3(old){
   m.prefs = Object.assign(m.prefs, { likes: (old.preferences && old.preferences.likes) || [], dislikes: (old.preferences && old.preferences.dislikes) || [] });
   m.totalStars = old.totalStars || 0; m.starBalance = typeof old.starBalance === 'number' ? old.starBalance : m.totalStars;
   m.stickers = (old.stickers || []).map(function(e){ return { id: 'L:' + e, base: e, acc: '', bg: 0, rarity: 'common', n: 1, date: null, legacy: true }; });
-  m.claims = old.claims || []; if(Array.isArray(old.rewards) && old.rewards.length) m.rewards = old.rewards;
+  m.claims = Array.isArray(old.claims) ? old.claims : []; if(Array.isArray(old.rewards) && old.rewards.length) m.rewards = old.rewards;
+  const clean = mergeState({ rewards: m.rewards, claims: m.claims }); m.rewards = clean.rewards; m.claims = clean.claims;
   m.timer = Object.assign(m.timer, old.timer || {}); m.streak = Object.assign(m.streak, old.streak || {});
   m.badges = (old.badges || []).filter(function(b){ return ['racha3', 'racha7', 'estrellas50', 'estrellas150', 'stickers10', 'primer_dia'].indexOf(b) !== -1; });
   m.sessionLog = (old.sessionLog || []).map(function(l){ return { date: l.date, kind: 'legacy', strand: l.strand, skill: null, correct: l.correct, total: l.total, credit: l.total ? l.correct / l.total : 0, mood: l.mood || null }; });
@@ -16412,14 +16420,14 @@ function loadState(storage){
     if(raw) return mergeState(JSON.parse(raw));
     const v3 = storage.getItem(V3_KEY) || storage.getItem(V2_KEY);
     if(v3){ const parsed = JSON.parse(v3); if(parsed && parsed.strands) return migrateV3(parsed); }
-  } catch(e){}
+  } catch(e){ try { const raw = storage.getItem(STATE_KEY); if(raw) storage.setItem(STATE_KEY + '_backup', raw); } catch(e2){} }
   return defaultState();
 }
 
 /* ---------- catalogue helpers (SKILLS comes from core.js) ---------- */
 function skillsOfStrand(id){ return SKILLS.filter(function(s){ return s.strand === id; }).sort(function(a, b){ return a.order - b.order; }); }
 function strandsWithSkills(){ return STRANDS.filter(function(s){ return skillsOfStrand(s.id).length > 0; }); }
-function isUnlocked(state, sk){ return sk.prereq.every(function(p){ const ps = state.skills[p]; return ps && ps.medal >= 1; }); }
+function isUnlocked(state, sk){ if(state.skills[sk.id] && state.skills[sk.id].medal >= 1) return true; return sk.prereq.every(function(p){ const ps = state.skills[p]; return ps && ps.medal >= 1; }); }
 function medalOf(state, id){ return state.skills[id] ? state.skills[id].medal : 0; }
 function strandProgress(state, strandId){
   const list = skillsOfStrand(strandId); if(!list.length) return 0;
@@ -16497,7 +16505,7 @@ function sessionStars(credits){
 function applySkillResult(state, skillId, kind, credits, today){
   today = today || todayStr();
   const st = skillState(state, skillId);
-  const n = credits.length; const sum = credits.reduce(function(a, b){ return a + b; }, 0); const acc = n ? sum / n : 0;
+  const n = credits.length; const sum = credits.reduce(function(a, b){ return a + b; }, 0); const acc = n ? Math.round(sum / n * 1e6) / 1e6 : 0;
   const before = { medal: st.medal, box: st.box, wobbly: st.wobbly };
   st.seen += n; st.correct += credits.filter(function(c){ return c > 0; }).length; st.credit += sum; st.last = today;
   const bump = function(){ st.box = Math.min(6, st.box + 1); };
@@ -16536,7 +16544,7 @@ function addXp(state, amount){
 }
 function ensureDaily(state, today){
   today = today || todayStr();
-  if(state.daily.date !== today) state.daily = { date: today, warmup: false, learn: false, boss: false, claimed: false };
+  if(state.daily.date !== today) state.daily = { date: today, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 };
   return state.daily;
 }
 
@@ -16665,7 +16673,8 @@ function confetti(n){
     document.body.appendChild(c); setTimeout(function(){ c.remove(); }, 3200);
   }
 }
-function go(name, p){ if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
+let LAST_GO = 0;
+function go(name, p){ LAST_GO = Date.now(); if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
 function R(html){ const a = $app(); a.innerHTML = '<div class="wrap">' + html + '</div>'; a.scrollTop = 0; }
 function topbar(title, back){
   return '<div class="topbar"><button class="icon-btn" data-act="go" data-to="' + (back || 'hub') + '" aria-label="Back">←</button><h2 class="white grow center">' + title + '</h2><span class="pill">⭐ ' + S.starBalance + '</span></div>';
@@ -16677,7 +16686,7 @@ const KIND_ES = { guided: 'Guiada', practice: 'Práctica', challenge: 'Reto', re
 /* ---------------- sticker drawing ---------------- */
 function stickerHTML(s, big){
   const bg = STICKER_BGS[s.bg % STICKER_BGS.length] || STICKER_BGS[0];
-  return '<div class="sticker ' + s.rarity + (big ? ' big' : '') + '" style="background:linear-gradient(145deg,' + bg[0] + ',' + bg[1] + ')">' + esc(s.base) + (s.acc ? '<span class="acc">' + esc(s.acc) + '</span>' : '') + (s.n > 1 ? '<span class="cnt">×' + s.n + '</span>' : '') + '</div>';
+  return '<div class="sticker ' + s.rarity + (big ? ' big' : '') + '" style="background:linear-gradient(145deg,' + bg[0] + ',' + bg[1] + ')">' + esc(s.base) + (s.acc ? '<span class="acc">' + esc(s.acc) + '</span>' : '') + (s.n > 1 ? '<span class="cnt">×' + (Number(s.n) | 0) + '</span>' : '') + '</div>';
 }
 
 /* ---------------- render dispatcher ---------------- */
@@ -16713,6 +16722,7 @@ SCREENS.placementIntro = function(){
 };
 
 /* ---------------- hub ---------------- */
+function liveStreak(){ return (S.streak.lastPlayDate && daysBetween(S.streak.lastPlayDate, todayStr()) <= 1) ? S.streak.count : 0; }
 function dailyDone(){ const d = S.daily; return (d.warmup ? 1 : 0) + (d.learn ? 1 : 0) + (d.boss ? 1 : 0); }
 SCREENS.hub = function(){
   if(!S.placement.done && !placementDone(S)){ /* quest unfinished */ }
@@ -16722,7 +16732,7 @@ SCREENS.hub = function(){
   const goal = S.goalReward ? S.rewards.filter(function(r){ return r.id === S.goalReward; })[0] : null;
   const d = S.daily;
   let h = '<div class="hero"><div class="mascot">' + mascot() + '</div><div class="grow"><b style="font-size:20px">' + esc(S.name) + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
-    '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + S.streak.count + '</div></div>';
+    '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + liveStreak() + '</div></div>';
   if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
   else {
     h += '<div class="gap"></div>';
@@ -16754,6 +16764,7 @@ function openSkillStep(sk, step){
   startSession(step, sk.id);
 }
 ACT.claimDaily = function(){
+  ensureDaily(S);
   if(S.daily.claimed || dailyDone() < 3) return;
   S.daily.claimed = true; S.starBalance += 10; S.totalStars += 10; S.packs += 1; save(); confetti(); toast('+10 ⭐ and a sticker pack!'); render();
 };
@@ -16787,7 +16798,7 @@ SCREENS.skill = function(p){
   h += ['guided', 'practice', 'challenge'].map(function(k){ return '<button class="btn block' + (nxt === k ? '' : ' small') + '" style="margin-bottom:8px' + (nxt === k ? '' : ';background:#ffffffcc;color:var(--ink)') + '" data-act="startSess" data-k="' + k + '" data-id="' + sk.id + '">' + { guided: '🌱 Guided (easy start)', practice: '🏃 Practice', challenge: '⚡ Challenge' }[k] + '</button>'; }).join('');
   R(h);
 };
-ACT.lesson = function(d){ go('lesson', { id: d.id, i: 0 }); };
+ACT.lesson = function(d){ if(timeIsUp()) return go('timeup'); go('lesson', { id: d.id, i: 0 }); };
 ACT.startSess = function(d){ startSession(d.k, d.id); };
 ACT.testout = function(d){ startSession('testout', d.id); };
 ACT.trick = function(d){ go('trick', { id: d.id }); };
@@ -16819,6 +16830,7 @@ ACT.lquiz = function(d, el){
   }
 };
 ACT.lnext = function(){
+  ensureDaily(S);
   const sk = skillById(scr.p.id); const i = scr.p.i;
   if(i < sk.lesson.steps.length - 1) return go('lesson', { id: sk.id, i: i + 1 });
   const st = skillState(S, sk.id); const first = !st.lessonDone; st.lessonDone = true;
@@ -16947,8 +16959,8 @@ SCREENS.question = function(){
 ACT.sayq = function(){ speak(SESS.q.prompt); };
 ACT.quit = function(){
   if(SESS.kind === 'placement'){ save(); return go('hub'); }
-  if(SESS.credits.length >= 2) return finishSession(true);
-  go('hub');
+  if(SESS.credits.length >= 1){ const st = sessionStars(SESS.credits); S.starBalance += st; S.totalStars += st; toast('Saved ' + st + ' ⭐ — finish the whole round to win medals!'); }
+  save(); SESS = null; go('hub');
 };
 ACT.hint = function(){ SESS.hint = true; render(); };
 ACT.pick = function(d){ const o = SESS.q.options[+d.k]; submit(o.key); };
@@ -16974,7 +16986,7 @@ ACT.check = function(){
   else if(q.type === 'setclock') submit(K.time(SESS.clk.h, SESS.clk.m));
   else if(q.type === 'order') submit('o:' + SESS.picked.map(function(i){ return i.key; }).join('|'));
 };
-ACT.idk = function(){ SESS.tries = 9; SESS.fbSkip = true; endQuestion(0, false, true); };
+ACT.idk = function(){ if(!SESS || SESS.phase !== 'ask') return; SESS.tries = 9; SESS.fbSkip = true; endQuestion(0, false, true); };
 
 function submit(resp){
   if(SESS.phase !== 'ask') return;
@@ -17036,11 +17048,11 @@ SCREENS.placementDone = function(p){
 
 /* ---------------- finish a session ---------------- */
 function finishSession(early){
-  if(!SESS.credits.length) return go('hub');
+  if(!SESS.credits.length){ SESS = null; toast('No questions this time — try again!'); return go('hub'); }
   const today = todayStr(); const kind = SESS.kind;
   if(S.streak.lastPlayDate && daysBetween(S.streak.lastPlayDate, today) >= 3) S.comeback = true;
   updateStreak(S, today);
-  const credits = SESS.credits; const acc = credits.reduce(function(a, b){ return a + b; }, 0) / credits.length;
+  const credits = SESS.credits; const acc = Math.round(credits.reduce(function(a, b){ return a + b; }, 0) / credits.length * 1e6) / 1e6;
   const info = { kind: kind, stars: 0, medals: [], wobblyCleared: 0, packs: 0, newBadges: [], levelUp: 0, acc: acc, n: credits.length, perfect: false, next: null };
   Object.keys(SESS.by).forEach(function(id){
     const sk = skillById(id); const cr = SESS.by[id];
@@ -17059,7 +17071,7 @@ function finishSession(early){
   if(info.medals.length){ S.packs++; info.packs++; }
   ensureDaily(S, today);
   S.daily.warmup = true;
-  if(S.sessionLog.filter(function(l){ return l.date === today && l.kind !== 'legacy'; }).length >= 3) S.daily.boss = true;
+  S.daily.rounds = (S.daily.rounds || 0) + 1; if(S.daily.rounds >= 3) S.daily.boss = true;
   info.newBadges = checkBadges(S);
   info.next = recommend(S);
   info.logIdx = S.sessionLog.length - Object.keys(SESS.by).length;
@@ -17179,7 +17191,7 @@ SCREENS.parent = function(){
   const errs = topErrors(S, 8);
   h += '<div class="card"><h3>Dónde se atasca</h3>' + (errs.length ? errs.map(function(e){ const sk = skillById(e.skill); return '<div class="prow" style="background:#FFF4E5;color:var(--ink);align-items:flex-start"><span><b>' + esc(sk ? sk.name : e.skill) + '</b><br><small>' + esc(stripTags(e.why)) + '</small></span><b>×' + e.n + '</b></div>'; }).join('') : '<p class="muted">Aún sin errores registrados.</p>') + '<p class="muted" style="margin-top:6px">Son los errores típicos que más repite, con la explicación que ella ve.</p></div><div class="gap"></div>';
   const recent = S.sessionLog.filter(function(l){ return l.kind !== 'legacy'; }).slice(-10).reverse();
-  h += '<div class="card"><h3>Últimas sesiones</h3>' + (recent.length ? recent.map(function(l){ const sk = skillById(l.skill); return '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>' + l.date.slice(5) + ' · ' + (KIND_ES[l.kind] || l.kind) + ' · ' + esc(sk ? sk.name : '') + '</span><b>' + l.correct + '/' + l.total + ' ' + ({ happy: '😀', ok: '😐', hard: '😟' }[l.mood] || '') + '</b></div>'; }).join('') : '<p class="muted">Todavía nada.</p>') + '</div><div class="gap"></div>';
+  h += '<div class="card"><h3>Últimas sesiones</h3>' + (recent.length ? recent.map(function(l){ const sk = skillById(l.skill); return '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>' + esc(l.date.slice(5)) + ' · ' + esc(KIND_ES[l.kind] || l.kind) + ' · ' + esc(sk ? sk.name : '') + '</span><b>' + l.correct + '/' + l.total + ' ' + ({ happy: '😀', ok: '😐', hard: '😟' }[l.mood] || '') + '</b></div>'; }).join('') : '<p class="muted">Todavía nada.</p>') + '</div><div class="gap"></div>';
   h += '<div class="card"><h3>Premios canjeados</h3>' + (S.claims.length ? S.claims.slice(-8).reverse().map(function(c){ return '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>' + (c.date || '') + ' · ' + esc(c.emoji || '') + ' ' + esc(c.title) + '</span><b>' + c.cost + '⭐</b></div>'; }).join('') : '<p class="muted">Ninguno aún.</p>') + '</div><div class="gap"></div>';
   h += '<div class="card"><h3>Ajustes</h3>' +
     '<p class="muted">Tiempo diario</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn' + (S.timer.mode === 'free' ? ' on' : '') + '" data-act="tmode" data-v="free" style="background:#e9ebf7;color:var(--ink)">Libre</button><button class="seg-btn' + (S.timer.mode === 'limit' ? ' on' : '') + '" data-act="tmode" data-v="limit" style="background:#e9ebf7;color:var(--ink)">Límite</button>' +
@@ -17222,6 +17234,7 @@ function boot(){
   load(); applyTheme();
   document.addEventListener('click', function(e){
     const el = e.target.closest('[data-act]'); if(!el || el.disabled) return;
+    if(!window.__noGuard && Date.now() - LAST_GO < 350 && el.dataset.act !== 'say') return;   // ignore double-taps that land on the next screen
     const f = ACT[el.dataset.act]; if(f) f(el.dataset, el);
   });
   document.addEventListener('change', function(e){

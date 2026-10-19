@@ -65,7 +65,7 @@ function defaultState(){
     claims: [], rewards: DEFAULT_REWARDS.map(function(r){ return Object.assign({}, r); }), goalReward: null,
     timer: { mode: 'free', minutes: 20, debtSeconds: 0 },
     streak: { count: 0, lastPlayDate: null },
-    sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false },
+    sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 },
     focus: null, legacy: null
   };
 }
@@ -82,9 +82,15 @@ function mergeState(loaded){
   m.streak = Object.assign({}, d.streak, L.streak || {});
   m.daily = Object.assign({}, d.daily, L.daily || {});
   m.skills = L.skills || {}; m.errors = L.errors || {};
-  m.stickers = Array.isArray(L.stickers) ? L.stickers : []; m.tricks = L.tricks || []; m.badges = L.badges || []; m.claims = L.claims || [];
-  m.sessionLog = L.sessionLog || [];
-  m.rewards = (Array.isArray(L.rewards) && L.rewards.length) ? L.rewards.map(function(r){ return { id: String(r.id), emoji: String(r.emoji || '🎁'), title: String(r.title || 'Prize'), cost: Math.max(1, parseInt(r.cost, 10) || 10) }; }) : d.rewards;
+  const num = function(x, dflt){ x = Number(x); return isFinite(x) ? x : (dflt || 0); };
+  const objs = function(a){ return Array.isArray(a) ? a.filter(function(x){ return x && typeof x === 'object'; }) : []; };
+  m.stickers = objs(L.stickers).filter(function(s){ return typeof s.base === 'string'; }).map(function(s){ return { id: String(s.id), base: String(s.base), acc: String(s.acc || ''), bg: num(s.bg) | 0, rarity: RARITIES.indexOf(s.rarity) > -1 ? s.rarity : 'common', n: Math.max(1, num(s.n, 1) | 0), date: s.date ? String(s.date) : null, legacy: !!s.legacy }; });
+  m.tricks = Array.isArray(L.tricks) ? L.tricks.map(String) : []; m.badges = Array.isArray(L.badges) ? L.badges.map(String) : [];
+  m.claims = objs(L.claims).map(function(c){ return { id: String(c.id || ''), title: String(c.title || ''), emoji: String(c.emoji || ''), cost: num(c.cost), date: c.date ? String(c.date) : '' }; });
+  m.sessionLog = objs(L.sessionLog).filter(function(l){ return typeof l.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(l.date); }).map(function(l){ return { date: l.date, kind: String(l.kind || 'practice'), strand: String(l.strand || ''), skill: l.skill ? String(l.skill) : null, correct: num(l.correct), total: num(l.total), credit: num(l.credit), mood: l.mood ? String(l.mood) : null }; });
+  ['totalStars', 'starBalance', 'xp', 'packs'].forEach(function(k){ m[k] = Math.max(0, num(L[k])); });
+  m.level = Math.max(1, num(L.level, 1) | 0); m.streak.count = Math.max(0, num(m.streak.count) | 0);
+  m.rewards = (Array.isArray(L.rewards) && L.rewards.filter(Boolean).length) ? L.rewards.filter(Boolean).map(function(r){ return { id: String(r.id), emoji: String(r.emoji || '🎁'), title: String(r.title || 'Prize'), cost: Math.max(1, parseInt(r.cost, 10) || 10) }; }) : d.rewards;
   m.v = 4;
   return m;
 }
@@ -95,7 +101,8 @@ function migrateV3(old){
   m.prefs = Object.assign(m.prefs, { likes: (old.preferences && old.preferences.likes) || [], dislikes: (old.preferences && old.preferences.dislikes) || [] });
   m.totalStars = old.totalStars || 0; m.starBalance = typeof old.starBalance === 'number' ? old.starBalance : m.totalStars;
   m.stickers = (old.stickers || []).map(function(e){ return { id: 'L:' + e, base: e, acc: '', bg: 0, rarity: 'common', n: 1, date: null, legacy: true }; });
-  m.claims = old.claims || []; if(Array.isArray(old.rewards) && old.rewards.length) m.rewards = old.rewards;
+  m.claims = Array.isArray(old.claims) ? old.claims : []; if(Array.isArray(old.rewards) && old.rewards.length) m.rewards = old.rewards;
+  const clean = mergeState({ rewards: m.rewards, claims: m.claims }); m.rewards = clean.rewards; m.claims = clean.claims;
   m.timer = Object.assign(m.timer, old.timer || {}); m.streak = Object.assign(m.streak, old.streak || {});
   m.badges = (old.badges || []).filter(function(b){ return ['racha3', 'racha7', 'estrellas50', 'estrellas150', 'stickers10', 'primer_dia'].indexOf(b) !== -1; });
   m.sessionLog = (old.sessionLog || []).map(function(l){ return { date: l.date, kind: 'legacy', strand: l.strand, skill: null, correct: l.correct, total: l.total, credit: l.total ? l.correct / l.total : 0, mood: l.mood || null }; });
@@ -109,14 +116,14 @@ function loadState(storage){
     if(raw) return mergeState(JSON.parse(raw));
     const v3 = storage.getItem(V3_KEY) || storage.getItem(V2_KEY);
     if(v3){ const parsed = JSON.parse(v3); if(parsed && parsed.strands) return migrateV3(parsed); }
-  } catch(e){}
+  } catch(e){ try { const raw = storage.getItem(STATE_KEY); if(raw) storage.setItem(STATE_KEY + '_backup', raw); } catch(e2){} }
   return defaultState();
 }
 
 /* ---------- catalogue helpers (SKILLS comes from core.js) ---------- */
 function skillsOfStrand(id){ return SKILLS.filter(function(s){ return s.strand === id; }).sort(function(a, b){ return a.order - b.order; }); }
 function strandsWithSkills(){ return STRANDS.filter(function(s){ return skillsOfStrand(s.id).length > 0; }); }
-function isUnlocked(state, sk){ return sk.prereq.every(function(p){ const ps = state.skills[p]; return ps && ps.medal >= 1; }); }
+function isUnlocked(state, sk){ if(state.skills[sk.id] && state.skills[sk.id].medal >= 1) return true; return sk.prereq.every(function(p){ const ps = state.skills[p]; return ps && ps.medal >= 1; }); }
 function medalOf(state, id){ return state.skills[id] ? state.skills[id].medal : 0; }
 function strandProgress(state, strandId){
   const list = skillsOfStrand(strandId); if(!list.length) return 0;
@@ -194,7 +201,7 @@ function sessionStars(credits){
 function applySkillResult(state, skillId, kind, credits, today){
   today = today || todayStr();
   const st = skillState(state, skillId);
-  const n = credits.length; const sum = credits.reduce(function(a, b){ return a + b; }, 0); const acc = n ? sum / n : 0;
+  const n = credits.length; const sum = credits.reduce(function(a, b){ return a + b; }, 0); const acc = n ? Math.round(sum / n * 1e6) / 1e6 : 0;
   const before = { medal: st.medal, box: st.box, wobbly: st.wobbly };
   st.seen += n; st.correct += credits.filter(function(c){ return c > 0; }).length; st.credit += sum; st.last = today;
   const bump = function(){ st.box = Math.min(6, st.box + 1); };
@@ -233,7 +240,7 @@ function addXp(state, amount){
 }
 function ensureDaily(state, today){
   today = today || todayStr();
-  if(state.daily.date !== today) state.daily = { date: today, warmup: false, learn: false, boss: false, claimed: false };
+  if(state.daily.date !== today) state.daily = { date: today, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 };
   return state.daily;
 }
 

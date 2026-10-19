@@ -109,8 +109,8 @@ SCREENS.question = function(){
 ACT.sayq = function(){ speak(SESS.q.prompt); };
 ACT.quit = function(){
   if(SESS.kind === 'placement'){ save(); return go('hub'); }
-  if(SESS.credits.length >= 2) return finishSession(true);
-  go('hub');
+  if(SESS.credits.length >= 1){ const st = sessionStars(SESS.credits); S.starBalance += st; S.totalStars += st; toast('Saved ' + st + ' ⭐ — finish the whole round to win medals!'); }
+  save(); SESS = null; go('hub');
 };
 ACT.hint = function(){ SESS.hint = true; render(); };
 ACT.pick = function(d){ const o = SESS.q.options[+d.k]; submit(o.key); };
@@ -136,7 +136,7 @@ ACT.check = function(){
   else if(q.type === 'setclock') submit(K.time(SESS.clk.h, SESS.clk.m));
   else if(q.type === 'order') submit('o:' + SESS.picked.map(function(i){ return i.key; }).join('|'));
 };
-ACT.idk = function(){ SESS.tries = 9; SESS.fbSkip = true; endQuestion(0, false, true); };
+ACT.idk = function(){ if(!SESS || SESS.phase !== 'ask') return; SESS.tries = 9; SESS.fbSkip = true; endQuestion(0, false, true); };
 
 function submit(resp){
   if(SESS.phase !== 'ask') return;
@@ -198,11 +198,11 @@ SCREENS.placementDone = function(p){
 
 /* ---------------- finish a session ---------------- */
 function finishSession(early){
-  if(!SESS.credits.length) return go('hub');
+  if(!SESS.credits.length){ SESS = null; toast('No questions this time — try again!'); return go('hub'); }
   const today = todayStr(); const kind = SESS.kind;
   if(S.streak.lastPlayDate && daysBetween(S.streak.lastPlayDate, today) >= 3) S.comeback = true;
   updateStreak(S, today);
-  const credits = SESS.credits; const acc = credits.reduce(function(a, b){ return a + b; }, 0) / credits.length;
+  const credits = SESS.credits; const acc = Math.round(credits.reduce(function(a, b){ return a + b; }, 0) / credits.length * 1e6) / 1e6;
   const info = { kind: kind, stars: 0, medals: [], wobblyCleared: 0, packs: 0, newBadges: [], levelUp: 0, acc: acc, n: credits.length, perfect: false, next: null };
   Object.keys(SESS.by).forEach(function(id){
     const sk = skillById(id); const cr = SESS.by[id];
@@ -221,7 +221,7 @@ function finishSession(early){
   if(info.medals.length){ S.packs++; info.packs++; }
   ensureDaily(S, today);
   S.daily.warmup = true;
-  if(S.sessionLog.filter(function(l){ return l.date === today && l.kind !== 'legacy'; }).length >= 3) S.daily.boss = true;
+  S.daily.rounds = (S.daily.rounds || 0) + 1; if(S.daily.rounds >= 3) S.daily.boss = true;
   info.newBadges = checkBadges(S);
   info.next = recommend(S);
   info.logIdx = S.sessionLog.length - Object.keys(SESS.by).length;
@@ -341,7 +341,7 @@ SCREENS.parent = function(){
   const errs = topErrors(S, 8);
   h += '<div class="card"><h3>Dónde se atasca</h3>' + (errs.length ? errs.map(function(e){ const sk = skillById(e.skill); return '<div class="prow" style="background:#FFF4E5;color:var(--ink);align-items:flex-start"><span><b>' + esc(sk ? sk.name : e.skill) + '</b><br><small>' + esc(stripTags(e.why)) + '</small></span><b>×' + e.n + '</b></div>'; }).join('') : '<p class="muted">Aún sin errores registrados.</p>') + '<p class="muted" style="margin-top:6px">Son los errores típicos que más repite, con la explicación que ella ve.</p></div><div class="gap"></div>';
   const recent = S.sessionLog.filter(function(l){ return l.kind !== 'legacy'; }).slice(-10).reverse();
-  h += '<div class="card"><h3>Últimas sesiones</h3>' + (recent.length ? recent.map(function(l){ const sk = skillById(l.skill); return '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>' + l.date.slice(5) + ' · ' + (KIND_ES[l.kind] || l.kind) + ' · ' + esc(sk ? sk.name : '') + '</span><b>' + l.correct + '/' + l.total + ' ' + ({ happy: '😀', ok: '😐', hard: '😟' }[l.mood] || '') + '</b></div>'; }).join('') : '<p class="muted">Todavía nada.</p>') + '</div><div class="gap"></div>';
+  h += '<div class="card"><h3>Últimas sesiones</h3>' + (recent.length ? recent.map(function(l){ const sk = skillById(l.skill); return '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>' + esc(l.date.slice(5)) + ' · ' + esc(KIND_ES[l.kind] || l.kind) + ' · ' + esc(sk ? sk.name : '') + '</span><b>' + l.correct + '/' + l.total + ' ' + ({ happy: '😀', ok: '😐', hard: '😟' }[l.mood] || '') + '</b></div>'; }).join('') : '<p class="muted">Todavía nada.</p>') + '</div><div class="gap"></div>';
   h += '<div class="card"><h3>Premios canjeados</h3>' + (S.claims.length ? S.claims.slice(-8).reverse().map(function(c){ return '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>' + (c.date || '') + ' · ' + esc(c.emoji || '') + ' ' + esc(c.title) + '</span><b>' + c.cost + '⭐</b></div>'; }).join('') : '<p class="muted">Ninguno aún.</p>') + '</div><div class="gap"></div>';
   h += '<div class="card"><h3>Ajustes</h3>' +
     '<p class="muted">Tiempo diario</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn' + (S.timer.mode === 'free' ? ' on' : '') + '" data-act="tmode" data-v="free" style="background:#e9ebf7;color:var(--ink)">Libre</button><button class="seg-btn' + (S.timer.mode === 'limit' ? ' on' : '') + '" data-act="tmode" data-v="limit" style="background:#e9ebf7;color:var(--ink)">Límite</button>' +
@@ -384,6 +384,7 @@ function boot(){
   load(); applyTheme();
   document.addEventListener('click', function(e){
     const el = e.target.closest('[data-act]'); if(!el || el.disabled) return;
+    if(!window.__noGuard && Date.now() - LAST_GO < 350 && el.dataset.act !== 'say') return;   // ignore double-taps that land on the next screen
     const f = ACT[el.dataset.act]; if(f) f(el.dataset, el);
   });
   document.addEventListener('change', function(e){

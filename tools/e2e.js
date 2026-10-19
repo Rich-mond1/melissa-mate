@@ -14,6 +14,7 @@ let fails = 0; const log = m => { fails++; console.log('✗ ' + m); };
   const badText = async w => { const t = await txt(); if(/undefined|NaN|\[object|null\b/.test(t)) log('bad text on ' + w + ': ' + (t.match(/.{0,30}(undefined|NaN|\[object|null\b).{0,30}/) || [''])[0]); };
 
   // ---- onboarding + placement
+  await page.evaluate(() => { window.__noGuard = true; });
   await page.click('[data-act=startPlacement]'); await page.click('[data-act=placementGo]');
   await page.evaluate(() => { window.__ans = function(right){
     const q = SESS.q, click = s => { const e = document.querySelector(s); if(!e) throw new Error('missing ' + s); e.click(); };
