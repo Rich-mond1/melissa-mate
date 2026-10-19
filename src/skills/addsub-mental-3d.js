@@ -60,11 +60,11 @@
     } else {
       const dig = dg(a, 't');
       if(c.op === '+'){
-        t.push('Look at the tens: ' + dig + ' tens + ' + d + ' ' + uw(d, 't') + ' = <b>' + (dig + d) + ' tens</b>.');
-        t.push((dig + d) + ' tens is 1 hundred and ' + (dig + d - 10) + ' tens, so the hundreds go up by 1 and the tens digit is ' + (dig + d - 10) + '.');
+        t.push('Look at the tens: ' + plural(dig, 'ten') + ' + ' + d + ' ' + uw(d, 't') + ' = <b>' + (dig + d) + ' tens</b>.');
+        t.push((dig + d) + ' tens is 1 hundred and ' + plural(dig + d - 10, 'ten') + ', so the hundreds go up by 1 and the tens digit is ' + (dig + d - 10) + '.');
       } else {
-        t.push('We cannot take ' + d + ' ' + uw(d, 't') + ' from ' + dig + ' tens. Swap 1 hundred for 10 tens: ' + (dig + 10) + ' tens.');
-        t.push((dig + 10) + ' tens − ' + d + ' ' + uw(d, 't') + ' = <b>' + (dig + 10 - d) + ' tens</b>, and the hundreds digit goes down by 1.');
+        t.push('We cannot take ' + d + ' ' + uw(d, 't') + ' from ' + plural(dig, 'ten') + '. Swap 1 hundred for 10 tens: ' + (dig + 10) + ' tens.');
+        t.push((dig + 10) + ' tens − ' + d + ' ' + uw(d, 't') + ' = <b>' + plural(dig + 10 - d, 'ten') + '</b>, and the hundreds digit goes down by 1.');
       }
       t.push(a + ' ' + sym(c.op) + ' ' + c.amt + ' = <b>' + c.ans + '</b>. ✅');
     }

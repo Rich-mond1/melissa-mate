@@ -262,7 +262,7 @@
   }
 
   registerSkill({
-    id: 'multdiv-word', strand: 'multdiv', name: 'Multiplying & dividing stories', emoji: '📖', year: 3, order: 390, prereq: ['multdiv-arrays-groups'],
+    id: 'multdiv-word', strand: 'multdiv', name: 'Multiplying & dividing stories', emoji: '📖', year: 3, order: 390, prereq: ['multdiv-arrays-groups', 'multdiv-3', 'multdiv-4'],
     lesson: {
       title: 'Which operation? Read, picture, choose',
       steps: [

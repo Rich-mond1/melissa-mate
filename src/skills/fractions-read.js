@@ -63,7 +63,7 @@
             hint: 'Count all the slices for the bottom number, then the coloured slices for the top number.',
             explain: ex('Reading the pizza', [
               'There are <b>' + d + '</b> equal slices altogether — that is the bottom number.',
-              '<b>' + n + '</b> slices are coloured — that is the top number.',
+              '<b>' + plural(n, 'slice') + '</b> ' + (n === 1 ? 'is' : 'are') + ' coloured — that is the top number.',
               'So <b>' + n + '/' + d + '</b> of the pizza is coloured. ✅'
             ]),
             truth: fKey(n, d), decode: function(){ const r = V.decodeFractionCircle(vis); return fKey(r.num, r.den); }
@@ -84,7 +84,7 @@
           return shade({
             prompt: 'Colour ' + n + '/' + d + ' of the bar.', den: d, num: n,
             hint: 'The bottom number (' + d + ') says how many equal parts there are. Tap exactly ' + n + ' of them.',
-            explain: ex('Colouring ' + n + '/' + d, ['The bar is cut into <b>' + d + '</b> equal parts.', 'The top number <b>' + n + '</b> says how many to colour.', 'Colour <b>' + n + '</b> parts and leave the other ' + (d - n) + ' white. ✅'])
+            explain: ex('Colouring ' + n + '/' + d, ['The bar is cut into <b>' + d + '</b> equal parts.', 'The top number <b>' + n + '</b> says how many to colour.', 'Colour <b>' + plural(n, 'part') + '</b> and leave the other ' + (d - n) + ' white. ✅'])
           });
         }
         const picks = [];

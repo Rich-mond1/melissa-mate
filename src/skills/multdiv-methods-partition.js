@@ -66,7 +66,7 @@
   function repeated(n, m){ let t = 0; for(let i = 0; i < m; i++) t += n; return t; }
 
   registerSkill({
-    id: 'multdiv-2digit-partition', strand: 'multdiv', name: 'Multiplying 2-digit numbers', emoji: '🧱', year: 3, order: 380, prereq: ['multdiv-arrays-groups', 'number-place-value'],
+    id: 'multdiv-2digit-partition', strand: 'multdiv', name: 'Multiplying 2-digit numbers', emoji: '🧱', year: 3, order: 380, prereq: ['multdiv-arrays-groups', 'number-place-value', 'multdiv-3', 'multdiv-4'],
     lesson: {
       title: 'Split, multiply, add',
       steps: [
@@ -120,7 +120,7 @@
           return mcq({
             prompt: 'Which shows ' + n + ' split into tens and ones?',
             correct: opt(K.text(label), label), distractors: cands.slice(1).filter(function(c){ return c.a + c.b !== n || c.a % 10 !== 0; }).map(function(c){ return opt(K.text(lab(c)), lab(c), c.why); }), keepOrder: true, count: 4,
-            hint: 'The tens digit is worth ten times as much. ' + n + ' has ' + tn(tdig) + ' and ' + s.o + ' ones.',
+            hint: 'The tens digit is worth ten times as much. ' + n + ' has ' + tn(tdig) + ' and ' + plural(s.o, 'one') + '.',
             explain: ex('Partitioning ' + n, [n + ' has <b>' + tdig + '</b> ' + (tdig === 1 ? 'ten' : 'tens') + ' and <b>' + s.o + '</b> ones.', tn(tdig) + ' is <b>' + s.t + '</b>.', 'So ' + n + ' = <b>' + label + '</b>. ✅']),
             truth: K.text(good.length === 1 ? lab(good[0]) : 'bad')
           });

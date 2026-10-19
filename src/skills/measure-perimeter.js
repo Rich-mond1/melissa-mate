@@ -242,12 +242,12 @@
     });
   }
   const STORY = [
-    ['a rabbit run', 'a fence', 'How long is the fence?'], ['a picture', 'ribbon for a frame', 'How much ribbon is needed?'],
-    ['a garden', 'a path edge', 'How long is the path edge?'], ['a playground', 'a rope', 'How long is the rope?'],
-    ['a card', 'a gold border', 'How long is the border?'], ['a pond', 'a safety fence', 'How long is the fence?']
+    ['a rabbit run', 'a fence', 'How long is the fence?', 'm'], ['a picture', 'ribbon for a frame', 'How much ribbon is needed?', 'cm'],
+    ['a garden', 'a path edge', 'How long is the path edge?', 'm'], ['a playground', 'a rope', 'How long is the rope?', 'm'],
+    ['a card', 'a gold border', 'How long is the border?', 'cm'], ['a pond', 'a safety fence', 'How long is the fence?', 'm']
   ];
   function t2Story(){
-    const st = pick(STORY), nm = pick(NAMES), m = chance(0.5), u = m ? 'm' : 'cm';
+    const st = pick(STORY), nm = pick(NAMES), u = st[3], m = u === 'm';
     let w, h; do { w = m ? randInt(5, 15) : randInt(10, 30); h = m ? randInt(3, 9) : randInt(5, 18); } while(w === h || w - h < 2 || w * h === 2 * (w + h));
     const vis = V.extra.perim.render(rect(w, h, false, u)), P = 2 * (w + h);
     return mcqNum({

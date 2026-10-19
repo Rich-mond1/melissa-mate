@@ -134,7 +134,7 @@
   }
 
   registerSkill({
-    id: 'frac-of-quantity', strand: 'fractions', name: 'Fractions of amounts', emoji: '🧮', year: 3, order: 440, prereq: ['frac-nonunit', 'multdiv-2-5-10'],
+    id: 'frac-of-quantity', strand: 'fractions', name: 'Fractions of amounts', emoji: '🧮', year: 3, order: 440, prereq: ['frac-nonunit', 'multdiv-2-5-10', 'multdiv-3', 'multdiv-4'],
     lesson: {
       title: 'A fraction of a number',
       steps: [

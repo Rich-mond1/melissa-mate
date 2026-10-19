@@ -2,12 +2,12 @@
 (function(){
   var INKC = 'var(--vis-ink,#1B1B2F)';
   var THEMES = [
-    { intro: 'Children voted for their favourite pet.', things: 'children', labels: ['Dog','Cat','Fish','Rabbit','Hamster','Bird'], ask: function(l){ return 'How many children chose ' + l + '?'; } },
-    { intro: 'Children voted for their favourite fruit.', things: 'children', labels: ['Apple','Banana','Grape','Pear','Plum','Mango'], ask: function(l){ return 'How many children chose ' + l + '?'; } },
-    { intro: 'Ana tallied the weather each day for a month.', things: 'days', labels: ['Sunny','Rainy','Cloudy','Windy','Foggy'], ask: function(l){ return 'How many days were ' + l + '?'; } },
-    { intro: 'Tom tallied the cars that drove past school.', things: 'cars', labels: ['Red','Blue','White','Black','Green','Silver'], ask: function(l){ return 'How many ' + l + ' cars were there?'; } },
-    { intro: 'Mei spotted animals on a trip to the zoo.', things: 'animals', labels: ['Lion','Zebra','Monkey','Parrot','Camel','Panda'], ask: function(l){ return 'How many ' + l + 's did Mei spot?'; } },
-    { intro: 'Leo tallied ice creams sold at the school fair.', things: 'ice creams', labels: ['Vanilla','Mint','Berry','Toffee','Choc'], ask: function(l){ return 'How many ' + l + ' ice creams were sold?'; } }
+    { intro: 'Children voted for their favourite pet.', things: 'children', labels: ['Dog','Cat','Fish','Rabbit','Hamster','Bird'], more: function(a, b){ return 'How many more children chose ' + a + ' than ' + b + '?'; }, ask: function(l){ return 'How many children chose ' + l + '?'; } },
+    { intro: 'Children voted for their favourite fruit.', things: 'children', labels: ['Apple','Banana','Grape','Pear','Plum','Mango'], more: function(a, b){ return 'How many more children chose ' + a + ' than ' + b + '?'; }, ask: function(l){ return 'How many children chose ' + l + '?'; } },
+    { intro: 'Ana tallied the weather each day over a term.', things: 'days', labels: ['Sunny','Rainy','Cloudy','Windy','Foggy'], more: function(a, b){ return 'How many more days were ' + a + ' than ' + b + '?'; }, ask: function(l){ return 'How many days were ' + l + '?'; } },
+    { intro: 'Tom tallied the cars that drove past school.', things: 'cars', labels: ['Red','Blue','White','Black','Green','Silver'], more: function(a, b){ return 'How many more ' + a + ' cars than ' + b + ' cars were there?'; }, ask: function(l){ return 'How many ' + l + ' cars were there?'; } },
+    { intro: 'Mei spotted animals on a trip to the zoo.', things: 'animals', labels: ['Lion','Zebra','Monkey','Parrot','Camel','Panda'], more: function(a, b){ return 'How many more ' + a + 's than ' + b + 's did Mei spot?'; }, ask: function(l){ return 'How many ' + l + 's did Mei spot?'; } },
+    { intro: 'Leo tallied ice creams sold at the school fair.', things: 'ice creams', labels: ['Vanilla','Mint','Berry','Toffee','Choc'], more: function(a, b){ return 'How many more ' + a + ' ice creams than ' + b + ' ice creams were sold?'; }, ask: function(l){ return 'How many ' + l + ' ice creams were sold?'; } }
   ];
   function distinct(k, lo, hi){ var a = []; for(var v = lo; v <= hi; v++) a.push(v); return sample(a, k); }
   function theme(){ return pick(THEMES); }
@@ -172,7 +172,7 @@
       var n = randInt(10, 29), vis3 = V.tally(n);
       return numeric({ prompt: 'How many crossed bundles of 5 can you see?', visual: vis3, answer: bundles(n),
         hint: 'Each crossed bundle has a diagonal line through it. Count the diagonals.',
-        explain: ex('Counting bundles', ['Each bundle is <b>5</b>, with a diagonal line.', 'The tally shows ' + n + ' marks, so ' + n + ' ÷ 5 gives ' + bundles(n) + ' full bundles' + (n % 5 ? ' and ' + (n % 5) + ' singles' : '') + '.', 'Bundles: <b>' + bundles(n) + '</b>. ✅']),
+        explain: ex('Counting bundles', ['Each bundle is <b>5</b>, with a diagonal line.', 'The tally shows ' + n + ' marks, so ' + n + ' ÷ 5 gives ' + bundles(n) + ' full bundles' + (n % 5 ? ' and ' + plural(n % 5, 'single') : '') + '.', 'Bundles: <b>' + bundles(n) + '</b>. ✅']),
         truth: bundles(n), decode: function(){ return (vis3.match(/class="talx"/g) || []).length; },
         wrong: function(v){ return v === n ? 'That is the number of marks. The question asks for bundles of 5.' : ''; } });
     }
@@ -187,13 +187,14 @@
         explain: ex('Checking Sam', ['Count the ' + labs[i] + ' row in fives.', 'It makes <b>' + real + '</b>.', 'Sam said ' + shown + ', so the answer is <b>' + (good ? 'Yes' : 'No') + '</b>. ✅']),
         truth: K.bool(real === shown), decode: function(){ return K.bool(rd() === shown); } });
     }
-    var a = randInt(0, 1), b = a + 1, c = 2, d2 = 3;
+    var order2 = [0, 1, 2, 3].sort(function(x, y){ return cs[y] - cs[x]; });
+    var hi = order2[0], lo = order2[1 + randInt(0, 2)];
     var vis5 = table(labs.map(function(l, x){ return { label: l, n: cs[x], mode: 'tally' }; }));
-    var sumAB = cs[a] + cs[b], diff = Math.abs(sumAB - cs[c]);
-    return numeric({ prompt: th.intro + ' How many more ' + th.things + ' chose ' + labs[a] + ' and ' + labs[b] + ' together than ' + labs[c] + '? (If ' + labs[c] + ' has more, give the difference.)', visual: vis5, answer: diff,
-      hint: 'Step 1: add the ' + labs[a] + ' and ' + labs[b] + ' rows. Step 2: find the difference with ' + labs[c] + '.',
-      explain: ex('Two steps', [labs[a] + ' + ' + labs[b] + ' = ' + cs[a] + ' + ' + cs[b] + ' = <b>' + sumAB + '</b>.', labs[c] + ' has <b>' + cs[c] + '</b>.', 'The difference is <b>' + diff + '</b>. ✅']),
-      truth: Math.abs(cs[a] + cs[b] - cs[c]), decode: function(){ var dd = decodeTable(vis5); return Math.abs(dd[labs[a]] + dd[labs[b]] - dd[labs[c]]); } });
+    var diff = cs[hi] - cs[lo];
+    return numeric({ prompt: th.intro + ' ' + th.more(labs[hi], labs[lo]), visual: vis5, answer: diff,
+      hint: 'Count the ' + labs[hi] + ' row and the ' + labs[lo] + ' row in fives. Then find the difference.',
+      explain: ex('How many more', [labs[hi] + ' has <b>' + cs[hi] + '</b> and ' + labs[lo] + ' has <b>' + cs[lo] + '</b>.', 'Take away: ' + cs[hi] + ' − ' + cs[lo] + '.', 'The difference is <b>' + diff + '</b>. ✅']),
+      truth: diff, decode: function(){ var dd = decodeTable(vis5); return dd[labs[hi]] - dd[labs[lo]]; } });
   }
 
   registerSkill({

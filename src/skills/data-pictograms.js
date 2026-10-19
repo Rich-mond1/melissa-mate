@@ -62,7 +62,7 @@
       return mcqNum({ prompt: 'Look at the key. How many ' + o.th.things + ' does ONE symbol stand for?', visual: o.vis, answer: key, count: 3,
         wrong: [{ v: 1, why: 'Look at the key at the bottom: it tells you what one symbol is worth.' }, { v: 2, why: 'Read the key again.' }, { v: 5, why: 'Read the key again.' }],
         hint: 'The key is at the bottom of the picture. It says symbol = a number.',
-        explain: ex('Reading the key', ['The key says: one symbol = <b>' + key + '</b>.', 'So each symbol stands for ' + key + ' ' + o.th.things + '.', 'Answer: <b>' + key + '</b>. ✅']),
+        explain: ex('Reading the key', ['The key says: one symbol = <b>' + key + '</b>.', 'So each symbol stands for ' + plural(key, o.th.things.replace(/s$/, ''), o.th.things) + '.', 'Answer: <b>' + key + '</b>. ✅']),
         truth: key, decode: function(){ return parseFloat(/=\s*([\d.]+)\s*</.exec(o.vis)[1]); } });
     }
     var best = 0; o.cs.forEach(function(c, x){ if(c > o.cs[best]) best = x; });

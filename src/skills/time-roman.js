@@ -33,7 +33,7 @@
     if(hard && m > 0 && SW[n]) out.push({ h: h, m: (SW[n] * 5) % 60, why: 'Careful: the long hand is on ' + ROM[n] + ' = ' + n + ', not ' + ROM[SW[n]] + '. ' + ROM[n] + ': ' + BUILD[n] + ' = ' + n + '. Then ' + n + ' × 5 = ' + m + '.' });
     if(m > 0) out.push({ h: h, m: n, why: 'The numeral tells you which NUMBER the hand is on; each number is worth 5 minutes. ' + n + ' × 5 = ' + m + ' minutes.' });
     if(m > 30) out.push({ h: nx(h), m: m, why: 'The short hand has not reached ' + ROM[nx(h)] + ' yet, so the hour is still ' + h + '.' });
-    else out.push({ h: pv(h), m: m, why: 'The short hand has passed ' + ROM[h] + ', so the hour is ' + h + '.' });
+    else out.push({ h: pv(h), m: m, why: m === 0 ? 'The short hand is exactly on ' + ROM[h] + ', so the hour is ' + h + '.' : 'The short hand has passed ' + ROM[h] + ', so the hour is ' + h + '.' });
     out.push({ h: (m / 5) || 12, m: (h % 12) * 5, why: 'It looks like the hands got swapped. The SHORT hand is the hour and the LONG hand is the minutes.' });
     shuffle([0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]).forEach(function(mm){ out.push({ h: h, m: mm, why: 'Look at the LONG hand: it is not on the numeral for ' + mm + ' minutes.' }); });
     shuffle([0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]).forEach(function(mm){ out.push({ h: nx(h), m: mm, why: 'Check the short hand and the long hand again.' }); });
@@ -84,7 +84,7 @@
   }
 
   registerSkill({
-    id: 'time-roman', strand: 'time', name: 'Roman numeral clocks', emoji: '🏛️', year: 3, order: 540, prereq: ['time-quarters'],
+    id: 'time-roman', strand: 'time', name: 'Roman numeral clocks', emoji: '🏛️', year: 3, order: 540, prereq: ['time-quarters', 'time-five-minutes'],
     lesson: {
       title: 'Clocks with Roman numerals',
       steps: [

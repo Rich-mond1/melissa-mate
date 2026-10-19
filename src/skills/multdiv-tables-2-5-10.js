@@ -258,7 +258,7 @@
     return q;
   }
   function qTwoStep(cfg, rg){
-    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 1));
+    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
     const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
     return numeric({
@@ -357,8 +357,8 @@
       steps: [
         { say: 'Times tables are <b>equal jumps</b>. The frog jumps in <b>5s</b>: 5, 10, 15. After <b>3 jumps</b> it is on <b>15</b>. That is <b>3 × 5 = 15</b>.', vis: { kind: 'numberLine', args: [{ min: 0, max: 20, minor: 5, major: 5, marks: [{ value: 15, kind: 'dot' }] }] } },
         { say: 'A times fact can be a picture too. This array has <b>4 rows</b> and <b>5 dots</b> in each row. Count in 5s: 5, 10, 15, 20. So <b>4 × 5 = 20</b>.', vis: { kind: 'array', args: [4, 5] } },
-        { say: 'The <b>10 times table</b> is the easiest: just put a <b>0</b> on the end! Here are <b>3 groups of 10</b>, so <b>3 × 10 = 30</b>. And 7 × 10 = 70.', vis: { kind: 'groups', args: [3, 10] },
-          quiz: { prompt: 'What is 6 × 10?', options: [{ label: '16', ok: false }, { label: '60', ok: true }, { label: '610', ok: false }], right: 'Yes! Put a 0 on the end of 6 and you get 60.', wrong: '6 × 10 means 6 tens. Put a 0 on the end of 6: it is 60.' } },
+        { say: 'The <b>10 times table</b> is the easiest: each digit moves <b>one place to the left</b>, into the tens, and 0 fills the ones. Here are <b>3 groups of 10</b>, so <b>3 × 10 = 30</b>. And 7 × 10 = 70.', vis: { kind: 'groups', args: [3, 10] },
+          quiz: { prompt: 'What is 6 × 10?', options: [{ label: '16', ok: false }, { label: '60', ok: true }, { label: '610', ok: false }], right: 'Yes! The 6 moves one place to the left, into the tens, so 6 × 10 = 60.', wrong: '6 × 10 means 6 tens. The 6 moves one place to the left, into the tens, with 0 ones: it is 60.' } },
         { say: 'The <b>2 times table</b> is all about <b>doubles</b>. Here are <b>6 groups of 2</b>. Double 6 is 6 + 6 = 12, so <b>6 × 2 = 12</b>.', vis: { kind: 'groups', args: [6, 2] } },
         { say: 'Every number in the <b>5 times table</b> ends in <b>0 or 5</b>: 5, 10, 15, 20, 25, 30, 35 … Count in 5s on the line. The dot is on <b>35</b>.', vis: { kind: 'numberLine', args: [{ min: 0, max: 50, minor: 5, major: 5, marks: [{ value: 35, kind: 'dot' }] }] },
           quiz: { prompt: 'Which number is in the 5 times table?', options: [{ label: '42', ok: false }, { label: '35', ok: true }, { label: '28', ok: false }], right: 'Yes! 35 ends in 5, and 7 × 5 = 35.', wrong: 'Numbers in the 5 times table end in 0 or 5. Only 35 does: 7 × 5 = 35.' } }
@@ -366,7 +366,7 @@
     },
     trick: {
       title: 'Add a zero, double it, halve it',
-      say: '<b>10s:</b> put a 0 on the end. <b>2s:</b> double the number. <b>5s:</b> they end in 0 or 5, and 5 × is <b>half</b> of 10 ×. Here is 2 × 7: double 7 makes 14.',
+      say: '<b>10s:</b> each digit moves one place to the left (7 × 10 = 70). <b>2s:</b> double the number. <b>5s:</b> they end in 0 or 5, and 5 × is <b>half</b> of 10 ×. Here is 2 × 7: double 7 makes 14.',
       vis: { kind: 'array', args: [2, 7] },
       example: '2 × 7 = double 7 = <b>14</b> &nbsp;•&nbsp; 10 × 7 = <b>70</b> &nbsp;•&nbsp; 5 × 7 = half of 70 = <b>35</b>'
     },

@@ -143,7 +143,7 @@
         { say: 'This triangle is <b>not</b> symmetrical about the dashed line. The corner on the left has no partner on the right, so the halves would not fit.', vis: { kind: 'symShape', args: ['rtriangle', 0] },
           quiz: { prompt: 'Would the two halves of this triangle match if you folded it on the dashed line?', options: [{ label: 'Yes', ok: false }, { label: 'No', ok: true }], right: 'Right! The halves are different, so it is not symmetrical.', wrong: 'The left half is much taller than the right half. They would not match.' } },
         { say: 'The line has to be in the right place! This rectangle is symmetrical about a line down its <b>middle</b>, but this dashed line is off to one side, so the halves are <b>different sizes</b>.', vis: { kind: 'symShape', args: ['rectangle', 34] },
-          quiz: { prompt: 'Is this dashed line a line of symmetry?', options: [{ label: 'Yes', ok: false }, { label: 'No', ok: true }], right: 'Yes, you spotted it: the line is not in the middle, so it is not.', wrong: 'The left part is bigger than the right part. The line is not in the middle.' } },
+          quiz: { prompt: 'Is this dashed line a line of symmetry?', options: [{ label: 'Yes', ok: false }, { label: 'No', ok: true }], right: 'Well spotted! The line is not in the middle, so it is not a line of symmetry.', wrong: 'The left part is bigger than the right part. The line is not in the middle.' } },
         { say: '<b>Year 4 idea:</b> if you know one half of a symmetrical picture, you can draw the other half. Each point goes the <b>same distance</b> from the line on the other side. 3 dots on one side means <b>6 dots</b> in the whole pattern.', vis: { kind: 'symShape', args: ['arrow', 0] } }
       ]
     },

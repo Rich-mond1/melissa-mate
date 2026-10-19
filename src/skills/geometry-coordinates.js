@@ -25,10 +25,10 @@
     function add(px, py, why){ if(px < 0 || py < 0 || px > maxV || py > maxV) return; const k = ck(px, py); if(px === x && py === y) return; if(seen[k]) return; seen[k] = 1; out.push(opt(k, lab(px, py), why)); }
     (extraFirst || []).forEach(function(e){ add(e[0], e[1], e[2]); });
     add(y, x, 'You swapped the numbers. Go ALONG the corridor first (x), then UP the stairs (y): the first number is across.');
-    add(x + 1, y, 'The dot is ' + x + ' steps along, not ' + (x + 1) + '. Count the steps along the bottom again.');
-    add(x - 1, y, 'The dot is ' + x + ' steps along, not ' + (x - 1) + '. Count the steps along the bottom again.');
-    add(x, y + 1, 'The dot is ' + y + ' steps up, not ' + (y + 1) + '. Count the steps up the side again.');
-    add(x, y - 1, 'The dot is ' + y + ' steps up, not ' + (y - 1) + '. Count the steps up the side again.');
+    add(x + 1, y, 'The dot is ' + plural(x, 'step') + ' along, not ' + (x + 1) + '. Count the steps along the bottom again.');
+    add(x - 1, y, 'The dot is ' + plural(x, 'step') + ' along, not ' + (x - 1) + '. Count the steps along the bottom again.');
+    add(x, y + 1, 'The dot is ' + plural(y, 'step') + ' up, not ' + (y + 1) + '. Count the steps up the side again.');
+    add(x, y - 1, 'The dot is ' + plural(y, 'step') + ' up, not ' + (y - 1) + '. Count the steps up the side again.');
     for(let a = 0; a <= maxV; a++) for(let b = 0; b <= maxV; b++) add(a, b, 'Check both numbers: along first, then up.');
     return out;
   }
@@ -38,7 +38,7 @@
       prompt: 'What are the <b>coordinates</b> of the red dot? (Write them as (across, up).)', visual: vis,
       correct: opt(ck(x, y), lab(x, y)), distractors: pointOpts(x, y, maxV), keepOrder: true, count: 4,
       hint: 'Start at 0. Count the steps ALONG the bottom to be under the dot, then count the steps UP. Along first, then up.',
-      explain: ex('Reading coordinates', ['From the corner (0), go <b>along</b> the bottom: <b>' + x + '</b> steps to be under the dot.', 'Then go <b>up</b>: <b>' + y + '</b> steps to reach it.', 'The coordinates are <b>' + lab(x, y) + '</b>. ✅']),
+      explain: ex('Reading coordinates', ['From the corner (0), go <b>along</b> the bottom: <b>' + x + '</b> ' + (x === 1 ? 'step' : 'steps') + ' to be under the dot.', 'Then go <b>up</b>: <b>' + y + '</b> ' + (y === 1 ? 'step' : 'steps') + ' to reach it.', 'The coordinates are <b>' + lab(x, y) + '</b>. ✅']),
       truth: ck(x, y), decode: function(){ const d = V.decodeGrid(vis); return ck(d.x, d.y); }
     });
   }
@@ -59,7 +59,7 @@
     const ds = pointOpts(x, y, maxV).map(function(o){ const m = /\((\d+), (\d+)\)/.exec(o.label); return opt(o.key, V.grid(maxV, [+m[1], +m[2]]), 'That dot is at ' + o.label + '. ' + (o.key === ck(y, x) ? 'You swapped the numbers.' : 'Count along first, then up.')); });
     const q = mcq({
       prompt: 'Which grid has a dot at <b>' + lab(x, y) + '</b>?', visual: '', correct: opt(ck(x, y), V.grid(maxV, [x, y])), distractors: ds, keepOrder: true, count: count,
-      hint: 'Start at 0. Go ALONG ' + x + ' steps, then UP ' + y + ' steps. Check each grid for a dot in that place.',
+      hint: 'Start at 0. Go ALONG ' + plural(x, 'step') + ', then UP ' + plural(y, 'step') + '. Check each grid for a dot in that place.',
       explain: ex('Plotting ' + lab(x, y), ['The first number, <b>' + x + '</b>, says how far to go along.', 'The second number, <b>' + y + '</b>, says how far to go up.', 'Only one grid has its dot at <b>' + lab(x, y) + '</b>. ✅']),
       truth: ck(x, y)
     });
@@ -124,7 +124,7 @@
     return numeric({
       prompt: 'The two red dots are on the same ' + (horiz ? 'row' : 'column') + '. How many steps apart are they?', visual: vis, answer: b - a,
       hint: 'Count the steps from one dot to the other along the grid lines. Do not count the dot you start on.',
-      explain: ex('Steps between two points', ['The dots are at ' + lab(pts[0][0], pts[0][1]) + ' and ' + lab(pts[1][0], pts[1][1]) + '.', 'Only the ' + (horiz ? 'first' : 'second') + ' number changes: from ' + a + ' to ' + b + '.', b + ' − ' + a + ' = <b>' + (b - a) + '</b> steps. ✅']),
+      explain: ex('Steps between two points', ['The dots are at ' + lab(pts[0][0], pts[0][1]) + ' and ' + lab(pts[1][0], pts[1][1]) + '.', 'Only the ' + (horiz ? 'first' : 'second') + ' number changes: from ' + a + ' to ' + b + '.', b + ' − ' + a + ' = <b>' + (b - a) + '</b> ' + ((b - a) === 1 ? 'step' : 'steps') + '. ✅']),
       truth: Math.max(b, a) - Math.min(a, b),
       decode: function(){ const d = decodePts(vis); return Math.abs(d[0].x - d[1].x) + Math.abs(d[0].y - d[1].y); },
       wrong: function(v){ return v === b - a + 1 ? 'You counted the starting dot too. Count the steps between the dots.' : ''; }

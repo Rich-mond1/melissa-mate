@@ -258,7 +258,7 @@
     return q;
   }
   function qTwoStep(cfg, rg){
-    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 1));
+    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
     const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
     return numeric({
@@ -330,11 +330,11 @@
   function q9Digits(){
     const n = randInt(2, 9), p = P(9, n), tens = Math.floor(p / 10), ones = p % 10;
     return mcqNum({
-      prompt: 'The digits of every answer in the 9 times table add up to 9. Fill the gap:  <b>9 × ' + n + ' = ' + tens + '▢</b>', answer: ones,
+      prompt: 'The digits of every answer from 9 × 1 to 9 × 10 add up to 9. Fill the gap:  <b>9 × ' + n + ' = ' + tens + '▢</b>', answer: ones,
       wrong: [{ v: tens, why: tens + ' is the digit already there. Find what must be added to ' + tens + ' to make 9.' }, { v: 9, why: 'The two digits must add up to 9 in total, and the first digit is already ' + tens + '.' }, { v: 9 - tens + 1, why: 'Close! ' + tens + ' + ' + (9 - tens + 1) + ' = ' + (10) + ', one too many.' }],
       nearby: [1, -1, 2, -2, 3], valid: function(v){ return v >= 0 && v <= 9; }, count: 4,
       hint: 'The two digits add up to 9. What do you add to ' + tens + ' to reach 9?',
-      explain: ex('The 9s digit rule', ['The digits of an answer in the 9s add up to 9.', 'The first digit is ' + tens + ', and ' + tens + ' + <b>' + ones + '</b> = 9.', 'So 9 × ' + n + ' = <b>' + p + '</b>, and the missing digit is ' + ones + '. ✅']),
+      explain: ex('The 9s digit rule', ['The digits of each answer from 9 × 1 to 9 × 10 add up to 9.', 'The first digit is ' + tens + ', and ' + tens + ' + <b>' + ones + '</b> = 9.', 'So 9 × ' + n + ' = <b>' + p + '</b>, and the missing digit is ' + ones + '. ✅']),
       truth: 9 - Math.floor(9 * n / 10)
     });
   }
@@ -391,7 +391,7 @@
           quiz: { prompt: '5 × 7 = 35. What is 6 × 7?', options: [{ label: '41', ok: false }, { label: '42', ok: true }, { label: '40', ok: false }], right: 'Yes! 35 + 7 = 42.', wrong: 'Add one more group of 7: 35 + 7 = 42.' } },
         { say: 'The <b>9s finger trick</b>: hold up 10 fingers. For 9 × 4, fold down finger <b>4</b>. <b>3</b> fingers on the left, <b>6</b> on the right. The answer is <b>36</b>!', vis: { kind: 'fingers', args: [4] },
           quiz: { prompt: 'For 9 × 6 you fold finger 6. That leaves 5 fingers on the left and 4 on the right. What is 9 × 6?', options: [{ label: '45', ok: false }, { label: '54', ok: true }, { label: '56', ok: false }], right: 'Yes! 5 tens and 4 ones makes 54.', wrong: 'Left fingers are the tens (5), right fingers are the ones (4). So 54.' } },
-        { say: 'The digits of every answer in the 9s <b>add up to 9</b>: 18 (1 + 8), 27 (2 + 7), 36 (3 + 6). Here are 3 groups of 9, and <b>27</b> is one of them.', vis: { kind: 'groups', args: [3, 9] } },
+        { say: 'The digits of every answer from <b>9 × 1 to 9 × 10</b> <b>add up to 9</b>: 18 (1 + 8), 27 (2 + 7), 36 (3 + 6). Here are 3 groups of 9, and <b>27</b> is one of them.', vis: { kind: 'groups', args: [3, 9] } },
         { say: '<b>11 ×</b> a single digit repeats the digit: 11 × 3 = 33. And <b>12 ×</b> is 10 × plus 2 ×: 12 × 3 = 30 + 6 = 36.', vis: { kind: 'array', args: [3, 11] },
           quiz: { prompt: 'What is 11 × 8?', options: [{ label: '88', ok: true }, { label: '19', ok: false }, { label: '80', ok: false }], right: 'Yes! Repeat the 8: 88.', wrong: 'For 11 times a single digit, write the digit twice: 88.' } },
         { say: 'The <b>7 times table</b>: split 7 into 5 + 2. For 7 × 6: 5 × 6 = 30 and 2 × 6 = 12. Add them: 30 + 12 = <b>42</b>.', vis: { kind: 'array', args: [7, 6] } }
@@ -399,7 +399,7 @@
     },
     trick: {
       title: 'The 9s finger trick',
-      say: 'Hold up all 10 fingers. For <b>9 × 3</b>, fold down the <b>3rd</b> finger. Fingers on the <b>left</b> are the tens (2). Fingers on the <b>right</b> are the ones (7). The digits of a 9s answer always add to 9.',
+      say: 'Hold up all 10 fingers. For <b>9 × 3</b>, fold down the <b>3rd</b> finger. Fingers on the <b>left</b> are the tens (2). Fingers on the <b>right</b> are the ones (7). From 9 × 1 to 9 × 10, the digits of the answer always add to 9.',
       vis: { kind: 'fingers', args: [3] },
       example: '9 × 6 → fold finger 6 → 5 on the left, 4 on the right → <b>54</b> &nbsp; (5 + 4 = 9 ✓)'
     },

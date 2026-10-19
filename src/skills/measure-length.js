@@ -88,7 +88,7 @@
     },
     trick: {
       title: 'Start at zero, big marks then small',
-      say: 'First check the object starts exactly at <b>0</b>. Then say the last <b>big number</b> you pass, then count the <b>small marks</b> after it. 5 is half-way between big numbers, 1 mark = 1 mm.',
+      say: 'First check the object starts exactly at <b>0</b>. Then say the last <b>big number</b> you pass, then count the <b>small marks</b> after it. The long mark half-way between two big numbers is 5 mm, and every small mark is 1 mm.',
       vis: { kind: 'ruler', args: [9.4, { emoji: '🥕' }] },
       example: 'Last big number is <b>9</b>, then <b>4</b> small marks: <b>9 cm 4 mm</b> = 94 mm'
     },

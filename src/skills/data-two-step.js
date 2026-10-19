@@ -61,7 +61,7 @@
 
   function g1(){
     var o = source(pickKind(), 3, 2, 8, false), f = pick(['together', 'together', 'diff']), k = 3;
-    var a = randInt(0, 2), b = (a + randInt(1, 2)) % 3, A = o.labs[a], B = o.labs[b], t = o.th.intro + ' (' + tell(o) + ')';
+    var a = randInt(0, 2), b = (a + randInt(1, 2)) % 3, A = o.labs[a], B = o.labs[b], t = o.th.intro;
     if(f === 'together'){
       var ans = o.vs[a] + o.vs[b];
       return mcqNum({ prompt: t + ' How many ' + o.th.things + ' did ' + A + ' and ' + B + ' get altogether?', visual: o.vis, answer: ans, count: 3,
@@ -78,7 +78,7 @@
 
   function g2(){
     var o = source(pickKind(), 4, 2, 7, true), f = pick(['together', 'vs', 'gone', 'range', 'added']), k = 4;
-    var order = sortedIdx(o.vs), t = o.th.intro + ' (' + tell(o) + ')';
+    var order = sortedIdx(o.vs), t = o.th.intro;
     if(f === 'together'){
       var p = sample([0, 1, 2, 3], 3), a = p[0], b = p[1], c = p[2], ans = o.vs[a] + o.vs[b] + o.vs[c];
       return mcqNum({ prompt: t + ' How many ' + o.th.things + ' did ' + o.labs[a] + ', ' + o.labs[b] + ' and ' + o.labs[c] + ' get altogether?', visual: o.vis, answer: ans,
@@ -122,7 +122,7 @@
   }
 
   function g3(){
-    var kind = pickKind(), o = source(kind, 5, 2, kind === 'pict' ? 7 : 6, true), t = o.th.intro + ' (' + tell(o) + ')';
+    var kind = pickKind(), o = source(kind, 5, 2, kind === 'pict' ? 7 : 6, true), t = o.th.intro;
     var order = sortedIdx(o.vs), f = pick(['mostafter', 'mostafter', 'vs', 'least2', 'twopairs', 'gone']);
     if(f === 'mostafter'){
       var cur = order[0], x = order[1 + randInt(0, 2)], gap = o.vs[cur] - o.vs[x];
@@ -131,7 +131,7 @@
       var winner = o.vs[x] + n > o.vs[cur] ? x : cur;
       var cands = o.labs.map(function(l, i){ return opt(K.text(l), l, i === x ? o.labs[x] + ' has ' + o.vs[x] + ' + ' + n + ' = ' + (o.vs[x] + n) + ', which is ' + (winner === cur ? 'still less than ' + o.vs[cur] + '.' : 'not the biggest.') : (i === cur ? o.labs[cur] + ' has ' + o.vs[cur] + ' now' + (winner === x ? ', but ' + o.labs[x] + ' will have more.' : ' — check the new total for ' + o.labs[x] + '.') : o.labs[i] + ' is smaller than the others.')); });
       var fm = function(d){ var best = null, tot = {}; Object.keys(d).forEach(function(l){ tot[l] = d[l] + (l === o.labs[x] ? n : 0); if(best === null || tot[l] > tot[best]) best = l; }); return K.text(best); };
-      return mcq({ prompt: t + ' If ' + n + ' more ' + o.th.things + ' are added to ' + o.labs[x] + ', who has the most now?', visual: o.vis, correct: opt(K.text(o.labs[winner]), o.labs[winner]), distractors: cands, keepOrder: true,
+      return mcq({ prompt: t + ' ' + o.labs[x] + ' gets ' + n + ' more ' + o.th.things + '. Who has the most now?', visual: o.vis, correct: opt(K.text(o.labs[winner]), o.labs[winner]), distractors: cands, keepOrder: true,
         hint: 'Step 1: add the extra ' + n + ' to ' + o.labs[x] + '’s number. Step 2: compare everyone.',
         explain: ex('Two steps', ['Step 1: ' + o.labs[x] + ' = ' + o.vs[x] + ' + ' + n + ' = <b>' + (o.vs[x] + n) + '</b>.', 'Step 2: the biggest other number is ' + o.labs[cur] + ' with <b>' + o.vs[cur] + '</b>.', 'So <b>' + o.labs[winner] + '</b> has the most now. ✅']),
         truth: fm(ds(o)), decode: function(){ return fm(ds(o)); } });

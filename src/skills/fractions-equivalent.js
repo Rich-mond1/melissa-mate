@@ -83,7 +83,7 @@
       opt(fK(p.n, p.e), F(p.n, p.e), 'You changed the bottom number but not the top. Both must be multiplied by ' + p.k + '.'),
       opt(fK(p.n + p.k, p.e), F(p.n + p.k, p.e), 'You ADDED ' + p.k + ' to the top. Equivalent fractions come from multiplying.'),
       opt(fK(p.n + 1, p.e), F(p.n + 1, p.e), 'Close, but not the same size. Multiply the top by ' + p.k + ' exactly.'),
-      opt(fK(p.m, p.e + p.d), F(p.m, p.e + p.d), 'You added the bottom numbers. The bottom is ' + p.d + ' × ' + p.k + ' = ' + p.e + '.')
+      opt(fK(p.m, p.e + p.d), F(p.m, p.e + p.d), 'The top is right but the bottom is too big. Multiply the bottom by the same number as the top: ' + p.d + ' × ' + p.k + ' = ' + p.e + '.')
     ];
     FAMS.forEach(function(f){ f.forEach(function(dd){ for(let k = 1; k < dd; k++) ds.push(opt(fK(k, dd), F(k, dd), 'That is a different size from ' + p.n + '/' + p.d + '.')); }); });
     return mcq({
@@ -99,8 +99,8 @@
     let m = p.m;
     if(!same){ m = (p.m > 1 && chance(0.5)) ? p.m - 1 : p.m + 1; if(m >= p.e) m = p.m - 1; }
     const vis = wallRender([[p.n, p.d], [m, p.e]], false);
-    const yes = opt(K.bool(true), 'Yes', 'The two bars are the same length, so they ARE the same amount.');
-    const no = opt(K.bool(false), 'No', 'Look at the shaded lengths: they are different, so the fractions are not equal.');
+    const yes = opt(K.bool(true), 'Yes', 'Look at the shaded lengths: the colour stops in different places, so the fractions are NOT the same amount.');
+    const no = opt(K.bool(false), 'No', 'The colour stops in the same place on both bars, so they ARE the same amount: ' + p.n + '/' + p.d + ' = ' + p.m + '/' + p.e + '.');
     return mcq2({
       prompt: 'Are ' + F(p.n, p.d) + ' and ' + F(m, p.e) + ' the same amount?', visual: vis,
       correct: same ? yes : no, other: same ? no : yes,
@@ -183,7 +183,7 @@
   }
 
   registerSkill({
-    id: 'frac-equivalent', strand: 'fractions', name: 'Equivalent fractions', emoji: '🧱', year: 3, order: 460, prereq: ['frac-nonunit'],
+    id: 'frac-equivalent', strand: 'fractions', name: 'Equivalent fractions', emoji: '🧱', year: 3, order: 460, prereq: ['frac-nonunit', 'frac-tenths'],
     lesson: {
       title: 'Same amount, different numbers',
       steps: [

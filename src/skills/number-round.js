@@ -68,7 +68,7 @@
     const n = randInt(11, 98); if(n % 10 === 5) return qCloser();
     const lo = down(n, 10), hi = lo + 10, vis = lineFor(n, 10), near = nearest(n, 10), far = near === lo ? hi : lo;
     return mcq2({
-      prompt: 'Is <b>' + n + '</b> closer to <b>' + lo + '</b> or to <b>' + hi + '</b>?', visual: vis, correct: opt(nk(near), String(near)), other: opt(nk(far), String(far), 'Look at the dot: it is ' + (Math.abs(n - far)) + ' steps from ' + far + ' but only ' + Math.abs(n - near) + ' from ' + near + '.'),
+      prompt: 'Is <b>' + n + '</b> closer to <b>' + lo + '</b> or to <b>' + hi + '</b>?', visual: vis, correct: opt(nk(near), String(near)), other: opt(nk(far), String(far), 'Look at the dot: it is ' + plural(Math.abs(n - far), 'step') + ' from ' + far + ' but only ' + Math.abs(n - near) + ' from ' + near + '.'),
       hint: 'Count the little steps from the dot to each end. The smaller number of steps wins.',
       explain: ex('Closer to which ten?', [n + ' is ' + Math.abs(n - near) + ' away from ' + near + '.', n + ' is ' + Math.abs(n - far) + ' away from ' + far + '.', 'Fewer steps to <b>' + near + '</b>, so it is closer to ' + near + '. ✅']),
       truth: nk(n - lo < hi - n ? lo : hi), decode: function(){ const d = readLine(vis); return nk(nearest(d, 10)); }
@@ -93,7 +93,7 @@
     const q = mcq({
       prompt: 'Which of these numbers rounds to <b>' + target + '</b> when rounded to the nearest <b>' + to + '</b>?', correct: opt(nk(inside), String(inside)), distractors: ds, keepOrder: false, count: 4,
       hint: 'Numbers that round to ' + target + ' are not too far from it. Test each choice with the 5-or-more rule.',
-      explain: ex('Which number rounds to ' + target + '?', [inside + ' is within ' + half + ' of ' + target + ': it rounds to <b>' + target + '</b>.', 'The other numbers round to something else.', 'The answer is <b>' + inside + '</b>. ✅']),
+      explain: ex('Which number rounds to ' + target + '?', [(function(){ const dd = Math.abs(inside - target), oth = inside < target ? target - to : target + to; return dd === 0 ? inside + ' is already a multiple of ' + to + ', so it stays as <b>' + target + '</b>.' : dd === half ? inside + ' is exactly halfway between ' + oth + ' and ' + target + ', and halfway rounds UP, so it rounds to <b>' + target + '</b>.' : inside + ' is only ' + dd + ' away from ' + target + ' but ' + (to - dd) + ' away from ' + oth + ', so it rounds to <b>' + target + '</b>.'; })(), 'The other numbers round to something else.', 'The answer is <b>' + inside + '</b>. ✅']),
       truth: 'pending'
     });
     let tk = null, cnt = 0;

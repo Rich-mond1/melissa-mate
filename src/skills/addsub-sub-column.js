@@ -206,7 +206,7 @@
             opt(K.text('zero'), 'Write 0 and carry on', 'A zero cannot just be skipped. The ones still need an exchange, and the tens have nothing to give yet.'),
             opt(K.text('flip'), 'Take ' + (c.a % 10) + ' from ' + (c.b % 10) + ' instead', 'The top number is always what we take away FROM.')],
           hint: 'You can only swap a ten for ones if you HAVE a ten. Where can you get tens from?',
-          explain: ex('Zero in the middle', ['The ones column needs help, but the tens digit is <b>0</b>.', 'So first swap <b>1 hundred for 10 tens</b>. The hundreds go down by 1.', 'Then swap 1 ten for 10 ones: you now have ' + (dg(c.a, 2) - 1) + ' hundreds, 9 tens and ' + (c.a % 10 + 10) + ' ones. ✅']),
+          explain: ex('Zero in the middle', ['The ones column needs help, but the tens digit is <b>0</b>.', 'So first swap <b>1 hundred for 10 tens</b>. The hundreds go down by 1.', 'Then swap 1 ten for 10 ones: you now have ' + plural(dg(c.a, 2) - 1, 'hundred') + ', 9 tens and ' + (c.a % 10 + 10) + ' ones. ✅']),
           truth: K.text(dg(c.a, 1) === 0 ? 'h2t' : 'no'), decode: function(){ const A = readRow(vis, 'da'); return K.text(A.charAt(1) === '0' ? 'h2t' : 'no'); } });
       }
     }

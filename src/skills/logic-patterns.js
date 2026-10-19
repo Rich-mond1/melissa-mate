@@ -274,7 +274,7 @@
         prompt: 'The pattern keeps going for ' + N + ' shapes. How many ' + target + 's will there be?', visual: vis, answer: cnt,
         hint: 'How many ' + target + 's are in ONE repeat? Then see how many whole repeats fit into ' + N + '.',
         explain: ex('Counting the ' + target + 's', [
-          'One repeat has <b>' + L + '</b> shapes and <b>' + perUnit + '</b> of them ' + (perUnit === 1 ? 'is a ' : 'are ') + target + (perUnit === 1 ? '' : 's') + '.',
+          'One repeat has <b>' + L + '</b> shapes and <b>' + perUnit + '</b> of them ' + (perUnit === 1 ? (/^[aeiou]/.test(target) ? 'is an ' : 'is a ') : 'are ') + target + (perUnit === 1 ? '' : 's') + '.',
           N + ' shapes is ' + Math.floor(N / L) + ' whole repeats' + (N % L ? ' plus ' + (N % L) + ' extra shapes (' + unit.slice(0, N % L).join(', ') + ')' : '') + '.',
           'Altogether there are <b>' + cnt + '</b> ' + target + (cnt === 1 ? '' : 's') + '. ✅'
         ]),

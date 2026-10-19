@@ -32,7 +32,7 @@
       prompt: 'The bar is cut into 10 equal parts. What fraction is coloured?', visual: vis,
       correct: opt(fK(n, 10), F(n, 10)), distractors: fracWrongs(n, 'Count the coloured parts again. The top number is how many are coloured.').map(function(x){ return opt(fK(x.n, x.d), F(x.n, x.d), x.why); }), keepOrder: true,
       hint: 'There are 10 parts in all (bottom number). Count only the coloured ones for the top number.',
-      explain: ex('Reading tenths', ['The bar has <b>10</b> equal parts, so the bottom number is 10 (tenths).', '<b>' + n + '</b> parts are coloured.', 'So ' + TENTHS[n] + ' is coloured: <b>' + n + '/10</b>. ✅']),
+      explain: ex('Reading tenths', ['The bar has <b>10</b> equal parts, so the bottom number is 10 (tenths).', '<b>' + plural(n, 'part') + '</b> ' + (n === 1 ? 'is' : 'are') + ' coloured.', 'So ' + TENTHS[n] + ' is coloured: <b>' + n + '/10</b>. ✅']),
       truth: fK(n * 3, 30),
       decode: function(){ const r = V.decodeFractionBar(vis); return fK(r.num, r.den); }
     });

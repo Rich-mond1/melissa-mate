@@ -181,7 +181,10 @@
         { say: 'Use the inverse to <b>check</b> your work. Is 523 − 187 = 336 right? Add back: 336 + 187 = 523. Yes! The check lands on the start number.',
           vis: { kind: 'html', args: ['<div style="font:800 22px system-ui;text-align:center;color:var(--vis-ink,#1B1B2F)">523 − 187 = 336<br>336 + 187 = 523 ✔</div>'] },
           quiz: { prompt: 'If 62 + 29 = 91, what is 91 − 29?', options: [{ label: '62', ok: true }, { label: '120', ok: false }, { label: '29', ok: false }], right: 'Yes! Taking away 29 undoes adding 29, so we are back at 62.', wrong: 'Subtraction undoes addition. 91 − 29 takes us back to 62.' } },
-        { say: 'An <b>estimate</b> tells you if an answer is sensible. Round to the nearest ten: 38 → 40 and 53 → 50. So 38 + 53 is about <b>90</b>. The exact answer, 91, is close. ✅', vis: { kind: 'numberLine', args: [{ min: 30, max: 70, minor: 1, major: 10, marks: [{ value: 38 }, { value: 53, color: 'var(--vis-b,#9B51E0)' }] }] } }
+        { say: 'To <b>round</b> to the nearest <b>ten</b>, look at the <b>ones</b> digit. For the nearest <b>hundred</b>, look at the <b>tens</b> digit. <b>5 or more: round up. 4 or less: round down.</b> So 38 → 40, and 463 → 500.', vis: { kind: 'numberLine', args: [{ min: 30, max: 50, minor: 1, major: 10, marks: [{ value: 38 }] }] },
+          quiz: { prompt: 'Round 67 to the nearest ten.', options: [{ label: '70', ok: true }, { label: '60', ok: false }, { label: '67', ok: false }], right: 'Yes! The ones digit is 7, which is 5 or more, so round up to 70.', wrong: 'Look at the ones digit: 7 is 5 or more, so round UP to 70.' } },
+        { say: 'Now <b>estimate</b>: round each number first, then do the easy sum. 38 → 40 and 53 → 50, so 38 + 53 is about <b>90</b>. The exact answer, 91, is close, so it is sensible. ✅', vis: { kind: 'numberLine', args: [{ min: 30, max: 70, minor: 1, major: 10, marks: [{ value: 38 }, { value: 53, color: 'var(--vis-b,#9B51E0)' }] }] },
+          quiz: { prompt: 'Estimate 62 + 29 by rounding each number to the nearest ten.', options: [{ label: '90', ok: true }, { label: '80', ok: false }, { label: '91', ok: false }], right: 'Yes! 62 → 60 and 29 → 30, and 60 + 30 = 90.', wrong: 'Round both numbers first: 62 → 60 and 29 → 30. Then 60 + 30 = 90.' } }
       ]
     },
     trick: {

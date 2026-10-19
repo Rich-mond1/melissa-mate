@@ -215,7 +215,7 @@
   }
 
   registerSkill({
-    id: 'frac-add-sub', strand: 'fractions', name: 'Adding and subtracting fractions', emoji: '➕', year: 3, order: 480, prereq: ['frac-nonunit'],
+    id: 'frac-add-sub', strand: 'fractions', name: 'Adding and subtracting fractions', emoji: '➕', year: 3, order: 480, prereq: ['frac-nonunit', 'frac-tenths'],
     lesson: {
       title: 'Same size parts',
       steps: [
@@ -224,7 +224,7 @@
         { say: 'Your turn! Blue is 1/5 and purple is 3/5. Add the top numbers and keep the bottom number the same.', vis: { kind: 'fracMix', args: [1, 3, 5, 'add'] },
           quiz: { prompt: 'The bar shows 1/5 + 3/5. What is the answer?', options: [{ label: '4/5', ok: true }, { label: '4/10', ok: false }, { label: '3/5', ok: false }], right: 'Yes! 1 + 3 = 4 and the bottom stays 5.', wrong: 'Add the tops: 1 + 3 = 4. The bottom stays 5 because the parts are still fifths. So 4/5.' } },
         { say: 'To <b>take away</b>, cross parts out. We start with <b>5/8</b> and take away <b>2/8</b>. Crossed-out parts do not count. <b>3</b> parts are left: <b>5/8 − 2/8 = 3/8</b>.', vis: { kind: 'fracMix', args: [5, 2, 8, 'sub'] },
-          quiz: { prompt: 'What is 5/8 − 2/8?', options: [{ label: '3/8', ok: true }, { label: '7/8', ok: false }, { label: '3/0', ok: false }], right: 'Yes! 5 − 2 = 3 and the bottom stays 8.', wrong: 'Take away the tops: 5 − 2 = 3. The bottom stays 8. So 3/8.' } },
+          quiz: { prompt: 'What is 5/8 − 2/8?', options: [{ label: '3/8', ok: true }, { label: '7/8', ok: false }, { label: '3/16', ok: false }], right: 'Yes! 5 − 2 = 3 and the bottom stays 8.', wrong: 'Take away the tops: 5 − 2 = 3. The bottom stays 8. So 3/8.' } },
         { say: 'Adding can fill up a whole bar! <b>3/8 + 5/8 = 8/8</b>, and 8/8 is <b>one whole</b>. In this skill our answers stay within one whole.', vis: { kind: 'fracMix', args: [3, 5, 8, 'add'] } }
       ]
     },

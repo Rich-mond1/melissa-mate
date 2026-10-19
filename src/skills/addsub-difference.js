@@ -24,7 +24,7 @@
     const js = jumps(lo, hi), parts = js.map(function(j){ return j[1] - j[0]; });
     return ex(intro || 'Difference between ' + lo + ' and ' + hi, [
       'Count on from the <b>smaller</b> number, using friendly stops: ' + jumpText(js) + '.',
-      'Add the jumps: ' + parts.join(' + ') + ' = <b>' + (hi - lo) + '</b>.',
+      js.length === 1 ? 'There is only one jump, so the difference is <b>' + (hi - lo) + '</b>.' : 'Add the jumps: ' + parts.join(' + ') + ' = <b>' + (hi - lo) + '</b>.',
       'Check: ' + lo + ' + ' + (hi - lo) + ' = ' + hi + '. ✅'
     ]);
   }
@@ -88,7 +88,7 @@
     const n = pick(NAMES), it = pick(ITEMS), payTxt = pay === 100 ? 'a £1 coin (100p)' : (pay === 200 ? 'a £2 coin (200p)' : 'a £5 note (500p)');
     const prompt = n + ' buys a ' + it + ' for <b>' + price + 'p</b> and pays with ' + payTxt + '. How much change?' + (typed ? ' Answer in pence.' : '');
     const ans = jumpSum(jumps(price, pay)), js = jumps(price, pay);
-    const exp = ex('Change from ' + pay + 'p', ['Count on from the price up to ' + pay + 'p: ' + jumpText(js) + '.', 'Add the jumps: ' + js.map(function(j){ return j[1] - j[0]; }).join(' + ') + ' = <b>' + ans + 'p</b>.', 'Check: ' + price + 'p + ' + ans + 'p = ' + pay + 'p. ✅']);
+    const exp = ex('Change from ' + pay + 'p', ['Count on from the price up to ' + pay + 'p: ' + jumpText(js) + '.', js.length === 1 ? 'There is only one jump, so the change is <b>' + ans + 'p</b>.' : 'Add the jumps: ' + js.map(function(j){ return j[1] - j[0]; }).join(' + ') + ' = <b>' + ans + 'p</b>.', 'Check: ' + price + 'p + ' + ans + 'p = ' + pay + 'p. ✅']);
     const vis = pay === 100 || pay === 200 ? nlVis(price, pay) : '';
     const hint = 'Count on from the price to the amount paid. Stop at the next 10p (or £1) on the way.';
     const wl = wrongList(price, pay).filter(function(w){ return w.v !== pay + price; }).concat([{ v: price, why: 'That is the price. The change is how much more is needed to reach what was paid.' }]);

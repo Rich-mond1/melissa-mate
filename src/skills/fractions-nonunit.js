@@ -102,7 +102,7 @@
     return shade({
       prompt: 'Colour ' + n + '/' + d + ' of the bar.', den: d, num: n,
       hint: 'The bottom number (' + d + ') says how many equal parts the bar has. Tap exactly ' + n + ' of them.',
-      explain: ex('Colouring ' + n + '/' + d, ['The bar is cut into <b>' + d + '</b> equal parts.', 'The top number <b>' + n + '</b> says how many parts to colour.', 'Colour <b>' + n + '</b> parts and leave ' + (d - n) + ' white. ✅'])
+      explain: ex('Colouring ' + n + '/' + d, ['The bar is cut into <b>' + d + '</b> equal parts.', 'The top number <b>' + n + '</b> says how many parts to colour.', 'Colour <b>' + plural(n, 'part') + '</b> and leave ' + (d - n) + ' white. ✅'])
     });
   }
 
@@ -114,7 +114,7 @@
     return numeric({
       prompt: (kind === 'set' ? 'There are ' + d + ' counters. ' + n + '/' + d + ' of them are coloured.' : 'The ' + what + ' is split into ' + d + ' equal ' + unit + '. ' + n + '/' + d + ' of it is coloured.') + ' How many ' + unit + ' are NOT coloured?', visual: vis, answer: w,
       hint: 'Count the white ' + unit + ' in the picture, or take the coloured ones away from ' + d + '.',
-      explain: ex('Counting the white ' + unit, ['There are <b>' + d + '</b> ' + unit + ' altogether.', '<b>' + n + '</b> are coloured.', d + ' − ' + n + ' = <b>' + w + '</b> ' + unit + ' are white. ✅']),
+      explain: ex('Counting the white ' + unit, ['There are <b>' + d + '</b> ' + unit + ' altogether.', '<b>' + n + '</b> are coloured.', d + ' − ' + n + ' = <b>' + plural(w, unit.replace(/s$/, '')) + '</b> ' + (w === 1 ? 'is' : 'are') + ' white. ✅']),
       truth: w, decode: function(){ const r = readPic(vis); return r.den - r.num; },
       wrong: function(v){ return v === n ? 'That is the number of COLOURED ' + unit + '. We want the white ones.' : v === d ? 'That is ALL the ' + unit + '.' : ''; }
     });

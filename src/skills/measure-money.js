@@ -1,13 +1,21 @@
 /* MEASURE — money: coins and notes, £ and p, adding, change, "enough money?" (all amounts kept in PENCE) */
 (function(){
   const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
-  const ITEMS = ['a bun', 'an apple', 'a pencil', 'a rubber', 'a lolly', 'a comic', 'a sticker book', 'a balloon', 'a postcard', 'a bookmark', 'a keyring', 'a banana', 'a sharpener', 'a cookie'];
-  const ITEM_PL = ['buns', 'apples', 'pencils', 'rubbers', 'lollies', 'comics', 'sticker books', 'balloons', 'postcards', 'bookmarks', 'keyrings', 'bananas', 'sharpeners', 'cookies'];
+  // realistic prices in pence (o = one, m = many, lo..hi = sensible price range)
+  const ITEMS = [
+    { o: 'a bun', m: 'buns', lo: 30, hi: 80 }, { o: 'an apple', m: 'apples', lo: 20, hi: 60 }, { o: 'a pencil', m: 'pencils', lo: 10, hi: 95 },
+    { o: 'a rubber', m: 'rubbers', lo: 10, hi: 50 }, { o: 'a lolly', m: 'lollies', lo: 20, hi: 70 }, { o: 'a sticker book', m: 'sticker books', lo: 50, hi: 95 },
+    { o: 'a balloon', m: 'balloons', lo: 10, hi: 50 }, { o: 'a postcard', m: 'postcards', lo: 20, hi: 60 }, { o: 'a bookmark', m: 'bookmarks', lo: 20, hi: 70 },
+    { o: 'a keyring', m: 'keyrings', lo: 50, hi: 95 }, { o: 'a banana', m: 'bananas', lo: 10, hi: 40 }, { o: 'a sharpener', m: 'sharpeners', lo: 10, hi: 40 },
+    { o: 'a cookie', m: 'cookies', lo: 30, hi: 80 }
+  ];
+  function priceOf(it){ return randInt(it.lo / 5, it.hi / 5) * 5; }
 
   function mt(p){ return p < 100 ? p + 'p' : '£' + (p % 100 === 0 ? String(p / 100) : (p / 100).toFixed(2)); }   // natural text
   function fp(p){ return '£' + (p / 100).toFixed(2); }                                                           // option label, pounds mode
   function fq(p){ return p + 'p'; }                                                                              // option label, pence mode
-  function fmtFor(a){ return a >= 100 ? fp : fq; }
+  function fm(p){ return p < 100 ? fq(p) : fp(p); }   // under £1 shows pence (60p), otherwise pounds (£1.60)
+  function fmtFor(a){ return fm; }
   function sumKey(list){ const c = {}; list.forEach(function(d){ c[d] = (c[d] || 0) + 1; }); return Object.keys(c).reduce(function(t, d){ return t + (+d) * c[d]; }, 0); }  // independent: denomination x how many
   function sum(list){ return list.reduce(function(a, b){ return a + b; }, 0); }
   function desc(list){ return list.slice().sort(function(a, b){ return b - a; }); }
@@ -41,7 +49,7 @@
     }
     return st;
   }
-  function two(){ const a = randInt(0, ITEMS.length - 1); let b = randInt(0, ITEMS.length - 1); while(b === a) b = randInt(0, ITEMS.length - 1); return [ITEMS[a], ITEMS[b]]; }
+  function two(){ return sample(ITEMS, 2); }
   // the "count up" way of finding change, as words
   function countUp(price, pay){
     const next = Math.ceil(price / 10) * 10;
@@ -154,7 +162,7 @@
     const lowball = list.reduce(function(t, c){ return t + (c >= 100 ? c / 100 : c); }, 0);
     const smalls = sum(list.filter(function(c){ return c < 100; }));
     return mcqNum({
-      prompt: 'How much money is this?', visual: vis, answer: total, fmt: fp,
+      prompt: 'How much money is this?', visual: vis, answer: total, fmt: fm,
       wrong: [
         { v: lowball, why: 'A £1 coin is worth 100p, not 1p (and a £2 coin is 200p).' },
         { v: smalls, why: 'You left out the pound coins. Add them too.' },
@@ -188,7 +196,7 @@
     return mcqNum({
       prompt: '£' + pounds + '.' + pad2(pence) + ' is the same as how many pence?', answer: p, fmt: fq,
       wrong: [
-        { v: pence, why: 'You forgot the ' + pounds + ' whole pound(s). Each £1 is 100p.' },
+        { v: pence, why: 'You forgot the ' + plural(pounds, 'whole pound') + '. Each £1 is 100p.' },
         { v: pounds * 100, why: 'You forgot the ' + pence + ' pence on the end.' },
         { v: p * 10, why: 'Only £1 = 100p. Do not add extra zeros.' },
         { v: pounds * 100 + (pence % 10) * 10 + Math.floor(pence / 10), why: 'The pence digits got swapped.' }
@@ -200,11 +208,11 @@
     });
   }
   function t2Add(){
-    const a = randInt(3, 14) * 5, b = randInt(3, 12) * 5 + (chance(0.4) ? 2 : 0), tot = a + b, it = two(), nm = pick(NAMES);
+    const it = two(), nm = pick(NAMES), a = priceOf(it[0]), b = priceOf(it[1]) + (chance(0.4) ? 2 : 0), tot = a + b;
     const sub = Math.abs(a - b);
     return mcqNum({
-      prompt: nm + ' buys ' + it[0] + ' for ' + mt(a) + ' and ' + it[1] + ' for ' + mt(b) + '. How much does ' + nm + ' spend altogether?',
-      answer: tot, fmt: fmtFor(tot),
+      prompt: nm + ' buys ' + it[0].o + ' for ' + mt(a) + ' and ' + it[1].o + ' for ' + mt(b) + '. How much does ' + nm + ' spend altogether?',
+      answer: tot, fmt: fm,
       wrong: [
         { v: sub, why: '"Altogether" means ADD the two prices, not take one away.' },
         { v: tot - 10, why: 'Check the tens: when the pence add to more than 10 you need to carry.' },
@@ -214,14 +222,14 @@
       nearby: [5, -5, 20, -20, 10, -10, 1, -1, 30],
       valid: function(v){ return v > 0 && (tot >= 100 || true); },
       hint: 'Add the two prices. Add the pence in the units first, then the tens.',
-      explain: ex('Adding two prices', ['Add ' + mt(a) + ' and ' + mt(b) + ', in pence: ' + a + 'p + ' + b + 'p.', 'Tens: ' + Math.floor(a / 10) * 10 + ' + ' + Math.floor(b / 10) * 10 + ' = ' + (Math.floor(a / 10) * 10 + Math.floor(b / 10) * 10) + '. Units: ' + (a % 10) + ' + ' + (b % 10) + ' = ' + (a % 10 + b % 10) + '.', 'Together: ' + tot + 'p' + (tot >= 100 ? ', which is <b>' + fp(tot) + '</b>' : '') + '. So the answer is <b>' + fmtFor(tot)(tot) + '</b>. ✅']),
+      explain: ex('Adding two prices', ['Add ' + mt(a) + ' and ' + mt(b) + ', in pence: ' + a + 'p + ' + b + 'p.', 'Tens: ' + Math.floor(a / 10) * 10 + ' + ' + Math.floor(b / 10) * 10 + ' = ' + (Math.floor(a / 10) * 10 + Math.floor(b / 10) * 10) + '. Units: ' + (a % 10) + ' + ' + (b % 10) + ' = ' + (a % 10 + b % 10) + '.', 'Together: ' + tot + 'p' + (tot >= 100 ? ', which is <b>' + fp(tot) + '</b>' : '') + '. So the answer is <b>' + fm(tot) + '</b>. ✅']),
       truth: (a + 100) + (b - 100)
     });
   }
   function t2Change(){
-    const price = randInt(1, 19) * 5, ch = 100 - price, nm = pick(NAMES), it = pick(ITEMS);
+    const it = pick(ITEMS), price = priceOf(it), ch = 100 - price, nm = pick(NAMES);
     return mcqNum({
-      prompt: nm + ' pays with a £1 coin for ' + it + ' that costs ' + price + 'p. How much change does ' + nm + ' get?',
+      prompt: nm + ' pays with a £1 coin (100p) for ' + it.o + ' that costs ' + price + 'p. How much change does ' + nm + ' get?',
       answer: ch, fmt: fq,
       wrong: [
         { v: price, why: 'That is the price. The change is what is left from £1.' },
@@ -237,11 +245,11 @@
     });
   }
   function t2Enough(){
-    const nm = pick(NAMES), it = pick(ITEMS);
+    const nm = pick(NAMES), item = pick(ITEMS), it = item.o;
     let has, price;
     do {
-      has = randInt(8, 36) * 5; price = has + randInt(-6, 6) * 5;
-    } while(price < 20 || price === has && chance(0.5));
+      price = priceOf(item); has = price + randInt(-6, 6) * 5;
+    } while(has < 10 || (price === has && chance(0.5)));
     const list = coinsFor(has, [5, 10, 20, 50, 100], 6);
     const vis = V.coins(list);
     const enough = has >= price;
@@ -258,11 +266,11 @@
   /* ------------------------------ tier 3 ------------------------------ */
   function t3TwoStep(){
     const pay = pick([100, 100, 200]);
-    let a, b;
-    do { a = randInt(5, pay === 100 ? 70 : 140) ; b = randInt(5, pay === 100 ? 60 : 130); if(pay === 100){ a = Math.round(a / 1); } } while(a + b >= pay || a + b < pay - 90 || a === b);
-    const nm = pick(NAMES), it = two(), spent = a + b, ch = pay - spent;
+    let a, b, it;
+    do { it = two(); a = randInt(it[0].lo, it[0].hi); b = randInt(it[1].lo, it[1].hi); } while(a + b >= pay || a + b < pay - 90 || a === b);
+    const nm = pick(NAMES), spent = a + b, ch = pay - spent;
     return numeric({
-      prompt: nm + ' buys ' + it[0] + ' for ' + mt(a) + ' and ' + it[1] + ' for ' + mt(b) + '. ' + nm + ' pays with ' + (pay === 100 ? 'a £1 coin' : 'a £2 coin') + '. How many pence change does ' + nm + ' get?',
+      prompt: nm + ' buys ' + it[0].o + ' for ' + mt(a) + ' and ' + it[1].o + ' for ' + mt(b) + '. ' + nm + ' pays with ' + (pay === 100 ? 'a £1 coin (100p)' : 'a £2 coin (200p)') + '. How many pence change does ' + nm + ' get?',
       answer: ch, unit: 'p',
       hint: 'Step 1: add the two prices. Step 2: count up (or take away) from what ' + nm + ' paid.',
       explain: ex('Two steps', ['Spent: ' + a + 'p + ' + b + 'p = <b>' + spent + 'p</b>.', 'Paid: ' + mt(pay) + ' = ' + pay + 'p.', 'Change: ' + pay + 'p − ' + spent + 'p = <b>' + ch + 'p</b>. ✅']),
@@ -272,11 +280,13 @@
   }
   function t3Change(){
     const pay = pick([500, 500, 1000]);
-    const price = pay === 500 ? randInt(21, 98) * 5 : randInt(21, 189) * 5;
-    const ch = pay - price, nm = pick(NAMES), it = pick(['a book', 'a toy rocket', 'a football', 'a puzzle', 'a board game', 'a T-shirt', 'a pencil case', 'a kite']);
+    const GOODS = [['a book', 150, 900], ['a toy rocket', 150, 900], ['a football', 300, 900], ['a puzzle', 250, 900], ['a board game', 400, 950], ['a T-shirt', 400, 950], ['a pencil case', 150, 600], ['a kite', 200, 800]];
+    let g, lo, hi;
+    do { g = pick(GOODS); lo = g[1]; hi = Math.min(g[2], pay - 5); } while(lo >= hi);
+    const price = randInt(lo / 5, hi / 5) * 5, ch = pay - price, nm = pick(NAMES), it = g[0];
     return mcqNum({
       prompt: it.charAt(0).toUpperCase() + it.slice(1) + ' costs ' + mt(price) + '. ' + nm + ' pays with a ' + mt(pay) + ' note. How much change does ' + nm + ' get?',
-      answer: ch, fmt: fmtFor(ch),
+      answer: ch, fmt: fm,
       wrong: [
         { v: ch + 100, why: 'Careful: you may have given £1 too much. Count up to the next pound, then on to the note.' },
         { v: ch - 100, why: 'Careful: you may have given £1 too little. Check the jump to the next pound.' },
@@ -287,7 +297,7 @@
       nearby: [50, -50, 5, -5, 20, -20],
       valid: function(v){ return v > 0; },
       hint: 'Count up from the price to the next pound, then up to the note. Add the jumps.',
-      explain: ex('Change from ' + mt(pay), [countUp(price, pay) || ('Take ' + mt(price) + ' from ' + mt(pay) + '.'), 'Add the jumps up: that gives <b>' + fmtFor(ch)(ch) + '</b>.', 'Check: ' + mt(price) + ' + ' + mt(ch) + ' = ' + mt(pay) + '. ✅']),
+      explain: ex('Change from ' + mt(pay), [countUp(price, pay) || ('Take ' + mt(price) + ' from ' + mt(pay) + '.'), 'Add the jumps up: that gives <b>' + fm(ch) + '</b>.', 'Check: ' + mt(price) + ' + ' + mt(ch) + ' = ' + mt(pay) + '. ✅']),
       truth: (Math.ceil(price / 100) * 100 - price) + (pay - Math.ceil(price / 100) * 100)
     });
   }
@@ -302,7 +312,7 @@
     list = desc(list);
     const vis = V.coins(list);
     return mcqNum({
-      prompt: 'How much money is this?', visual: vis, answer: total, fmt: fp,
+      prompt: 'How much money is this?', visual: vis, answer: total, fmt: fm,
       wrong: [
         { v: total - list[0] + list[0] / 100, why: 'A note is worth many pounds — a ' + mt(list[0]) + ' note is ' + list[0] + 'p, not ' + list[0] / 100 + 'p.' },
         { v: total - list[0], why: 'The note was left out. Add it too!' },
@@ -335,9 +345,9 @@
     return q;
   }
   function t3Times(){
-    const n = randInt(3, 6), price = pick([15, 20, 25, 30, 35, 40, 45]), k = randInt(0, ITEM_PL.length - 1), nm = pick(NAMES);
+    const n = randInt(3, 6), item = pick(ITEMS), price = Math.min(priceOf(item), 60), nm = pick(NAMES);
     return numeric({
-      prompt: nm + ' buys ' + n + ' ' + ITEM_PL[k] + '. Each one costs ' + price + 'p. How many pence do they cost altogether?',
+      prompt: nm + ' buys ' + n + ' ' + item.m + '. Each one costs ' + price + 'p. How many pence do they cost altogether?',
       answer: n * price, unit: 'p',
       hint: 'Add ' + price + 'p again and again ' + n + ' times, or multiply ' + price + ' × ' + n + '.',
       explain: ex('Lots of the same price', [n + ' lots of ' + price + 'p.', price + ' × ' + n + ' = ' + Array(n).fill(price).join(' + ') + '.', 'The total is <b>' + (n * price) + 'p</b>. ✅']),
@@ -346,14 +356,14 @@
     });
   }
   function t3Enough(){
-    const nm = pick(NAMES), k = randInt(0, ITEM_PL.length - 1), n = randInt(2, 5), price = randInt(3, 19) * 5, tot = n * price;
+    const nm = pick(NAMES), item = pick(ITEMS), n = randInt(2, 5), price = priceOf(item), tot = n * price;
     let has;
     do { has = tot + randInt(-8, 8) * 5; } while(has < 20 || has > 600);
     const list = coinsFor(has, [5, 10, 20, 50, 100, 200], 7);
     const vis = V.coins(list);
     const enough = has >= tot;
     return mcq2({
-      prompt: nm + ' has these coins and wants ' + n + ' ' + ITEM_PL[k] + ' at ' + mt(price) + ' each. Does ' + nm + ' have enough money?', visual: vis,
+      prompt: nm + ' has these coins and wants ' + n + ' ' + item.m + ' at ' + mt(price) + ' each. Does ' + nm + ' have enough money?', visual: vis,
       correct: opt(K.bool(enough), enough ? 'Yes' : 'No', ''),
       other: opt(K.bool(!enough), enough ? 'No' : 'Yes', enough ? 'The ' + n + ' items cost ' + mt(tot) + ' and ' + nm + ' has ' + mt(has) + '. That is enough.' : 'The ' + n + ' items cost ' + mt(tot) + ' but ' + nm + ' only has ' + mt(has) + '.'),
       hint: 'Two jobs: find the cost of all the items, and add up the coins. Then compare.',

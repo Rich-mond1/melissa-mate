@@ -228,10 +228,10 @@
         // which picture is a ...?
         const target = pick(T1);
         const tv = draw(target, { width: 120 }), tf = polyFacts(tv);
-        const ds = shuffle(T1).filter(function(x){ return !IS[target](FACT[x]) && !IS[x](tf); }).map(function(x){ return opt(K.text(x), draw(x, { width: 120 }), 'That picture shows ' + art(x) + ', which ' + DEF[x] + '. A ' + target + ' ' + DEF[target] + '.'); });
+        const ds = shuffle(T1).filter(function(x){ return !IS[target](FACT[x]) && !IS[x](tf); }).map(function(x){ return opt(K.text(x), draw(x, { width: 120 }), 'That picture shows ' + art(x) + ', which ' + DEF[x] + '. ' + cap(art(target)) + ' ' + DEF[target] + '.'); });
         const q = mcq({
           prompt: 'Which picture shows ' + art(target) + '?', visual: '', correct: opt(K.text(target), tv), distractors: ds, count: 3,
-          hint: 'Say what a ' + target + ' is like, then count the sides on each picture.',
+          hint: 'Say what ' + art(target) + ' is like, then count the sides on each picture.',
           explain: ex('Finding ' + art(target), [artB(target) + ' ' + DEF[target] + '.', 'Count the sides on each picture and look for corners.', 'Only one picture fits: ' + art(target).replace(target, '<b>' + target + '</b>') + '. ✅']),
           truth: K.text(target)
         });
@@ -268,7 +268,7 @@
           return mcq({
             prompt: 'What kind of triangle is this?', visual: vis, correct: opt(K.text(target), target), distractors: ds, count: 3, keepOrder: true,
             hint: 'Look for a square corner first. Then compare the lengths of the three sides.',
-            explain: ex('Sorting triangles', ['Right angles: <b>' + f.ra + '</b>. Equal sides: <b>' + (f.allEq ? 'all 3' : (f.eqMax === 2 ? '2' : 'none')) + '</b>.', 'An <b>equilateral</b> has 3 equal sides, an <b>isosceles</b> has 2, a <b>scalene</b> has none, a <b>right-angled</b> triangle has a square corner.', 'This is a <b>' + target + '</b>. ✅']),
+            explain: ex('Sorting triangles', ['Right angles: <b>' + f.ra + '</b>. Equal sides: <b>' + (f.allEq ? 'all 3' : (f.eqMax === 2 ? '2' : 'none')) + '</b>.', 'An <b>equilateral</b> has 3 equal sides, an <b>isosceles</b> has 2, a <b>scalene</b> has none, a <b>right-angled</b> triangle has a square corner.', 'This is ' + art(target).replace(target, '<b>' + target + '</b>') + '. ✅']),
             truth: K.text(nameOf(polyFacts(vis))), decode: function(){ return K.text(nameOf(decFacts(vis))); }
           });
         }

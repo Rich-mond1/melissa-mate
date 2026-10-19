@@ -75,7 +75,7 @@
     const q = mcq({
       prompt: 'Which number line has the ? at ' + n + '/' + d + '?', visual: '',
       correct: opt(fK(n, d), line01(d, n, { width: 240 })), distractors: shuffle(ds), count: Math.min(3, d - 1 >= 3 ? 3 : 2),
-      hint: 'Each line is cut into ' + d + ' equal steps. Count ' + n + ' steps along from 0.',
+      hint: 'Each line is cut into ' + d + ' equal steps. Count ' + plural(n, 'step') + ' along from 0.',
       explain: ex('Placing ' + n + '/' + d, ['The line from 0 to 1 is cut into <b>' + d + '</b> equal steps.', 'The top number says to walk <b>' + plural(n, 'step') + '</b> from 0.', 'Only one line has its ? at <b>' + n + '/' + d + '</b>. ✅']),
       truth: fK(n * 3, d * 3)
     });
@@ -119,8 +119,8 @@
     if(!right && (a === n || a < 1 || a >= d)) a = n === 1 ? 2 : n - 1;
     const vis = line01(d, n, {});
     const nm = pick(['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Aisha', 'Kai']);
-    const yes = opt(K.bool(true), 'Yes', 'The ? really is at that fraction. Count the jumps from 0 again.');
-    const no = opt(K.bool(false), 'No', 'Count the jumps from 0 to the ? again — it IS at a different fraction.');
+    const yes = opt(K.bool(true), 'Yes', 'Count the jumps from 0 again: the ? is at ' + n + '/' + d + ', not ' + a + '/' + d + '.');
+    const no = opt(K.bool(false), 'No', 'Count the jumps from 0 again: the ? really IS at ' + a + '/' + d + ', so ' + nm + ' is right.');
     return mcq2({
       prompt: nm + ' says the ? is at ' + a + '/' + d + '. Is ' + nm + ' right?', visual: vis,
       correct: right ? yes : no, other: right ? no : yes,

@@ -6,6 +6,7 @@
   function dg(n){ return [Math.floor(n / 100), Math.floor(n / 10) % 10, n % 10]; }
   const PL = ['hundreds', 'tens', 'ones'];
   const PL1 = ['hundreds', 'tens', 'ones'];
+  function PU(n, i){ return n + ' ' + (n === 1 ? ['hundred', 'ten', 'one'][i] : PL[i]); }
   const BLOCKS_HINT = 'Big blue squares are hundreds, purple sticks are tens and yellow cubes are ones. Count each kind, then write them side by side: hundreds, tens, ones.';
 
   /* wrong answers for "blocks -> number" */
@@ -16,8 +17,8 @@
     w.push({ v: h + t + o, why: 'You added up the digits. Instead, write them side by side: ' + plural(h, 'hundred') + ', ' + plural(t, 'ten') + ', ' + plural(o, 'one') + '.' });
     if(t === 0) w.push({ v: h * 10 + o, why: 'No purple sticks means 0 tens. Write a 0 in the tens place to hold it.' });
     if(o === 0) w.push({ v: h * 10 + t, why: 'No yellow cubes means 0 ones. Write a 0 in the ones place to hold it.' });
-    w.push({ v: val(h, t + 1, o), why: 'Count the purple sticks again, there are ' + t + ' of them.' });
-    w.push({ v: val(h, t, o + 1), why: 'Count the yellow cubes again, there are ' + o + ' of them.' });
+    w.push({ v: val(h, t + 1, o), why: 'Count the purple sticks again, there ' + (t === 1 ? 'is 1 of them' : 'are ' + t + ' of them') + '.' });
+    w.push({ v: val(h, t, o + 1), why: 'Count the yellow cubes again, there ' + (o === 1 ? 'is 1 of them' : 'are ' + o + ' of them') + '.' });
     return w;
   }
 
@@ -93,9 +94,9 @@
   }
   function valueExplain(p){
     return ex('The value of the ' + p.d + ' in ' + p.n, [
-      p.n + ' = <b>' + p.ds[0] + '</b> hundreds + <b>' + p.ds[1] + '</b> tens + <b>' + p.ds[2] + '</b> ones.',
+      p.n + ' = <b>' + PU(p.ds[0], 0) + '</b> + <b>' + PU(p.ds[1], 1) + '</b> + <b>' + PU(p.ds[2], 2) + '</b>.',
       'The ' + p.d + ' is in the <b>' + PL[p.idx] + '</b> place.',
-      p.idx === 2 ? p.d + ' ones is just <b>' + p.d + '</b>.' : p.d + ' ' + PL[p.idx] + ' = ' + p.d + ' × ' + (p.idx === 0 ? 100 : 10) + ' = <b>' + p.ans + '</b>. ✅'
+      p.idx === 2 ? PU(p.d, 2) + ' is just <b>' + p.d + '</b>.' : PU(p.d, p.idx) + ' = ' + p.d + ' × ' + (p.idx === 0 ? 100 : 10) + ' = <b>' + p.ans + '</b>. ✅'
     ]);
   }
   function valueWrongs(p){
@@ -161,7 +162,7 @@
             const w = [];
             if(t === 0) w.push({ v: h * 10 + o, why: 'There are no tens, so a 0 must hold the tens place: ' + n + ', not ' + (h * 10 + o) + '.' });
             if(o === 0) w.push({ v: h * 10 + t, why: 'There are no ones, so a 0 must hold the ones place: ' + n + ', not ' + (h * 10 + t) + '.' });
-            if(t !== 0 && o !== 0){ w.push({ v: o * 100 + t * 10 + h, why: 'You wrote the digits backwards. The hundreds digit goes first.' }); w.push({ v: h + t + o, why: 'You added the digits. Write them side by side instead.' }); w.push({ v: Number('' + h + '0' + t + '0' + o), why: 'You wrote the zeros as well. Just write the digit for each column.' }); }
+            if(t !== 0 && o !== 0){ w.push({ v: o * 100 + t * 10 + h, why: 'You wrote the digits backwards. The hundreds digit goes first.' }); w.push({ v: h + t + o, why: 'You added the digits. Write them side by side instead.' }); w.push({ v: Number('' + h * 100 + t * 10 + o), why: 'You wrote the value of each part side by side (' + h * 100 + ', ' + t * 10 + ', ' + o + '). Each column only holds ONE digit.' }); }
             else { w.push({ v: Number('' + h + '0' + (t || o)), why: 'Careful, there is one missing column to hold with a 0, not two.' }); w.push({ v: h + t + o, why: 'You added the digits. Write them side by side instead.' }); w.push({ v: t === 0 ? h * 100 + o * 10 : h * 100 + t, why: 'The ' + (t === 0 ? o : t) + ' is in the wrong column. Check hundreds, tens, ones.' }); }
             return mcqNum({
               prompt: 'What number is <b>' + parts + '</b>?', answer: n, wrong: w, nearby: [10, -10, 100, -100, 1],
@@ -198,9 +199,9 @@
             const h = randInt(3, 9), t = randInt(0, 9), o = randInt(0, 9), n = val(h, t, o), X = chance(0.7) ? h - 1 : h - 2;
             const ans = t + 10 * (h - X);
             return numeric({
-              prompt: n + ' = ' + X + ' hundreds + <b>?</b> tens + ' + o + ' ones. What number goes in the gap?', answer: ans,
-              hint: 'Taking a hundred out of ' + n + ' leaves less in the hundreds. Remember that 1 hundred is the same as 10 tens.',
-              explain: ex('Partitioning ' + n + ' another way', [n + ' = ' + h + ' hundreds + ' + t + ' tens + ' + o + ' ones.', 'We only use ' + X + ' hundreds, so ' + (h - X) + ' hundred' + (h - X === 1 ? '' : 's') + ' (' + (h - X) * 100 + ') turn into ' + (h - X) * 10 + ' tens.', t + ' tens + ' + (h - X) * 10 + ' tens = <b>' + ans + '</b> tens.', X * 100 + ' + ' + ans * 10 + ' + ' + o + ' = ' + n + '. ✅']),
+              prompt: n + ' = ' + plural(X, 'hundred') + ' + <b>?</b> tens + ' + plural(o, 'one') + '. What number goes in the gap?', answer: ans,
+              hint: 'Using fewer hundreds means the missing hundreds must be written as tens instead. Remember that 1 hundred is the same as 10 tens.',
+              explain: ex('Partitioning ' + n + ' another way', [n + ' = ' + plural(h, 'hundred') + ' + ' + plural(t, 'ten') + ' + ' + plural(o, 'one') + '.', 'We only use ' + plural(X, 'hundred') + ', so ' + (h - X) + ' hundred' + (h - X === 1 ? '' : 's') + ' (' + (h - X) * 100 + ') turn into ' + (h - X) * 10 + ' tens.', plural(t, 'ten') + ' + ' + (h - X) * 10 + ' tens = <b>' + ans + '</b> tens.', X * 100 + ' + ' + ans * 10 + ' + ' + o + ' = ' + n + '. ✅']),
               truth: (n - X * 100 - o) / 10,
               wrong: function(v){ return v === t ? 'That is the tens digit. But the hundred you took out turns into 10 more tens.' : (v === t + 1 ? 'One hundred is 10 tens, not 1 ten.' : ''); }
             });
@@ -210,14 +211,14 @@
             return numeric({
               prompt: 'How many tens are there altogether in <b>' + n + '</b>?', answer: ans,
               hint: 'Each hundred is worth 10 tens. How many tens do the hundreds give? Then add the tens.',
-              explain: ex('Tens in ' + n, [h + ' hundreds = ' + h + ' × 10 = <b>' + h * 10 + '</b> tens.', 'Plus ' + plural(t, 'more ten') + '.', h * 10 + ' + ' + t + ' = <b>' + ans + '</b> tens. ✅']),
+              explain: ex('Tens in ' + n, [plural(h, 'hundred') + ' = ' + h + ' × 10 = <b>' + h * 10 + '</b> tens.', 'Plus ' + plural(t, 'more ten') + '.', h * 10 + ' + ' + t + ' = <b>' + ans + '</b> tens. ✅']),
               truth: Number(String(n).slice(0, -1)),
               wrong: function(v){ return v === t ? 'That is only the tens digit. The hundreds turn into tens too.' : (v === h ? 'That is the hundreds digit. 1 hundred = 10 tens.' : ''); }
             });
           }
           case 3: { // same as?
             const h = randInt(2, 9), t = randInt(0, 8), o = randInt(0, 9), n = val(h, t, o);
-            const lab = function(x, T, y){ return x + ' hundred' + (x === 1 ? '' : 's') + ' + ' + T + ' tens + ' + y + ' ones'; };
+            const lab = function(x, T, y){ return plural(x, 'hundred') + ' + ' + plural(T, 'ten') + ' + ' + plural(y, 'one'); };
             const useTensOnly = chance(0.25);
             const X = useTensOnly ? 0 : h - 1, T = useTensOnly ? h * 10 + t : t + 10;
             const cands = [[X, t, o, 'Moving a hundred out means adding 10 tens, not leaving the tens alone.'], [X, t + 1, o, 'One hundred is 10 tens, not 1 ten.'], [h, t + 10, o, 'You kept all the hundreds AND added 10 more tens.'], [X, t + 100, o, 'One hundred is 10 tens, not 100 tens.'], [h - 2, t + 10, o, 'Taking out 2 hundreds needs 20 more tens.'], [X, T, o + 10, 'The ones are still ' + o + '. They do not change.'], [X, T + 1, o, 'Count again: the total in tens is off by one.'], [X, T - 1, o, 'Count again: the total in tens is off by one.']];
@@ -241,7 +242,7 @@
             return mcqNum({
               prompt: 'What number do these blocks show? Careful: there are lots of purple sticks!', visual: vis, answer: n, wrong: w, nearby: [10, -10, 100, -100],
               hint: 'Count the value of each kind: hundreds × 100, tens × 10, ones × 1. Then add them up.',
-              explain: ex('Blocks with lots of tens', [plural(h, 'hundred') + ' = <b>' + h * 100 + '</b>.', t + ' tens = ' + t + ' × 10 = <b>' + t * 10 + '</b>.', o + ' ones = <b>' + o + '</b>.', h * 100 + ' + ' + t * 10 + ' + ' + o + ' = <b>' + n + '</b>. ✅']),
+              explain: ex('Blocks with lots of tens', [plural(h, 'hundred') + ' = <b>' + h * 100 + '</b>.', t + ' tens = ' + t + ' × 10 = <b>' + t * 10 + '</b>.', plural(o, 'one') + ' = <b>' + o + '</b>.', h * 100 + ' + ' + t * 10 + ' + ' + o + ' = <b>' + n + '</b>. ✅']),
               truth: Number('' + (h + 1) + (t - 10) + o),
               decode: function(){ return V.decodeBaseTen(vis); }
             });

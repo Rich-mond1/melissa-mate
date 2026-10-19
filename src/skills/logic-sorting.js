@@ -19,7 +19,7 @@
     m4: { label: 'in the 4 times table', comp: 'nm4', fn: function(n){ return n % 4 === 0; }, how: 'Count in 4s to check: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48.' },
     nm4: { label: 'not in the 4 times table', comp: 'm4', fn: function(n){ return n % 4 !== 0; }, how: 'Count in 4s to check: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48.' },
     gt50: { label: 'more than 50', comp: 'le50', fn: function(n){ return n > 50; }, how: 'Is it bigger than 50? 51 is, 50 is not.' },
-    le50: { label: 'no more than 50', comp: 'gt50', fn: function(n){ return n <= 50; }, how: 'Is it bigger than 50? 51 is, 50 is not.' }
+    le50: { label: '50 or less', comp: 'gt50', fn: function(n){ return n <= 50; }, how: 'Is it bigger than 50? 51 is, 50 is not.' }
   };
   const AXES = { par: ['even', 'odd'], m5: ['m5', 'nm5'], m10: ['m10', 'nm10'], big: ['gt50', 'le50'] };
   const AXPAIRS = [['par', 'm5'], ['par', 'big'], ['m5', 'big'], ['m10', 'big']];
@@ -389,7 +389,7 @@
 
   /* ------------------------------------------------------------ the skill */
   registerSkill({
-    id: 'logic-sorting', strand: 'logic', name: 'Sorting and odd one out', emoji: '🧺', year: 3, order: 920, prereq: ['logic-patterns'],
+    id: 'logic-sorting', strand: 'logic', name: 'Sorting and odd one out', emoji: '🧺', year: 3, order: 920, prereq: ['logic-patterns', 'multdiv-2-5-10'],
     lesson: {
       title: 'Sorting with rules',
       steps: [
@@ -397,7 +397,7 @@
         { say: 'This number has one dot left on its own. A number with one left over is <b>odd</b>. 7 dots make 3 pairs and 1 spare. So <b>7 is odd</b>.', vis: { kind: 'dots', args: [7, { cols: 2 }] },
           quiz: { prompt: 'Look at the dots: 9 dots in pairs. Is 9 odd or even?', options: [{ label: 'Odd', ok: true }, { label: 'Even', ok: false }], right: 'Yes! 9 makes 4 pairs and 1 left over, so it is odd.', wrong: '9 dots make 4 pairs with 1 left over. A number with one left over is odd.' } },
         { say: 'Check the <b>last digit</b>. <b>Multiples of 5</b> end in <b>0 or 5</b>. <b>Multiples of 10</b> end in <b>0</b>. All of these are multiples of 5, but only 10, 20 and 30 are multiples of 10.', vis: { kind: 'lgCards', args: [[5, 10, 15, 20, 25, 30]] } },
-        { say: 'A <b>Carroll diagram</b> sorts with two rules at once. 12 is even <b>and</b> not a multiple of 5, so it goes in the top-left box. Every number must match both its headings.', vis: { kind: 'lgCarroll', args: [{ cols: ['m5', 'nm5'], rows: ['even', 'odd'], cells: { 'even|m5': [10, 20], 'even|nm5': [12, 18], 'odd|m5': [15, 25], 'odd|nm5': [7, 21] } }] },
+        { say: 'A <b>Carroll diagram</b> sorts with two rules at once. 12 is even <b>and</b> not a multiple of 5, so it goes in the top-right box. Every number must match both its headings.', vis: { kind: 'lgCarroll', args: [{ cols: ['m5', 'nm5'], rows: ['even', 'odd'], cells: { 'even|m5': [10, 20], 'even|nm5': [12, 18], 'odd|m5': [15, 25], 'odd|nm5': [7, 21] } }] },
           quiz: { prompt: 'Which box does 35 go in?', options: [{ label: 'Odd and a multiple of 5', ok: true }, { label: 'Even and a multiple of 5', ok: false }, { label: 'Odd and not a multiple of 5', ok: false }], right: 'Yes! 35 is odd and it ends in 5.', wrong: '35 ends in 5, so it is a multiple of 5. It ends in an odd digit, so it is odd.' } },
         { say: 'In an <b>odd one out</b> puzzle, test <b>every</b> number with the rule. Which of 20, 30, 45, 50 is not a multiple of 10? Only <b>45</b> fails, because it does not end in 0.', vis: { kind: 'lgCards', args: [[20, 30, 45, 50]] } }
       ]

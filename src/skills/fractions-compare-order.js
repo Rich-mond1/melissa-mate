@@ -139,8 +139,8 @@
     const p = unitPair([2, 3, 4, 5, 6, 8, 10]), a = p[0], b = p[1];
     const claimBig = chance(0.5) ? a : b, other = claimBig === a ? b : a;
     const isTrue = bigger(claimBig, other);
-    const T = opt(K.bool(true), 'True', 'It IS true: with 1 on top, the smaller the bottom number the bigger the piece.');
-    const Fa = opt(K.bool(false), 'False', 'It is false. A bigger bottom number means smaller pieces, so 1/' + (claimBig[1]) + ' is NOT bigger than 1/' + other[1] + '.');
+    const T = opt(K.bool(true), 'True', 'It is false. A bigger bottom number means smaller pieces, so 1/' + claimBig[1] + ' is NOT bigger than 1/' + other[1] + '.');
+    const Fa = opt(K.bool(false), 'False', 'It IS true: with 1 on top, the smaller the bottom number the bigger the piece, so 1/' + claimBig[1] + ' is bigger than 1/' + other[1] + '.');
     return mcq2({
       prompt: 'True or false? ' + F(claimBig[0], claimBig[1]) + ' is bigger than ' + F(other[0], other[1]) + '.', visual: '',
       correct: isTrue ? T : Fa, other: isTrue ? Fa : T,
@@ -166,14 +166,14 @@
   }
 
   registerSkill({
-    id: 'frac-compare-order', strand: 'fractions', name: 'Comparing and ordering fractions', emoji: '⚖️', year: 3, order: 470, prereq: ['frac-nonunit'],
+    id: 'frac-compare-order', strand: 'fractions', name: 'Comparing and ordering fractions', emoji: '⚖️', year: 3, order: 470, prereq: ['frac-nonunit', 'frac-tenths'],
     lesson: {
       title: 'Which fraction is bigger?',
       steps: [
         { say: 'When the bottom numbers are the <b>same</b>, the parts are the same size. So the fraction with <b>more parts coloured</b> is bigger. Here 3/5 is bigger than 2/5.', vis: { kind: 'fracBars', args: [[[3, 5], [2, 5]]] },
           quiz: { prompt: 'Which is bigger, 2/7 or 5/7?', options: [{ label: '2/7', ok: false }, { label: '5/7', ok: true }], right: 'Yes! The parts are the same size, and 5 parts is more than 2 parts.', wrong: 'Both are sevenths, so compare the top numbers: 5 is bigger than 2. So 5/7 is bigger.' } },
         { say: 'Now look at <b>unit fractions</b> (1 on top). Here is 1/2 and 1/4. Half a bar is much longer than a quarter of a bar.', vis: { kind: 'fracBars', args: [[[1, 2], [1, 4]]] } },
-        { say: 'Surprise! The <b>bigger</b> the bottom number, the <b>smaller</b> the fraction. More pieces means each piece is smaller. So <b>1/2 > 1/4 > 1/8</b>.', vis: { kind: 'fracBars', args: [[[1, 2], [1, 4], [1, 8]]] },
+        { say: 'Surprise! When the top is <b>1</b>, the <b>bigger</b> the bottom number, the <b>smaller</b> the fraction. More pieces means each piece is smaller. So <b>1/2 > 1/4 > 1/8</b>.', vis: { kind: 'fracBars', args: [[[1, 2], [1, 4], [1, 8]]] },
           quiz: { prompt: 'Which is bigger, 1/3 or 1/6?', options: [{ label: '1/3', ok: true }, { label: '1/6', ok: false }], right: 'Yes! Thirds are bigger pieces than sixths.', wrong: 'A whole cut into 3 pieces gives bigger pieces than one cut into 6. So 1/3 is bigger.' } }
       ]
     },

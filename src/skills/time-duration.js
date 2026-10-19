@@ -54,16 +54,16 @@
   /* ---- explanations ---- */
   function countOn(s, e){
     const d = e - s, sm = s % 60, em = e % 60, steps = [];
-    if(Math.floor(s / 60) === Math.floor(e / 60)) steps.push('Count on from ' + dig(s) + ' to ' + dig(e) + ' in 5s: that is <b>' + d + ' minutes</b>.');
+    if(Math.floor(s / 60) === Math.floor(e / 60)) steps.push('Count on from ' + dig(s) + ' to ' + dig(e) + ' in 5s: that is <b>' + plural(d, 'minute') + '</b>.');
     else if(sm === 0){
       const hrs = (e - s - em) / 60;
       steps.push(dig(s) + ' to ' + dig(s + hrs * 60) + ' is <b>' + plural(hrs, 'hour') + '</b>.');
-      if(em) steps.push(dig(e - em) + ' to ' + dig(e) + ' is <b>' + em + ' minutes</b>.');
+      if(em) steps.push(dig(e - em) + ' to ' + dig(e) + ' is <b>' + plural(em, 'minute') + '</b>.');
     } else {
       const nxt = s + (60 - sm), mid = (e - em - nxt) / 60;
-      steps.push('Jump to the next o’clock: ' + dig(s) + ' to ' + dig(nxt) + ' is <b>' + (60 - sm) + ' minutes</b>.');
+      steps.push('Jump to the next o’clock: ' + dig(s) + ' to ' + dig(nxt) + ' is <b>' + plural(60 - sm, 'minute') + '</b>.');
       if(mid > 0) steps.push(dig(nxt) + ' to ' + dig(nxt + mid * 60) + ' is <b>' + plural(mid, 'hour') + '</b>.');
-      if(em) steps.push('Then ' + dig(e - em) + ' to ' + dig(e) + ' is <b>' + em + ' minutes</b>.');
+      if(em) steps.push('Then ' + dig(e - em) + ' to ' + dig(e) + ' is <b>' + plural(em, 'minute') + '</b>.');
     }
     steps.push('All together: <b>' + durLabel(d) + '</b>. ✅');
     return steps;
@@ -71,7 +71,7 @@
   function explainFinish(s, d){
     const e = s + d, sm = s % 60, hrs = Math.floor(d / 60), rem = d % 60, steps = ['Start at <b>' + dig(s) + '</b>.'];
     if(hrs) steps.push('Add ' + plural(hrs, 'hour') + ': ' + dig(s) + ' → ' + dig(s + hrs * 60) + '.');
-    if(rem) steps.push('Add ' + rem + ' minutes: ' + sm + ' + ' + rem + ' = ' + (sm + rem) + (sm + rem >= 60 ? ', which is past 60, so the hour moves on' : '') + '. It ends at <b>' + dig(e) + '</b>. ✅');
+    if(rem) steps.push('Add ' + plural(rem, 'minute') + ': ' + sm + ' + ' + rem + ' = ' + (sm + rem) + (sm + rem === 60 ? ', which reaches 60, so the hour moves on' : sm + rem > 60 ? ', which is more than 60, so the hour moves on' : '') + '. It ends at <b>' + dig(e) + '</b>. ✅');
     else steps.push('It ends at <b>' + dig(e) + '</b>. ✅');
     return steps;
   }
@@ -79,9 +79,9 @@
     const e = s + d, sm = s % 60, rem = d % 60, out = [];
     function add(t, why){ const tt = ((t % 720) + 720) % 720; out.push({ t: tt, why: why }); }
     add(s - d, 'Finishing is LATER than starting, so we add the time on, not take it away.');
-    if(rem && sm + rem >= 60) add(e - 60, 'The minutes went past 60, so the hour must move on: ' + sm + ' + ' + rem + ' = ' + (sm + rem) + '.');
-    if(rem && sm + rem < 60) add(e + 60, 'Not past 60 minutes yet, so the hour does not change.');
-    if(rem) add(s + Math.floor(d / 60) * 60, 'You added the hours but forgot the ' + rem + ' extra minutes.');
+    if(rem && sm + rem >= 60) add(e - 60, 'The minutes reached 60 or more, so the hour must move on: ' + sm + ' + ' + rem + ' = ' + (sm + rem) + '.');
+    if(rem && sm + rem < 60) add(e + 60, 'The minutes have not reached 60 yet, so the hour does not change.');
+    if(rem) add(s + Math.floor(d / 60) * 60, 'You added the hours but forgot the ' + plural(rem, 'extra minute') + '.');
     add(e + 30, 'Check the adding again.'); add(e - 30, 'Check the adding again.');
     add(e + 60, 'Check the adding again.'); add(e - 60, 'Check the adding again.');
     add(e + 10, 'Check the adding again.'); add(e - 10, 'Check the adding again.');
@@ -104,8 +104,8 @@
       if(dec > 0 && dec < 600) out.push({ v: dec, why: 'You took the times away like ordinary numbers. Minutes only go up to 60, so count on in jumps instead.' });
       const sep = (eh - sh) * 60 + Math.abs(em - sm);
       out.push({ v: sep, why: 'You took the smaller minutes from the bigger. Count on to the next o’clock first instead.' });
-      if(sm) out.push({ v: d - (60 - sm) + 0, why: 'You forgot the minutes up to the next o’clock (' + (60 - sm) + ' minutes).' });
-      if(em && eh > sh) out.push({ v: d - em, why: 'You forgot the last ' + em + ' minutes after the o’clock.' });
+      if(sm) out.push({ v: d - (60 - sm) + 0, why: 'You forgot the minutes up to the next o’clock (' + plural(60 - sm, 'minute') + ').' });
+      if(em && eh > sh) out.push({ v: d - em, why: 'You forgot the last ' + plural(em, 'minute') + ' after the o’clock.' });
       out.push({ v: d + 10, why: 'Count the jumps again carefully.' }); out.push({ v: d - 10, why: 'Count the jumps again carefully.' });
     } else {
       out.push({ v: (eh - sh) * 60 + Math.abs(em - sm), why: 'You took the smaller minutes from the bigger. Count on from the start instead.' });
@@ -187,7 +187,7 @@
       return numeric({ prompt: 'How many days are there in ' + nm1 + ' and ' + nm2 + ' together (a normal year)?', answer: a + b, unit: 'days', hint: 'Work out each month first (use the rhyme), then add.', explain: ex('Two months', [nm1 + ' has ' + a + ' days.', nm2 + ' has ' + b + ' days.', a + ' + ' + b + ' = <b>' + (a + b) + '</b> days. ✅']), truth: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31].slice(i, i + 2).reduce(function(x, y){ return x + y; }, 0) });
     }
     const q = pick([[3, 45], [2, 30], [1, 15]]);
-    return numeric({ prompt: 'How many minutes are there in ' + q[0] + ' quarter' + (q[0] > 1 ? 's' : '') + ' of an hour?', answer: q[1], unit: 'minutes', hint: 'A quarter of an hour is 15 minutes. Count in 15s.', explain: ex('Quarters of an hour', ['1 quarter of an hour = 15 minutes.', q[0] + ' quarters = ' + Array(q[0]).fill(15).join(' + ') + '.', 'That is <b>' + q[1] + '</b> minutes. ✅']), truth: 15 * q[0] });
+    return numeric({ prompt: 'How many minutes are there in ' + q[0] + ' quarter' + (q[0] > 1 ? 's' : '') + ' of an hour?', answer: q[1], unit: 'minutes', hint: 'A quarter of an hour is 15 minutes. Count in 15s.', explain: ex('Quarters of an hour', ['1 quarter of an hour = 15 minutes.', plural(q[0], 'quarter') + ' = ' + Array(q[0]).fill(15).join(' + ') + '.', 'That is <b>' + q[1] + '</b> minutes. ✅']), truth: 15 * q[0] });
   }
 
   registerSkill({
@@ -199,7 +199,7 @@
         { say: 'Handy time facts: <b>60 seconds</b> = 1 minute, <b>60 minutes</b> = 1 hour, <b>24 hours</b> = 1 day, <b>7 days</b> = 1 week, <b>12 months</b> = 1 year.', vis: { kind: 'html', args: ['<table style="border-collapse:collapse;margin:0 auto;font-weight:800;color:var(--vis-ink,#1B1B2F)"><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">60 seconds</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 minute</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">60 minutes</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 hour</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">24 hours</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 day</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">7 days</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 week</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">12 months</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 year</td></tr></table>'] },
           quiz: { prompt: 'How many minutes are there in 1 hour?', options: [{ label: '60', ok: true }, { label: '100', ok: false }, { label: '24', ok: false }], right: 'Yes! 60 minutes make 1 hour.', wrong: 'An hour is 60 minutes (12 numbers × 5). Not 100, and 24 is the hours in a day.' } },
         { say: 'Half hours: from 3:30 to 4:00 is <b>30 minutes</b>. From 4:00 to 5:00 is <b>1 hour</b>. So 3:30 to 5:00 is <b>1 hour 30 minutes</b>.', vis: { kind: 'clockPair', args: [3, 30, 5, 0] } },
-        { say: 'Across the hour, jump to the next o’clock first. This line shows minutes after 3 o’clock. A film starts at <b>3:40</b> and ends at <b>4:15</b> (75). Jump 20 minutes to 4:00, then 15 more: <b>35 minutes</b>.', vis: { kind: 'numberLine', args: [{ min: 0, max: 75, minor: 5, major: 15, width: 348, marks: [{ value: 40, kind: 'dot' }] }] },
+        { say: 'Across the hour, jump to the next o’clock first. A film starts at <b>3:40</b> and ends at <b>4:15</b>. The line counts minutes after 3 o’clock, and the dot is 3:40. Jump 20 minutes to 4:00, then 15 more: <b>35 minutes</b>.', vis: { kind: 'numberLine', args: [{ min: 0, max: 75, minor: 5, major: 15, width: 348, marks: [{ value: 40, kind: 'dot' }] }] },
           quiz: { prompt: 'A cartoon starts at 5:50 and ends at 6:20. How long is it?', options: [{ label: '30 minutes', ok: true }, { label: '70 minutes', ok: false }, { label: '40 minutes', ok: false }], right: 'Yes! 5:50 to 6:00 is 10 minutes, and 6:00 to 6:20 is 20 more: 30 minutes.', wrong: 'Jump to the o’clock: 5:50 to 6:00 is 10 minutes. Then 6:00 to 6:20 is 20. 10 + 20 = 30 minutes.' } },
         { say: '“Finishes at” problems: start at the start time and add on. A class starts at <b>4:20</b> and lasts <b>30 minutes</b>. 20 + 30 = 50 minutes past 4, so it finishes at <b>4:50</b>.', vis: { kind: 'clock', args: [4, 20] },
           quiz: { prompt: 'A show starts at 4:20 and lasts 30 minutes. When does it finish?', options: [{ label: '4:50', ok: true }, { label: '5:20', ok: false }, { label: '4:30', ok: false }], right: 'Yes! 4:20 + 30 minutes = 4:50.', wrong: 'Add 30 minutes to 4:20. 20 + 30 = 50, so it finishes at 4:50.' } }
@@ -289,7 +289,7 @@
         }
         if(f === 3){ // finishes at, minutes
           const sh = randInt(1, 9), sm = pick([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 8, 12, 17, 22, 38, 43, 47, 52]), d = pick([15, 20, 25, 30, 35, 40, 45, 50, 55, 65, 70, 75, 80, 85, 95]), nm = pick(NAMES), th = pick(THINGS);
-          return finishMcq(sh * 60 + sm, d, nm + '’s ' + th + ' starts at the time on the clock and lasts ' + durLabel(d) + '. When does it finish?', 'Add the hours first, then the minutes. If the minutes pass 60, the hour moves on.');
+          return finishMcq(sh * 60 + sm, d, nm + '’s ' + th + ' starts at the time on the clock and lasts ' + durLabel(d) + '. When does it finish?', 'Add the hours first, then the minutes. If the minutes reach 60, the hour moves on.');
         }
         if(f === 4) return typedFact();
         if(f === 5) return chance(0.5) ? typedFact() : monthQ();

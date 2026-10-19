@@ -86,10 +86,10 @@
     return ex('Converting ' + a, [h + ' is less than 12, so it is the <b>morning</b> (am).', 'The hour stays <b>' + h12 + '</b>.', a + ' is <b>' + b + '</b>. ✅']);
   }
   const EVENTS = [
-    { w: 'wakes up', h: 7, m: 0 }, { w: 'has breakfast', h: 7, m: 30 }, { w: 'starts school', h: 8, m: 45 }, { w: 'has morning break', h: 10, m: 15 },
-    { w: 'goes swimming', h: 9, m: 0 }, { w: 'watches the sunrise', h: 6, m: 20 }, { w: 'gets home from school', h: 15, m: 30 }, { w: 'has tea', h: 17, m: 45 },
-    { w: 'goes to bed', h: 20, m: 0 }, { w: 'has football practice', h: 16, m: 15 }, { w: 'goes to a birthday party', h: 14, m: 0 }, { w: 'watches the fireworks', h: 19, m: 30 },
-    { w: 'reads a bedtime story', h: 19, m: 45 }, { w: 'has a snack after school', h: 15, m: 15 }
+    { w: 'wakes up for school', h: 7, m: 0 }, { w: 'has breakfast before school', h: 7, m: 30 }, { w: 'starts school', h: 8, m: 45 }, { w: 'has morning break at school', h: 10, m: 15 },
+    { w: 'goes swimming before school', h: 7, m: 15 }, { w: 'watches the sunrise', h: 6, m: 20 }, { w: 'gets home from school', h: 15, m: 30 }, { w: 'has tea in the evening', h: 17, m: 45 },
+    { w: 'goes to bed at night', h: 20, m: 0 }, { w: 'has football practice after school', h: 16, m: 15 }, { w: 'goes to a birthday party in the afternoon', h: 14, m: 0 }, { w: 'watches the fireworks after dark', h: 19, m: 30 },
+    { w: 'reads a bedtime story at night', h: 19, m: 45 }, { w: 'has a snack after school', h: 15, m: 15 }, { w: 'goes swimming after school', h: 16, m: 30 }, { w: 'eats lunch at school', h: 12, m: 15 }
   ];
 
   registerSkill({
@@ -122,7 +122,7 @@
             prompt: nm + ' ' + ev.w + ' at ' + txt + '. Is that am or pm?',
             correct: opt(K.text(ap), ap, ''), other: opt(K.text(ap === 'am' ? 'pm' : 'am'), ap === 'am' ? 'pm' : 'am', ap === 'am' ? 'This is early in the day, before noon, so it is the morning: am.' : 'This is after noon, in the afternoon or evening, so it is pm.'),
             hint: 'am is the morning (before lunchtime). pm is the afternoon, evening and night. When does this happen in a day?',
-            explain: ex('am or pm?', [nm + ' ' + ev.w + (ap === 'am' ? ' in the <b>morning</b>.' : ' in the <b>afternoon or evening</b>.'), 'Morning is <b>am</b>. Afternoon, evening and night are <b>pm</b>.', 'So ' + txt + ' is ' + txt + ' <b>' + ap + '</b>. ✅']),
+            explain: ex('am or pm?', ['It makes sense for ' + nm + ' to do this at ' + txt + (ap === 'am' ? ' in the <b>morning</b>.' : ' in the <b>afternoon or evening</b>.'), 'Morning is <b>am</b>. Afternoon, evening and night are <b>pm</b>.', 'So ' + txt + ' is ' + txt + ' <b>' + ap + '</b>. ✅']),
             truth: K.text(ev.h >= 12 ? 'pm' : 'am')
           });
           return ok;

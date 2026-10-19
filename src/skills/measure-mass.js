@@ -6,7 +6,7 @@
   const GRAM_THINGS = [['a paper clip', 1], ['a feather', 2], ['a pencil', 8], ['a slice of bread', 40], ['an egg', 60], ['a chocolate bar', 100], ['an apple', 150], ['a mobile phone', 170], ['a tennis ball', 58]];
   const KG_THINGS = [['a bag of potatoes', 2500], ['a watermelon', 3000], ['a cat', 4000], ['a bag of rice', 5000], ['a school bag full of books', 6000], ['a big pumpkin', 8000], ['a bicycle', 12000], ['a suitcase', 15000], ['a washing machine', 70000]];
   function gTxt(v){ return v + ' g'; }
-  function kgTxt(v){ return Number.isInteger(v) ? v + ' kg' : Math.floor(v) + '½ kg'; }
+  function kgTxt(v){ return Number.isInteger(v) ? v + ' kg' : (v < 1 ? '' : Math.floor(v)) + '½ kg'; }
   function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
   function dv(html, step){ return Math.round(V.decodeDial(html) / step) * step; }   // needle angle -> value, snapped to the scale step
   function rd(v){ return Math.round(v * 1000) / 1000; }
@@ -171,9 +171,13 @@
     });
   }
   function t2Diff(){
-    const sc = S_HALF; let a, b;
-    do { a = randInt(3, 9) * 50; b = randInt(1, 6) * 50; } while(a - b < 50);
-    const p = sample([['melon', '🍈'], ['pumpkin', '🎃'], ['cabbage', '🥬'], ['pineapple', '🍍'], ['coconut', '🥥'], ['lemon bag', '🍋']], 2);
+    const sc = S_HALF; let a, b, p;
+    // realistic masses (g, in 50s): [name, emoji, lowest, highest]
+    const FR = [['lemon', '🍋', 50, 100], ['banana', '🍌', 100, 200], ['apple', '🍎', 100, 200], ['orange', '🍊', 150, 250], ['pear', '🍐', 150, 250], ['avocado', '🥑', 150, 250], ['potato', '🥔', 150, 300], ['coconut', '🥥', 350, 450], ['small cabbage', '🥬', 350, 450]];
+    do {
+      p = sample(FR, 2);
+      a = randInt(p[0][2] / 50, p[0][3] / 50) * 50; b = randInt(p[1][2] / 50, p[1][3] / 50) * 50;
+    } while(a - b < 50);
     const va = dial(a, sc), vb = dial(b, sc);
     const vis = '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px"><div style="text-align:center;font-weight:800;width:170px">' + p[0][1] + ' ' + p[0][0] + '<div style="width:170px">' + va + '</div></div><div style="text-align:center;font-weight:800;width:170px">' + p[1][1] + ' ' + p[1][0] + '<div style="width:170px">' + vb + '</div></div></div>';
     const d = a - b;
@@ -185,7 +189,7 @@
         { v: d + 50, why: 'Check your take-away: ' + a + ' − ' + b + '.' },
         { v: d - 50, why: 'Check your take-away: ' + a + ' − ' + b + '.' }
       ],
-      nearby: [100, -100],
+      nearby: [100, -100, 150, -150, 200, 250, 300],
       valid: function(v){ return v > 0; },
       hint: 'Read both scales in grams, then take the smaller number from the bigger one.',
       explain: ex('How much heavier?', ['The ' + p[0][0] + ' is <b>' + a + ' g</b>. The ' + p[1][0] + ' is <b>' + b + ' g</b>.', 'Difference: ' + a + ' − ' + b + '.', 'The ' + p[0][0] + ' is <b>' + d + ' g</b> heavier. ✅']),
@@ -234,7 +238,7 @@
     return numeric({
       prompt: 'The scale shows kilograms. How many grams is that?', visual: vis, answer: g, unit: 'g',
       hint: 'First read the kilograms. Then remember 1 kg = 1000 g.',
-      explain: ex('Kilograms to grams', ['The needle shows <b>' + kgTxt(val) + '</b>.', '1 kg = 1000 g' + (Number.isInteger(val) ? '.' : ', and ½ kg = 500 g.'), Number.isInteger(val) ? val + ' × 1000 = <b>' + g + ' g</b>. ✅' : Math.floor(val) + ' kg = ' + Math.floor(val) * 1000 + ' g, plus 500 g = <b>' + g + ' g</b>. ✅']),
+      explain: ex('Kilograms to grams', ['The needle shows <b>' + kgTxt(val) + '</b>.', '1 kg = 1000 g' + (Number.isInteger(val) ? '.' : ', and ½ kg = 500 g.'), Number.isInteger(val) ? val + ' × 1000 = <b>' + g + ' g</b>. ✅' : val < 1 ? 'Half of 1000 g is 500 g, so ½ kg = <b>' + g + ' g</b>. ✅' : Math.floor(val) + ' kg = ' + Math.floor(val) * 1000 + ' g, plus 500 g = <b>' + g + ' g</b>. ✅']),
       truth: val * 10 * 100, decode: function(){ return dv(vis, 0.5) * 1000; },
       wrong: function(v){ return v === val * 100 ? '1 kg is 1000 g, not 100 g.' : v === val ? 'That is the kilograms. Multiply by 1000 to get grams.' : ''; }
     });

@@ -111,7 +111,7 @@
       prompt: 'It is ' + h + ' o’clock. Look at the small angle between the two hands. Is it ' + (bridge ? 'acute, right or obtuse?' : 'smaller than, bigger than, or a right angle?'), visual: vis,
       correct: opt(K.text(cat), labs[cat]), distractors: ds, count: 3,
       hint: 'At 3 o’clock the hands make a perfect square corner. Is ' + h + ' o’clock closer together than that, or further apart?',
-      explain: ex('Angle between clock hands', ['Each hour on a clock is one twelfth of a turn, so the hands at ' + h + ' o’clock are ' + Math.min(h, 12 - h) + ' hour-gaps apart.', 'At 3 o’clock there are 3 gaps and the angle is a right angle.', Math.min(h, 12 - h) === 3 ? 'Here there are 3 gaps too.' : 'Here there are ' + (Math.min(h, 12 - h) < 3 ? 'fewer' : 'more') + ' gaps.', 'So the angle is <b>' + labs[cat] + '</b>' + (bridge ? ' (Year 4 words: acute = smaller, obtuse = bigger)' : '') + '. ✅']),
+      explain: ex('Angle between clock hands', ['Each hour on a clock is one twelfth of a turn, so the hands at ' + h + ' o’clock are ' + plural(Math.min(h, 12 - h), 'hour-gap') + ' apart.', 'At 3 o’clock there are 3 gaps and the angle is a right angle.', Math.min(h, 12 - h) === 3 ? 'Here there are 3 gaps too.' : 'Here there are ' + (Math.min(h, 12 - h) < 3 ? 'fewer' : 'more') + ' gaps.', 'So the angle is <b>' + labs[cat] + '</b>' + (bridge ? ' (Year 4 words: acute = smaller, obtuse = bigger)' : '') + '. ✅']),
       truth: K.text(degCat(Math.min(30 * h, 360 - 30 * h))), decode: function(){ const d = V.decodeClock(vis); const hh = d.h % 12; return K.text(degCat(Math.min(30 * hh, 360 - 30 * hh))); }
     });
   }

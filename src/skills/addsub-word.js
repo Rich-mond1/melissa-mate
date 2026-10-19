@@ -145,7 +145,7 @@
   function twoTruth(q){ let t = q.a; q.sent.forEach(function(s){ t += (s[0] === '+' ? 1 : -1) * s[1]; }); return t; }
   function twoExplain(q){
     const s1 = q.sent[0][0], s2 = q.sent[1][0], u = q.u;
-    return ex('A two-step story', ['<b>Step 1:</b> ' + q.a + ' ' + s1 + ' ' + q.b + ' = <b>' + q.mid + u + '</b>.', '<b>Step 2:</b> ' + q.mid + ' ' + s2 + ' ' + q.c + ' = <b>' + q.ans + u + '</b>.', 'The answer is <b>' + q.ans + u + '</b>. Check it is sensible: it should be a bit ' + (q.ans > q.a ? 'more' : 'less') + ' than ' + q.a + '. ✅']);
+    return ex('A two-step story', ['<b>Step 1:</b> ' + q.a + ' ' + s1 + ' ' + q.b + ' = <b>' + q.mid + u + '</b>.', '<b>Step 2:</b> ' + q.mid + ' ' + s2 + ' ' + q.c + ' = <b>' + q.ans + u + '</b>.', 'The answer is <b>' + q.ans + u + '</b>. Check it is sensible: the story starts at ' + q.a + u + ' and in the end goes ' + (q.ans >= q.a ? 'up' : 'down') + ' by ' + Math.abs(q.ans - q.a) + u + '. ✅']);
   }
   function twoWrongs(q){
     const out = [{ v: q.mid, why: 'That is only the first step. There is a second step in the story!' }];
@@ -161,9 +161,9 @@
       title: 'Solving stories with bar models',
       steps: [
         { say: 'A <b>bar model</b> is a picture of a story. Ana has <b>45</b> stickers. Ben has <b>28</b>. How many altogether? The two parts join to make the whole, which is the <b>?</b>.', vis: { kind: 'barModel', args: [[{ value: 45 }, { value: 28 }], '?'] } },
-        { say: 'Words like <b>altogether</b>, <b>in total</b> and <b>more arrive</b> mean <b>add</b>. 45 + 28 = <b>73</b>.', vis: { kind: 'barModel', args: [[{ value: 45 }, { value: 28 }], 73] },
+        { say: 'Words like <b>altogether</b>, <b>in total</b> and <b>more arrive</b> (amounts joining) mean <b>add</b>. 45 + 28 = <b>73</b>.', vis: { kind: 'barModel', args: [[{ value: 45 }, { value: 28 }], 73] },
           quiz: { prompt: 'A zoo has 36 owls. 19 more owls arrive. Which sum do we use?', options: [{ label: '36 + 19', ok: true }, { label: '36 − 19', ok: false }], right: 'Yes! "More arrive" means the amounts join, so we add: 36 + 19 = 55.', wrong: 'More owls arrive, so there are more of them. We add: 36 + 19 = 55.' } },
-        { say: 'Here the whole is <b>82</b>. Sam gives <b>35</b> away. The part left is the <b>?</b>. Words like <b>left</b>, <b>gives away</b> and <b>how many more</b> mean <b>subtract</b>: 82 − 35 = <b>47</b>.', vis: { kind: 'barModel', args: [[{ value: 35 }, { value: '?' }], 82] } },
+        { say: 'The whole is <b>82</b>. Sam gives <b>35</b> away; the part left is the <b>?</b>. <b>Left</b> and <b>gives away</b> mean <b>subtract</b>: 82 − 35 = <b>47</b>. <b>How many more is needed?</b> finds a gap, so that is a subtraction too.', vis: { kind: 'barModel', args: [[{ value: 35 }, { value: '?' }], 82] } },
         { say: 'Some stories have <b>two steps</b>. A bus has 120 people. 30 get off, then 45 get on. Step 1: 120 − 30 = 90. Step 2: 90 + 45 = <b>135</b>. Do one step at a time!', vis: { kind: 'barModel', args: [[{ value: 90 }, { value: 30 }], 120] },
           quiz: { prompt: 'A box has 200 beads. 50 are lost, then 20 more are added. How many now?', options: [{ label: '170', ok: true }, { label: '130', ok: false }, { label: '270', ok: false }], right: 'Yes! 200 − 50 = 150, then 150 + 20 = 170.', wrong: 'Step 1: 200 − 50 = 150. Step 2: 150 + 20 = 170.' } }
       ]

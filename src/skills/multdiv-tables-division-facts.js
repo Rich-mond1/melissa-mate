@@ -258,7 +258,7 @@
     return q;
   }
   function qTwoStep(cfg, rg){
-    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 1));
+    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
     const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
     return numeric({
@@ -447,7 +447,7 @@
     const d = pick(DIVS), n = randInt(2, 12), p = P(d, n), who = pick(NAMES), it = pick(SHARE_ITEMS), share = chance(0.5), two = chance(0.4), k = randInt(1, 6);
     if(two){
       return numeric({
-        prompt: who + ' has ' + p + ' ' + it + '. ' + (share ? 'She shares them equally between ' + d + ' friends.' : 'She puts them in bags of ' + d + '.') + ' Then ' + k + ' ' + (share ? 'more are added to each friend’s pile' : 'more bags are added') + '. How many ' + (share ? it + ' does each friend have now' : 'bags are there now') + '?', answer: n + k,
+        prompt: who + ' has ' + p + ' ' + it + '. ' + (share ? who + ' shares them equally between ' + d + ' friends.' : who + ' puts them in bags of ' + d + '.') + ' Then ' + k + ' ' + (share ? 'more are added to each friend’s pile' : 'more bags are added') + '. How many ' + (share ? it + ' does each friend have now' : 'bags are there now') + '?', answer: n + k,
         hint: 'Two steps. First work out ' + p + ' ÷ ' + d + '. Then add ' + k + '.',
         explain: ex('Two steps', ['Step 1: ' + p + ' ÷ ' + d + ' = <b>' + n + '</b> (' + d + ' × ' + n + ' = ' + p + ').', 'Step 2: ' + n + ' + ' + k + ' = <b>' + (n + k) + '</b>.', 'So the answer is ' + (n + k) + '. ✅']),
         truth: p / d + k, wrong: function(v){ return v === n ? n + ' is only step 1. Now add ' + k + '.' : ''; }
@@ -461,7 +461,7 @@
   }
 
   registerSkill({
-    id: 'multdiv-division-facts', strand: 'multdiv', name: 'Division facts', emoji: '➗', year: 3, order: 350, prereq: ['multdiv-2-5-10'],
+    id: 'multdiv-division-facts', strand: 'multdiv', name: 'Division facts', emoji: '➗', year: 3, order: 350, prereq: ['multdiv-2-5-10', 'multdiv-3', 'multdiv-4'],
     lesson: {
       title: 'Sharing, grouping and fact families',
       steps: [

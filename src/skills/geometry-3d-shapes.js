@@ -21,6 +21,9 @@
     'triangular prism': ['a camping tent', 'a tent with triangle ends']
   };
   const PROPN = { f: 'flat faces', e: 'edges', v: 'vertices' };
+  const POLY = ['cube', 'cuboid', 'square-based pyramid', 'triangular prism'];
+  const SING = { f: 'flat face', e: 'edge', v: 'vertex' };
+  function propN(p, n){ return n === 1 ? SING[p] : PROPN[p]; }
   function art(n){ return /^[aeiou]/.test(n) ? 'an ' + n : 'a ' + n; }
   function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
   function artB(n){ return (/^[aeiou]/.test(n) ? 'An ' : 'A ') + '<b>' + n + '</b>'; }
@@ -83,10 +86,10 @@
   /* counting questions */
   const HINTP = { f: 'A face is a flat surface you could put a sticker on. Count them all: top, bottom and the sides.', e: 'An edge is where two faces meet. Count top edges, bottom edges, then the edges going up and down.', v: 'A vertex is a corner, where edges meet. Count the corners on the top, then the bottom.' };
   function countQ(pool, props){
-    const name = pick(pool), p = pick(props), vis = V.shape3D(name);
+    const name = pick(pool), vis = V.shape3D(name), p = H[name].c > 0 ? 'f' : pick(props);
     const a = V.FACTS3D[name][{ f: 'flat', e: 'edges', v: 'vertices' }[p]];
     const wrong = [];
-    ['f', 'e', 'v'].forEach(function(o){ if(o !== p) wrong.push({ v: V.FACTS3D[name][{ f: 'flat', e: 'edges', v: 'vertices' }[o]], why: 'That is the number of ' + PROPN[o] + '. The question asks about ' + PROPN[p] + '.' }); });
+    ['f', 'e', 'v'].forEach(function(o){ if(o !== p && H[name].c === 0) wrong.push({ v: V.FACTS3D[name][{ f: 'flat', e: 'edges', v: 'vertices' }[o]], why: 'That is the number of ' + PROPN[o] + '. The question asks about ' + PROPN[p] + '.' }); });
     return mcqNum({
       prompt: 'How many <b>' + PROPN[p] + '</b> does ' + art(name) + ' have?', visual: vis, answer: a, wrong: wrong, nearby: [1, -1, 2, -2, 3, 4, -4], valid: function(v){ return v >= 0 && v <= 14; },
       hint: HINTP[p],
@@ -95,11 +98,13 @@
     });
   }
   function whichHasQ(pool, props, count){
-    const p = pick(props), target = pick(pool), val = H[target][p];
+    const p = pick(props);
+    if(p !== 'f') pool = pool.filter(function(n){ return H[n].c === 0; });
+    const target = pick(pool), val = H[target][p];
     const clue = p === 'f' ? cnt(val, 'flat face') : p === 'e' ? cnt(val, 'edge') : cnt(val, 'vertex', 'vertices');
     const ds = shuffle(pool.filter(function(n){ return H[n][p] !== val; })).map(function(x){ return opt(K.text(x), x, cap(art(x)) + ' has ' + cnt(H[x][p], p === 'f' ? 'flat face' : p === 'e' ? 'edge' : 'vertex', p === 'v' ? 'vertices' : undefined) + ', not ' + val + '.'); });
     const q = mcq({
-      prompt: 'Which 3D shape has <b>' + clue + '</b>?', visual: '', correct: opt(K.text(target), target), distractors: ds, count: count,
+      prompt: 'Which 3D shape has <b>' + clue + '</b>?', visual: '', correct: opt(K.text(target), target), distractors: ds, count: Math.min(count, ds.length + 1),
       hint: 'Picture each shape and count its ' + PROPN[p] + '. Rule out the ones that have a different number.',
       explain: ex('Counting ' + PROPN[p], [cap(art(target)) + ' has <b>' + clue + '</b>.', 'The others have different numbers, e.g. ' + art(ds[0].key.slice(2)) + ' has ' + cnt(H[ds[0].key.slice(2)][p], p === 'f' ? 'flat face' : p === 'e' ? 'edge' : 'vertex', p === 'v' ? 'vertices' : undefined) + '.', 'So the answer is the <b>' + target + '</b>. ✅']),
       truth: 'pending'
@@ -120,14 +125,15 @@
     const target = pick(five);
     let kinds = null;
     for(let t = 0; t < 40 && !kinds; t++){
-      const k = sample(['f', 'c', 'e', 'v'], randInt(2, 3));
+      const k = H[target].c > 0 ? ['f', 'c'] : sample(['f', 'c', 'e', 'v'], randInt(2, 3));
       const fit = five.filter(function(n){ return k.every(function(x){ return H[n][x] === H[target][x]; }); });
       if(fit.length === 1) kinds = k;
     }
-    kinds = kinds || ['f', 'c', 'e', 'v'];
+    kinds = kinds || (H[target].c > 0 ? ['f', 'c'] : ['f', 'c', 'e', 'v']);
     const clues = kinds.map(function(k){ return clueText(H[target][k], k); });
     const ds = shuffle(NAMES.filter(function(n){ return n !== target && kinds.some(function(k){ return H[n][k] !== H[target][k]; }); })).map(function(x){
       const bad = kinds.filter(function(k){ return H[x][k] !== H[target][k]; })[0];
+      if(H[x].c > 0 && (bad === 'e' || bad === 'v')) return opt(K.text(x), x, cap(art(x)) + ' has a curved surface, but the riddle says ' + clueText(H[target].c, 'c') + '.');
       return opt(K.text(x), x, cap(art(x)) + ' has ' + clueText(H[x][bad], bad) + ', but the riddle says ' + clueText(H[target][bad], bad) + '.');
     });
     const q = mcq({
@@ -142,14 +148,14 @@
     return q;
   }
   function sumQ(){
-    const a = pick(NAMES), b = pick(NAMES), p = pick(['e', 'v', 'f']);
+    const a = pick(NAMES), b = pick(NAMES), p = (H[a].c > 0 || H[b].c > 0) ? 'f' : pick(['e', 'v', 'f']);
     const vis = '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">' + V.shape3D(a) + V.shape3D(b) + '</div>';
     const ans = H[a][p] + H[b][p];
     const key = { f: 'flat', e: 'edges', v: 'vertices' }[p];
     return numeric({
       prompt: 'How many <b>' + PROPN[p] + '</b> do these two shapes have <b>altogether</b>?', visual: vis, answer: ans,
       hint: 'Count the ' + PROPN[p] + ' of the first shape, then of the second shape, then add.',
-      explain: ex('Two shapes', [cap(art(a)) + ' has <b>' + H[a][p] + '</b> ' + PROPN[p] + '.', cap(art(b)) + ' has <b>' + H[b][p] + '</b> ' + PROPN[p] + '.', H[a][p] + ' + ' + H[b][p] + ' = <b>' + ans + '</b>. ✅']),
+      explain: ex('Two shapes', [cap(art(a)) + ' has <b>' + H[a][p] + '</b> ' + propN(p, H[a][p]) + '.', cap(art(b)) + ' has <b>' + H[b][p] + '</b> ' + propN(p, H[b][p]) + '.', H[a][p] + ' + ' + H[b][p] + ' = <b>' + ans + '</b>. ✅']),
       truth: H[b][p] + H[a][p], decode: function(){ return vis.split('<svg').slice(1).reduce(function(t, s){ return t + V.FACTS3D[kind3D('<svg' + s)][key]; }, 0); },
       wrong: function(v){ return v === H[a][p] || v === H[b][p] ? 'That is only one of the shapes. Add both.' : ''; }
     });
@@ -193,7 +199,7 @@
     });
   }
   function tfQ(){
-    const name = pick(NAMES.filter(function(n){ return n !== 'cuboid'; })), p = pick(['f', 'e', 'v']);
+    const name = pick(NAMES.filter(function(n){ return n !== 'cuboid'; })), p = H[name].c > 0 ? 'f' : pick(['f', 'e', 'v']);
     const vis = V.shape3D(name), key = { f: 'flat', e: 'edges', v: 'vertices' }[p];
     const real = H[name][p];
     const isTrue = chance(0.5);

@@ -147,7 +147,7 @@
     const q = randInt(1, 4), cw = chance(0.5), start = pick(DIRS), vis = R(start, q, cw, q < 4);
     return mcqNum({
       prompt: 'The arrow turns round the circle, following the red curve. How many <b>right angles</b> is that?', visual: vis, answer: q,
-      wrong: [{ v: q + 1, why: 'Count the quarters the red curve covers again: it covers ' + q + ', not ' + (q + 1) + '.' }, { v: q - 1, why: 'The red curve covers ' + q + ' quarters, not ' + (q - 1) + '.' }, { v: 2 * q, why: 'Each quarter is one right angle. Do not double the number.' }],
+      wrong: [{ v: q + 1, why: 'Count the quarters the red curve covers again: it covers ' + q + ', not ' + (q + 1) + '.' }, { v: q - 1, why: 'The red curve covers ' + plural(q, 'quarter') + ', not ' + (q - 1) + '.' }, { v: 2 * q, why: 'Each quarter is one right angle. Do not double the number.' }],
       valid: function(v){ return v >= 1 && v <= 8; }, count: 3,
       hint: 'Each quarter of the circle (N to E, E to S, S to W, W to N) is one right angle. How many quarters does the red curve go through?',
       explain: ex('Counting right angles in a turn', ['One quarter turn is one right angle.', 'The red curve covers <b>' + q + '</b> quarter' + (q === 1 ? '' : 's') + '.', 'So the turn is <b>' + q + '</b> right angle' + (q === 1 ? '' : 's') + '. ✅']),
@@ -158,7 +158,7 @@
     const q = randInt(1, 4);
     return mcqNum({
       prompt: 'How many <b>right angles</b> make <b>' + TNAME[q] + '</b>?', visual: '', answer: q,
-      wrong: [{ v: q === 4 ? 2 : q * 2, why: 'A quarter turn is 1 right angle, so ' + TNAME[q] + ' is ' + q + ' quarters, not ' + (q * 2) + '.' }, { v: q + 1, why: 'Each quarter turn is one right angle. ' + cap(TNAME[q]) + ' is ' + q + ' quarters.' }, { v: q - 1, why: 'Each quarter turn is one right angle. ' + cap(TNAME[q]) + ' is ' + q + ' quarters.' }],
+      wrong: [{ v: q === 4 ? 2 : q * 2, why: 'A quarter turn is 1 right angle, so ' + TNAME[q] + ' is ' + plural(q, 'quarter') + ', not ' + (q * 2) + '.' }, { v: q + 1, why: 'Each quarter turn is one right angle. ' + cap(TNAME[q]) + ' is ' + plural(q, 'quarter') + '.' }, { v: q - 1, why: 'Each quarter turn is one right angle. ' + cap(TNAME[q]) + ' is ' + plural(q, 'quarter') + '.' }],
       valid: function(v){ return v >= 1 && v <= 8; }, count: 4,
       hint: 'A quarter turn is the same as one right angle (a square corner). A full turn is all the way round.',
       explain: ex('Turns and right angles', ['A full turn is all the way round: <b>4</b> right angles.', cap(TNAME[q]) + ' is <b>' + q + '</b> out of 4 quarters.', 'So it is <b>' + q + '</b> right angle' + (q === 1 ? '' : 's') + '. ✅']),
@@ -202,12 +202,12 @@
   function sumTurnsQ(){
     const a = randInt(1, 3), b = randInt(1, 4 - a), who = pick(ACTORS), cwv = chance(0.5);
     const tot = a + b;
-    const ds = [1, 2, 3, 4].filter(function(n){ return n !== tot; }).map(function(n){ return opt(K.text(TSHORT[n]), TNAME[n], a + ' quarter' + (a === 1 ? '' : 's') + ' + ' + b + ' quarter' + (b === 1 ? '' : 's') + ' makes ' + tot + ' quarters, not ' + n + '.'); });
+    const ds = [1, 2, 3, 4].filter(function(n){ return n !== tot; }).map(function(n){ return opt(K.text(TSHORT[n]), TNAME[n], a + ' quarter' + (a === 1 ? '' : 's') + ' + ' + b + ' quarter' + (b === 1 ? '' : 's') + ' makes ' + plural(tot, 'quarter') + ', not ' + n + '.'); });
     return mcq({
       prompt: who + ' makes ' + TNAME[a] + ' ' + cwWord(cwv) + ', then ' + TNAME[b] + ' more, the same way round. What turn is that <b>altogether</b>?', visual: '',
       correct: opt(K.text(TSHORT[tot]), TNAME[tot]), distractors: ds, keepOrder: true, count: 4,
       hint: 'Count the quarters. A quarter turn is 1, a half turn is 2, a three-quarter turn is 3.',
-      explain: ex('Adding turns', [cap(TNAME[a]) + ' is <b>' + a + '</b> quarter' + (a === 1 ? '' : 's') + '.', cap(TNAME[b]) + ' is <b>' + b + '</b> quarter' + (b === 1 ? '' : 's') + '.', a + ' + ' + b + ' = ' + tot + ' quarters, which is <b>' + TNAME[tot] + '</b>. ✅']),
+      explain: ex('Adding turns', [cap(TNAME[a]) + ' is <b>' + a + '</b> quarter' + (a === 1 ? '' : 's') + '.', cap(TNAME[b]) + ' is <b>' + b + '</b> quarter' + (b === 1 ? '' : 's') + '.', a + ' + ' + b + ' = ' + plural(tot, 'quarter') + ', which is <b>' + TNAME[tot] + '</b>. ✅']),
       truth: K.text(['', 'quarter', 'half', 'three-quarter', 'full'][(a * 90 + b * 90) / 90])
     });
   }
