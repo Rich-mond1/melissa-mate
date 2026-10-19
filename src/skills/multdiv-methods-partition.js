@@ -37,6 +37,7 @@
     }
   };
 
+  function tn(k){ return k + (k === 1 ? ' ten' : ' tens'); }
   function split(n){ return { t: n - (n % 10), o: n % 10 }; }
   function pickN(minT, maxT, minO, maxO){ return randInt(minT, maxT) * 10 + randInt(minO, maxO); }
   function nonZero(v){ return v >= 1; }
@@ -108,19 +109,19 @@
           const cands = [
             { a: s.t, b: s.o, why: '' },
             { a: tdig, b: s.o, why: 'That uses ' + tdig + ' for the tens. But the tens digit stands for ' + s.t + '.' },
-            { a: s.t * 10, b: s.o, why: 'That makes the tens part too big: ' + n + ' has ' + tdig + ' tens, which is ' + s.t + '.' },
+            { a: s.t * 10, b: s.o, why: 'That makes the tens part too big: ' + n + ' has ' + tn(tdig) + ', which is ' + s.t + '.' },
             { a: s.o * 10, b: tdig, why: 'The digits are the wrong way round. The tens digit of ' + n + ' is ' + tdig + '.' },
-            { a: s.t + 10, b: s.o, why: 'The tens part is ' + s.t + ' (' + tdig + ' tens), not ' + (s.t + 10) + '.' },
+            { a: s.t + 10, b: s.o, why: 'The tens part is ' + s.t + ' (' + tn(tdig) + '), not ' + (s.t + 10) + '.' },
             { a: s.t, b: s.o + 1, why: 'The ones digit of ' + n + ' is ' + s.o + '.' }
           ];
-          const good = cands.filter(function(c){ return c.a + c.b === n && c.a % 10 === 0 && c.b < 10; });
           const lab = function(c){ return c.a + ' + ' + c.b; };
+          const good = cands.filter(function(c){ return c.a + c.b === n && c.a % 10 === 0 && c.b < 10; }).filter(function(c, i, arr){ return arr.findIndex(function(d){ return lab(d) === lab(c); }) === i; });
           const label = s.t + ' + ' + s.o;
           return mcq({
             prompt: 'Which shows ' + n + ' split into tens and ones?',
             correct: opt(K.text(label), label), distractors: cands.slice(1).filter(function(c){ return c.a + c.b !== n || c.a % 10 !== 0; }).map(function(c){ return opt(K.text(lab(c)), lab(c), c.why); }), keepOrder: true, count: 4,
-            hint: 'The tens digit is worth ten times as much. ' + n + ' has ' + tdig + ' tens and ' + s.o + ' ones.',
-            explain: ex('Partitioning ' + n, [n + ' has <b>' + tdig + '</b> tens and <b>' + s.o + '</b> ones.', tdig + ' tens is <b>' + s.t + '</b>.', 'So ' + n + ' = <b>' + label + '</b>. ✅']),
+            hint: 'The tens digit is worth ten times as much. ' + n + ' has ' + tn(tdig) + ' and ' + s.o + ' ones.',
+            explain: ex('Partitioning ' + n, [n + ' has <b>' + tdig + '</b> ' + (tdig === 1 ? 'ten' : 'tens') + ' and <b>' + s.o + '</b> ones.', tn(tdig) + ' is <b>' + s.t + '</b>.', 'So ' + n + ' = <b>' + label + '</b>. ✅']),
             truth: K.text(good.length === 1 ? lab(good[0]) : 'bad')
           });
         }
@@ -139,10 +140,10 @@
           const maxO = Math.max(1, Math.floor(9 / m)), n = pickN(1, 4, 1, maxO), s = split(n);
           return mcqNum({
             prompt: n + ' × ' + m + ' = (' + s.t + ' × ' + m + ') + (' + s.o + ' × ' + m + ') = ? + ' + s.o * m + '. What is the missing number?', answer: s.t * m,
-            wrong: [{ v: (s.t / 10) * m, why: 'You forgot the zero. ' + s.t + ' is ' + s.t / 10 + ' tens, so ' + s.t + ' × ' + m + ' = ' + s.t * m + '.' }, { v: s.t + m, why: 'You added. The bracket says ' + s.t + ' × ' + m + '.' }, { v: s.t * m * 10, why: 'That is ten times too big. ' + s.t / 10 + ' × ' + m + ' = ' + s.t / 10 * m + ' tens, so ' + s.t * m + '.' }],
+            wrong: [{ v: (s.t / 10) * m, why: 'You forgot the zero. ' + s.t + ' is ' + tn(s.t / 10) + ', so ' + s.t + ' × ' + m + ' = ' + s.t * m + '.' }, { v: s.t + m, why: 'You added. The bracket says ' + s.t + ' × ' + m + '.' }, { v: s.t * m * 10, why: 'That is ten times too big. ' + s.t / 10 + ' × ' + m + ' = ' + tn(s.t / 10 * m) + ', so ' + s.t * m + '.' }],
             valid: nonZero,
-            hint: 'The missing number is the first bracket: ' + s.t + ' × ' + m + '. Think of ' + s.t / 10 + ' tens times ' + m + '.',
-            explain: ex('The tens part', [s.t + ' is ' + s.t / 10 + ' tens.', s.t / 10 + ' tens × ' + m + ' = ' + s.t / 10 * m + ' tens = <b>' + s.t * m + '</b>.', 'So the missing number is <b>' + s.t * m + '</b>. ✅']),
+            hint: 'The missing number is the first bracket: ' + s.t + ' × ' + m + '. Think of ' + tn(s.t / 10) + ' times ' + m + '.',
+            explain: ex('The tens part', [s.t + ' is ' + tn(s.t / 10) + '.', tn(s.t / 10) + ' × ' + m + ' = ' + tn(s.t / 10 * m) + ' = <b>' + s.t * m + '</b>.', 'So the missing number is <b>' + s.t * m + '</b>. ✅']),
             truth: (s.t / 10 * m) * 10
           });
         }
@@ -150,10 +151,10 @@
         const t = randInt(2, 5), mm = pick([2, 3, 4, 5]);
         return mcqNum({
           prompt: 'What is ' + t * 10 + ' × ' + mm + '?', answer: t * 10 * mm,
-          wrong: [{ v: t * mm, why: 'You forgot the zero. ' + t + ' tens × ' + mm + ' = ' + t * mm + ' tens, which is ' + t * mm * 10 + '.' }, { v: t * mm * 100, why: 'That is ten times too big. ' + t + ' tens × ' + mm + ' = ' + t * mm + ' tens = ' + t * mm * 10 + '.' }, { v: t * 10 + mm, why: 'You added. Multiply: ' + t + ' tens × ' + mm + '.' }],
+          wrong: [{ v: t * mm, why: 'You forgot the zero. ' + tn(t) + ' × ' + mm + ' = ' + tn(t * mm) + ', which is ' + t * mm * 10 + '.' }, { v: t * mm * 100, why: 'That is ten times too big. ' + tn(t) + ' × ' + mm + ' = ' + tn(t * mm) + ' = ' + t * mm * 10 + '.' }, { v: t * 10 + mm, why: 'You added. Multiply: ' + tn(t) + ' × ' + mm + '.' }],
           valid: nonZero,
-          hint: 'Say it as tens: ' + t + ' tens × ' + mm + ' = how many tens? Then write it as a number.',
-          explain: ex('Multiplying tens', [t * 10 + ' is ' + t + ' tens.', t + ' × ' + mm + ' = ' + t * mm + ', so ' + t * mm + ' tens.', t * mm + ' tens is <b>' + t * mm * 10 + '</b>. ✅']),
+          hint: 'Say it as tens: ' + tn(t) + ' × ' + mm + ' = how many tens? Then write it as a number.',
+          explain: ex('Multiplying tens', [t * 10 + ' is ' + tn(t) + '.', t + ' × ' + mm + ' = ' + t * mm + ', so ' + tn(t * mm) + '.', tn(t * mm) + ' is <b>' + t * mm * 10 + '</b>. ✅']),
           truth: repeated(t * 10, mm)
         });
       },
@@ -179,7 +180,7 @@
             { l: n + ' + ' + m, v: n + m, why: 'That adds. We want to multiply each part: ' + s.t + ' × ' + m + ' and ' + s.o + ' × ' + m + '.' },
             { l: s.t + ' × ' + s.o + ' + ' + m, v: s.t * s.o + m, why: 'That multiplies the tens by the ones. Multiply each part by ' + m + ' instead.' }
           ];
-          const good = cands.filter(function(c){ return c.v === target; });
+          const good = [cands[0]].concat(cands.slice(1).filter(function(c){ return c.v !== target; })).filter(function(c){ return c.v === target; });
           const label = cands[0].l;
           return mcq({
             prompt: 'Which working is right for ' + n + ' × ' + m + '?',
@@ -194,12 +195,12 @@
           const ans = askT ? s.t * m : s.o * m;
           const line = n + ' × ' + m + ' = (' + s.t + ' × ' + m + ') + (' + s.o + ' × ' + m + ') = ' + (askT ? '?' : s.t * m) + ' + ' + (askT ? s.o * m : '?');
           const wr = askT
-            ? [{ v: s.t / 10 * m, why: 'You forgot the zero. ' + s.t + ' × ' + m + ' = ' + s.t * m + ' (' + s.t / 10 + ' tens × ' + m + ').' }, { v: s.t + m, why: 'You added. The bracket says ' + s.t + ' × ' + m + '.' }, { v: s.o * m, why: 'That is the other bracket. The ? comes from ' + s.t + ' × ' + m + '.' }]
+            ? [{ v: s.t / 10 * m, why: 'You forgot the zero. ' + s.t + ' × ' + m + ' = ' + s.t * m + ' (' + tn(s.t / 10) + ' × ' + m + ').' }, { v: s.t + m, why: 'You added. The bracket says ' + s.t + ' × ' + m + '.' }, { v: s.o * m, why: 'That is the other bracket. The ? comes from ' + s.t + ' × ' + m + '.' }]
             : [{ v: s.o + m, why: 'You added. The bracket says ' + s.o + ' × ' + m + '.' }, { v: s.t * m, why: 'That is the other bracket. The ? comes from ' + s.o + ' × ' + m + '.' }, { v: s.o, why: 'You did not multiply. ' + s.o + ' × ' + m + ' = ' + s.o * m + '.' }];
           return mcqNum({
             prompt: 'Find the missing number: ' + line, answer: ans, wrong: wr, valid: nonZero,
             hint: 'Find the bracket that matches the ?. ' + (askT ? 'It is the first bracket: ' + s.t + ' × ' + m + '.' : 'It is the second bracket: ' + s.o + ' × ' + m + '.'),
-            explain: ex('Filling the gap', [askT ? 'The ? is the tens part: ' + s.t + ' × ' + m + '.' : 'The ? is the ones part: ' + s.o + ' × ' + m + '.', (askT ? s.t / 10 + ' tens × ' + m + ' = ' + s.t / 10 * m + ' tens = ' : (s.o + ' × ' + m + ' = ')) + '<b>' + ans + '</b>.', 'The missing number is <b>' + ans + '</b>, and the total is ' + n * m + '. ✅']),
+            explain: ex('Filling the gap', [askT ? 'The ? is the tens part: ' + s.t + ' × ' + m + '.' : 'The ? is the ones part: ' + s.o + ' × ' + m + '.', (askT ? tn(s.t / 10) + ' × ' + m + ' = ' + tn(s.t / 10 * m) + ' = ' : (s.o + ' × ' + m + ' = ')) + '<b>' + ans + '</b>.', 'The missing number is <b>' + ans + '</b>, and the total is ' + n * m + '. ✅']),
             truth: askT ? (s.t / 10 * m) * 10 : repeated(s.o, m)
           });
         }
@@ -207,10 +208,10 @@
           const n = pickN(2, 7, 2, 9), s = split(n), vis = areaModel(s.t, s.o, m, 'tens');
           return mcqNum({
             prompt: 'What goes in the ? box for ' + n + ' × ' + m + '?', visual: vis, answer: s.t * m,
-            wrong: [{ v: s.t / 10 * m, why: 'You forgot the zero. The top says ' + s.t + ', not ' + s.t / 10 + '. ' + s.t + ' × ' + m + ' = ' + s.t * m + '.' }, { v: s.t + m, why: 'You added. Each box is a multiplication: ' + s.t + ' × ' + m + '.' }, { v: s.o * m, why: 'That is the ones box. The ? is under ' + s.t + '.' }, { v: s.t / 10 * m * 100, why: 'That is ten times too big. ' + s.t / 10 + ' tens × ' + m + ' = ' + s.t / 10 * m + ' tens.' }],
+            wrong: [{ v: s.t / 10 * m, why: 'You forgot the zero. The top says ' + s.t + ', not ' + s.t / 10 + '. ' + s.t + ' × ' + m + ' = ' + s.t * m + '.' }, { v: s.t + m, why: 'You added. Each box is a multiplication: ' + s.t + ' × ' + m + '.' }, { v: s.o * m, why: 'That is the ones box. The ? is under ' + s.t + '.' }, { v: s.t / 10 * m * 100, why: 'That is ten times too big. ' + tn(s.t / 10) + ' × ' + m + ' = ' + tn(s.t / 10 * m) + '.' }],
             valid: nonZero,
-            hint: 'The ? is under ' + s.t + '. Multiply ' + s.t + ' by ' + m + '. Think of ' + s.t / 10 + ' tens × ' + m + '.',
-            explain: ex('The tens box', [s.t + ' is ' + s.t / 10 + ' tens.', s.t / 10 + ' tens × ' + m + ' = ' + s.t / 10 * m + ' tens = <b>' + s.t * m + '</b>.', 'So <b>' + s.t * m + '</b> goes in the ? box. ✅']),
+            hint: 'The ? is under ' + s.t + '. Multiply ' + s.t + ' by ' + m + '. Think of ' + tn(s.t / 10) + ' × ' + m + '.',
+            explain: ex('The tens box', [s.t + ' is ' + tn(s.t / 10) + '.', tn(s.t / 10) + ' × ' + m + ' = ' + tn(s.t / 10 * m) + ' = <b>' + s.t * m + '</b>.', 'So <b>' + s.t * m + '</b> goes in the ? box. ✅']),
             truth: repeated(s.t, m), decode: function(){ const d = V.decodeAreaModel(vis); return d.tens * d.m; }
           });
         }
@@ -269,8 +270,8 @@
           });
         }
         if(f === 5){ // which is bigger
-          let a, b, ma, mb;
-          do { a = pickN(2, 8, 1, 9); b = pickN(2, 8, 1, 9); ma = pick([2, 3, 4, 5, 8]); mb = pick([2, 3, 4, 5, 8]); } while(a * ma === b * mb || ma === mb || a === b || Math.abs(a * ma - b * mb) < 4);
+          let a, b, ma, mb, tries = 0;
+          do { a = pickN(2, 8, 1, 9); b = pickN(2, 8, 1, 9); ma = pick([2, 3, 4, 5, 8]); mb = pick([2, 3, 4, 5, 8]); tries++; } while(a * ma === b * mb || ma === mb || a === b || Math.abs(a * ma - b * mb) < 4 || (tries < 500 && Math.abs(a * ma - b * mb) > 0.2 * Math.max(a * ma, b * mb)));
           const la = a + ' × ' + ma, lb = b + ' × ' + mb, bigA = a * ma > b * mb, big = bigA ? la : lb, small = bigA ? lb : la;
           const sa = split(a), sb = split(b);
           return mcq2({

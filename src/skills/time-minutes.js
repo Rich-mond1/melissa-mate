@@ -33,7 +33,7 @@
     const s1 = 'The <b>short</b> hand has just passed the <b>' + h + '</b>' + (m > 30 ? ' (it is now nearly at the ' + nx(h) + ', but the hour is still ' + h + ')' : '') + '.';
     const s2 = k === 0 ? 'The <b>long</b> hand has gone ' + r + ' ticks past the 12: <b>' + r + ' minutes</b>.'
       : r === 0 ? 'The <b>long</b> hand is on the <b>' + k + '</b>. Count in 5s: ' + countStr(m) + '. That is <b>' + m + ' minutes</b>.'
-      : 'The <b>long</b> hand is ' + r + ' tick' + (r > 1 ? 's' : '') + ' after the <b>' + k + '</b>. Count in 5s: ' + countStr(m) + ' (' + k * 5 + '). Then in 1s: ' + ticksStr(m) + '. That is <b>' + m + ' minutes</b>.';
+      : 'The <b>long</b> hand is ' + r + ' tick' + (r > 1 ? 's' : '') + ' after the <b>' + k + '</b>. Count in 5s: ' + countStr(m) + (k > 1 ? ' (' + k * 5 + ')' : '') + '. Then in 1s: ' + ticksStr(m) + '. That is <b>' + m + ' minutes</b>.';
     return ex('Reading ' + dig(h, m), [s1, s2, 'So the time is <b>' + dig(h, m) + '</b>' + (m > 30 ? ' — that is ' + (60 - m) + ' minutes to ' + nx(h) : '') + '. ✅']);
   }
   function laterWrongs(h, m, d){
@@ -88,11 +88,11 @@
         }
         if(f === 1){
           return mcqNum({
-            prompt: 'How many minutes past ' + h + ' is it?', visual: vis, answer: m, fmt: function(v){ return v + ' minutes'; },
+            prompt: 'How many minutes past ' + h + ' is it?', visual: vis, answer: m, fmt: function(v){ return v + (v === 1 ? ' minute' : ' minutes'); },
             wrong: [{ v: k * 5, why: 'You forgot the little ticks after the number. Add them in 1s.' }, { v: k * 5 + r * 5, why: 'The little ticks are 1 minute each, not 5.' }, { v: m + 1, why: 'One tick too far. Count again.' }, { v: m - 1, why: 'One tick too few. Count again.' }],
             valid: function(v){ return v > 0 && v < 60; }, nearby: [2, -2, 3, -3, 5, -5, 10],
             hint: 'Count in 5s to the number, then add the ticks after it.',
-            explain: ex('Minutes past ' + h, ['Long hand has passed the <b>' + k + '</b>' + (k === 0 ? ' (the 12)' : '') + (k ? ': ' + countStr(m) + ' = ' + k * 5 + ' minutes' : '') + '.', 'Then <b>' + r + '</b> tick' + (r > 1 ? 's' : '') + ' more: ' + ticksStr(m) + '.', 'So it is <b>' + m + ' minutes</b> past ' + h + '. ✅']),
+            explain: ex('Minutes past ' + h, ['Long hand has passed the <b>' + k + '</b>' + (k === 0 ? ' (the 12)' : '') + (k ? ': counting in 5s gives ' + k * 5 + ' minutes' : '') + '.', 'Then <b>' + r + '</b> tick' + (r > 1 ? 's' : '') + ' more: ' + ticksStr(m) + '.', 'So it is <b>' + m + ' minutes</b> past ' + h + '. ✅']),
             truth: (m - r) + r, decode: function(){ return V.decodeClock(vis).m; }
           });
         }
@@ -120,7 +120,7 @@
         if(f === 2){
           const mm = pick([31, 32, 33, 34, 36, 37, 38, 39, 41, 42, 43, 44, 46, 47, 48, 49, 51, 52, 53, 54, 56, 57, 58, 59]), vis = V.clock(h, mm);
           return mcqNum({
-            prompt: 'How many minutes is it until ' + nx(h) + ' o’clock?', visual: vis, answer: 60 - mm, fmt: function(v){ return v + ' minutes'; },
+            prompt: 'How many minutes is it until ' + nx(h) + ' o’clock?', visual: vis, answer: 60 - mm, fmt: function(v){ return v + (v === 1 ? ' minute' : ' minutes'); },
             wrong: [{ v: mm, why: 'That is the minutes PAST ' + h + '. We need the minutes still to go until ' + nx(h) + ': take it away from 60.' }, { v: 50 - mm + 10 + 1, why: 'Check your take-away: 60 minus the minutes past.' }],
             valid: function(v){ return v > 0 && v < 60; }, nearby: [1, -1, 2, -2, 10, -10, 5, -5],
             hint: 'Read the minutes past the hour first. A whole hour is 60 minutes.',

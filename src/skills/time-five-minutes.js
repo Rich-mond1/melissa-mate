@@ -99,7 +99,7 @@
         }
         if(f === 1){
           return mcqNum({
-            prompt: 'The long hand points to the ' + (m / 5) + '. How many minutes past ' + h + ' is it?', visual: vis, answer: m, fmt: function(v){ return v + ' minutes'; },
+            prompt: 'The long hand points to the ' + (m / 5) + '. How many minutes past ' + h + ' is it?', visual: vis, answer: m, fmt: function(v){ return v + (v === 1 ? ' minute' : ' minutes'); },
             wrong: [{ v: m / 5, why: 'That is the NUMBER on the clock. Each number is worth 5 minutes, so multiply by 5.' }, { v: 60 - m, why: 'That counts the minutes still to go. “Past” counts from the top, the 12.' }],
             valid: function(v){ return v > 0 && v < 60 && v % 5 === 0 || v === m / 5; }, nearby: [5, -5, 10, -10, 15, 20],
             hint: 'Each number on the clock is 5 minutes. Count in 5s: 5, 10, 15 …',

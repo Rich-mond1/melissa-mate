@@ -219,7 +219,8 @@
         });
       },
       3: function(){
-        const f = randInt(1, 6);
+        const f = randInt(1, 7);
+        if(f === 7){ return sentenceQ(randInt(3, 6), pick([3, 4, 5, 6, 7, 8]), 4); }
         if(f === 1){ // typed array total
           const r = randInt(3, 6), c = randInt(4, 9), vis = V.array(r, c), t = r * c;
           return numeric({

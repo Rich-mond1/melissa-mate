@@ -72,7 +72,7 @@
     const ans = seq[l], shown = '';
     return mcqNum({
       prompt: 'What comes <b>next</b>?<br><b>' + seq.slice(0, l).join(', ') + ', ?</b>', answer: ans, wrong: wrongsSeq(ans, step, up), count: count, nearby: [step, -step, 2 * step, 1, -1],
-      hint: 'Subtract two neighbours to find the jump. Then ' + (up ? 'add' : 'take away') + ' it to the last number.',
+      hint: 'Subtract two neighbours to find the jump. Then ' + (up ? 'add it to' : 'take it away from') + ' the last number.',
       explain: ex('Counting ' + (up ? 'on' : 'back') + ' in ' + step + 's', ['The jump: ' + Math.max(seq[1], seq[0]) + ' and ' + Math.min(seq[1], seq[0]) + ' are <b>' + step + '</b> apart.', seq[l - 1] + (up ? ' + ' : ' − ') + step + ' = <b>' + ans + '</b>.', 'So the next number is <b>' + ans + '</b>. ✅']),
       truth: 2 * seq[l - 1] - seq[l - 2]
     });
@@ -109,7 +109,7 @@
     const gap = randInt(0, l - 1), ans = seq[gap];
     return numeric({
       prompt: 'Type the missing number.<br><b>' + termsText(seq, gap) + '</b>', answer: ans,
-      hint: 'Subtract two neighbours to find the jump. Then count ' + (gap === 0 ? 'back from the second number' : 'on from the number before') + '.',
+      hint: gap === 0 ? 'Subtract two neighbours to find the jump. The missing number is BEFORE the second number, so go the opposite way from the counting direction.' : 'Subtract two neighbours to find the jump. Then count ' + (up ? 'on' : 'back') + ' from the number before the gap.',
       explain: ex('Finding the missing number', stepsExplain(seq, gap, step, up)), truth: truthGap(seq, gap),
       wrong: function(v){ return v === ans + 1 || v === ans - 1 ? 'Close! The jump is ' + step + ' each time, not 1.' : ''; }
     });

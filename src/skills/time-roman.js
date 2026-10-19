@@ -78,7 +78,7 @@
       prompt: 'Which Roman numeral means ' + n + '?',
       correct: opt(K.num(n), ROM[n]), distractors: ds.filter(function(w){ return w.v >= 1 && w.v <= 12; }).map(function(w){ return opt(K.num(w.v), ROM[w.v], w.why); }), keepOrder: true, count: cnt,
       hint: 'Build it from I (1), V (5) and X (10). Count how many you need to make ' + n + '.',
-      explain: ex('Writing ' + n + ' in Roman numerals', [n + ' = ' + MAKE[n] + '.', n + ' is built as ' + ROM[n].split('').join(' ') + '.', 'The Roman numeral for ' + n + ' is <b>' + ROM[n] + '</b>. ✅']),
+      explain: ex('Writing ' + n + ' in Roman numerals', [(n === 1 || n === 5 || n === 10) ? n + ' is one of the three building blocks: I = 1, V = 5, X = 10.' : n + ' = ' + MAKE[n] + '.', n + ' is built as ' + ROM[n].split('').join(' ') + '.', 'The Roman numeral for ' + n + ' is <b>' + ROM[n] + '</b>. ✅']),
       truth: K.num(parseRoman(ROM[n]))
     });
   }
@@ -115,7 +115,7 @@
           });
         }
         if(f === 2) return numeralToNumber(EASY, false);
-        return numberToNumeral(EASY, 3);
+        return numberToNumeral([2, 3, 5, 6, 7, 8, 10, 11, 12], 3);
       },
       2: function(){
         const f = randInt(0, 4);
@@ -133,7 +133,7 @@
         if(f === 3) return numberToNumeral(FULL, 4);
         const h = randInt(1, 12), n = randInt(1, 11), m = n * 5, vis = rc(h, m);
         return mcqNum({
-          prompt: 'The long hand is on the numeral ' + ROM[n] + '. How many minutes past the hour is it?', visual: vis, answer: m, fmt: function(v){ return v + ' minutes'; },
+          prompt: 'The long hand is on the numeral ' + ROM[n] + '. How many minutes past the hour is it?', visual: vis, answer: m, fmt: function(v){ return v + (v === 1 ? ' minute' : ' minutes'); },
           wrong: [{ v: n, why: n + ' is the NUMBER on the clock. Each number is worth 5 minutes, so multiply by 5.' }, { v: 60 - m, why: 'That is the minutes still TO go. We want the minutes PAST the hour.' }],
           valid: function(v){ return v > 0 && v < 60; }, nearby: [5, -5, 10, -10, 15],
           hint: ROM[n] + ' is a number from 1 to 12. Change it into a number, then count in 5s.',

@@ -206,7 +206,7 @@
         if(f === 2){ // typed: 24-hour hour
           const h12 = randInt(1, 12), ap = pick(['am', 'pm']), a = t12(h12, m, ap), h = to24(h12, ap);
           return numeric({
-            prompt: 'Write ' + a + ' as a 24-hour time. Type just the HOUR (the first two digits).', answer: h, unit: 'hours',
+            prompt: 'Write ' + a + ' as a 24-hour time. Type just the HOUR part (the number before the colon).', answer: h, unit: 'hours',
             hint: h12 === 12 ? 'Careful: 12 is special! Is this noon or midnight?' : (ap === 'pm' ? 'pm: add 12 to the hour.' : 'am: the hour stays the same.'),
             explain: expl12to24(h12, m, ap), truth: Math.floor(parse12(a) / 60),
             wrong: function(v){ return (ap === 'pm' && v === h12) ? 'For pm you must add 12.' : (h12 === 12 && v === 24 ? 'There is no 24:' + pad2(m) + '. After 23:59 the clock goes to 00:00.' : ''); }

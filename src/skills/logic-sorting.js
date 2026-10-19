@@ -19,11 +19,12 @@
     m4: { label: 'in the 4 times table', comp: 'nm4', fn: function(n){ return n % 4 === 0; }, how: 'Count in 4s to check: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48.' },
     nm4: { label: 'not in the 4 times table', comp: 'm4', fn: function(n){ return n % 4 !== 0; }, how: 'Count in 4s to check: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48.' },
     gt50: { label: 'more than 50', comp: 'le50', fn: function(n){ return n > 50; }, how: 'Is it bigger than 50? 51 is, 50 is not.' },
-    le50: { label: '50 or less', comp: 'gt50', fn: function(n){ return n <= 50; }, how: 'Is it bigger than 50? 51 is, 50 is not.' }
+    le50: { label: 'no more than 50', comp: 'gt50', fn: function(n){ return n <= 50; }, how: 'Is it bigger than 50? 51 is, 50 is not.' }
   };
   const AXES = { par: ['even', 'odd'], m5: ['m5', 'nm5'], m10: ['m10', 'nm10'], big: ['gt50', 'le50'] };
   const AXPAIRS = [['par', 'm5'], ['par', 'big'], ['m5', 'big'], ['m10', 'big']];
   function sat(id, n){ return R[id].fn(n); }
+  function failWhy(n, id){ return n + ' is ' + R[R[id].comp].label + ', so it does not go under "' + cap(R[id].label) + '".'; }
   function asks(n, id){ return 'Is ' + n + ' ' + R[id].label + '? ' + (sat(id, n) ? 'Yes ✅' : 'No ❌'); }
 
   /* ------------------------------------------------------------ pictures: number cards */
@@ -108,7 +109,7 @@
         prompt: prompt, visual: vis, count: o.count || 4,
         correct: opt(K.num(target), String(target)),
         distractors: nums.filter(function(n){ return n !== target; }).map(function(n){
-          return opt(K.num(n), String(n), form === 'not' ? n + ' IS ' + label + ', so it belongs with the others. Look for the one that does not.' : n + ' is NOT ' + label + '. ' + rule.how);
+          return opt(K.num(n), String(n), form === 'not' ? n + ' IS ' + label + ', so it belongs with the others. Look for the one that does not.' : n + ' is ' + R[rule.comp].label + ', not ' + label + '. ' + rule.how);
         }),
         hint: rule.how + ' Test every number.',
         explain: ex('Testing every number', [rule.how].concat(lines).concat(['So the answer is <b>' + target + '</b>. ✅'])),
@@ -169,7 +170,7 @@
       const vis = carrollHTML({ cols: L.cols, rows: L.rows, cells: L.cells, card: x });
       const ds = []; L.rowList.forEach(function(r){ L.cols.forEach(function(c){
         if(cellKey(r, c) === tkey) return;
-        const why = (r !== '' && !sat(r, x) ? x + ' is not ' + R[r].label + '. ' : '') + (!sat(c, x) ? x + ' is not ' + R[c].label + '.' : '');
+        const why = (r !== '' && !sat(r, x) ? failWhy(x, r) + ' ' : '') + (!sat(c, x) ? failWhy(x, c) : '');
         ds.push(opt(cellKey(r, c), cellText(r, c), why || 'Check both headings.'));
       }); });
       const steps = [];
@@ -209,7 +210,7 @@
       const homeNums = cells[cellKey(home[0], home[1])].filter(function(n){ return n !== intruder; });
       const pickOthers = sample(homeNums.concat(others.map(function(x){ return x.n; })), 6);
       const ds = pickOthers.map(function(n){ return opt(K.num(n), String(n), n + ' fits the headings of its box. Check the other numbers.'); });
-      const why = (home[0] !== '' && !sat(home[0], intruder) ? intruder + ' is not ' + R[home[0]].label + '. ' : '') + (!sat(home[1], intruder) ? intruder + ' is not ' + R[home[1]].label + '.' : '');
+      const why = (home[0] !== '' && !sat(home[0], intruder) ? failWhy(intruder, home[0]) + ' ' : '') + (!sat(home[1], intruder) ? failWhy(intruder, home[1]) : '');
       const q = mcq({
         prompt: 'One number is in the wrong box. Which one is it?', visual: vis, count: 4,
         correct: opt(K.num(intruder), String(intruder)), distractors: ds,
@@ -241,13 +242,13 @@
       const ans = pick(good);
       // distractors: one fails only the column rule, one fails only the row rule, one fails both (when two rules exist)
       const ds = [];
-      function add(n, why){ if(n !== undefined && !taken[n] && n !== ans && ds.every(function(d){ return d.key !== K.num(n); })) ds.push(opt(K.num(n), String(n), why)); }
+      function add(n, why){ if(n !== undefined && !taken[n] && n !== ans && ds.every(function(d){ return d.key !== K.num(n); })) ds.push(opt(K.num(n), String(n), why(n))); }
       const passRow = function(n){ return hr === '' || sat(hr, n); };
-      add(pick(pool(o.max, function(n){ return !taken[n] && passRow(n) && !sat(hc, n); }).concat([undefined])), 'This number is not ' + R[hc].label + ', so it cannot go in a box headed "' + cap(R[hc].label) + '".');
-      if(hr !== '') add(pick(pool(o.max, function(n){ return !taken[n] && !sat(hr, n) && sat(hc, n); }).concat([undefined])), 'This number is not ' + R[hr].label + ', so it cannot go in that row.');
-      add(pick(pool(o.max, function(n){ return !taken[n] && !passRow(n) && !sat(hc, n); }).concat([undefined])), 'This number matches neither heading.');
-      pool(o.max, function(n){ return !taken[n] && !((passRow(n)) && sat(hc, n)); }).forEach(function(n){ if(ds.length < 3 && chance(0.2)) add(n, 'This number does not match both headings.'); });
-      shuffle(pool(o.max, function(n){ return !taken[n] && !(passRow(n) && sat(hc, n)); })).forEach(function(n){ if(ds.length < 3) add(n, 'This number does not match both headings.'); });
+      add(pick(pool(o.max, function(n){ return !taken[n] && passRow(n) && !sat(hc, n); }).concat([undefined])), function(n){ return failWhy(n, hc); });
+      if(hr !== '') add(pick(pool(o.max, function(n){ return !taken[n] && !sat(hr, n) && sat(hc, n); }).concat([undefined])), function(n){ return failWhy(n, hr); });
+      add(pick(pool(o.max, function(n){ return !taken[n] && !passRow(n) && !sat(hc, n); }).concat([undefined])), function(n){ return n + ' matches neither heading.'; });
+      pool(o.max, function(n){ return !taken[n] && !((passRow(n)) && sat(hc, n)); }).forEach(function(n){ if(ds.length < 3 && chance(0.2)) add(n, function(m){ return m + ' does not match both headings.'; }); });
+      shuffle(pool(o.max, function(n){ return !taken[n] && !(passRow(n) && sat(hc, n)); })).forEach(function(n){ if(ds.length < 3) add(n, function(m){ return m + ' does not match both headings.'; }); });
       if(ds.length < 3) continue;
       const optNums = [ans].concat(ds.map(function(d){ return parseInt(d.label, 10); }));
       if(optNums.filter(function(n){ return passRow(n) && sat(hc, n); }).length !== 1) continue;
@@ -282,7 +283,7 @@
     const vis = carrollHTML({ cols: cols, rows: null, cells: cells, card: x });
     return mcq2({
       prompt: 'Which box does the new number go in?', visual: vis,
-      correct: opt('|' + home[0], cap(R[home[0]].label)), other: opt('|' + cols.filter(function(c){ return c !== home[0]; })[0], cap(R[cols.filter(function(c){ return c !== home[0]; })[0]].label), x + ' is NOT ' + R[cols.filter(function(c){ return c !== home[0]; })[0]].label + '. ' + R[home[0]].how),
+      correct: opt('|' + home[0], cap(R[home[0]].label)), other: opt('|' + cols.filter(function(c){ return c !== home[0]; })[0], cap(R[cols.filter(function(c){ return c !== home[0]; })[0]].label), failWhy(x, cols.filter(function(c){ return c !== home[0]; })[0]) + ' ' + R[home[0]].how),
       hint: R[cols[0]].how,
       explain: ex('Sorting ' + x, [R[cols[0]].how, asks(x, cols[0]), 'So ' + x + ' goes in the <b>' + cap(R[home[0]].label) + '</b> box. ✅']),
       truth: '|' + (R[cols[0]].fn(x) ? cols[0] : cols[1]),
@@ -303,7 +304,7 @@
       return mcq({
         prompt: 'Which number is ' + R[a].label + ' AND ' + R[b].label + '?', visual: vis, count: 4,
         correct: opt(K.num(ans), String(ans)),
-        distractors: nums.slice(1).map(function(n){ return opt(K.num(n), String(n), n + (sat(a, n) ? ' is ' + R[a].label + ' but it is NOT ' + R[b].label + '.' : (sat(b, n) ? ' is ' + R[b].label + ' but it is NOT ' + R[a].label + '.' : ' is neither of those things.'))); }),
+        distractors: nums.slice(1).map(function(n){ return opt(K.num(n), String(n), n + (sat(a, n) ? ' is ' + R[a].label + ' but it is ' + R[R[b].comp].label + '.' : (sat(b, n) ? ' is ' + R[b].label + ' but it is ' + R[R[a].comp].label + '.' : ' is neither of those things.'))); }),
         hint: 'A number must pass BOTH tests. Test each number twice: once for each rule.',
         explain: ex('Two tests for every number', nums.map(function(n){ return n + ': ' + (sat(a, n) ? '✅' : '❌') + ' ' + R[a].label + ', ' + (sat(b, n) ? '✅' : '❌') + ' ' + R[b].label; }).concat(['Only <b>' + ans + '</b> passes both tests. ✅'])),
         truth: K.num(ans),
