@@ -88,6 +88,32 @@ const CHECK = function(){
     }
     await p.context().close();
   }
+  // ---- app screens (hub, trophies, stickers, parent...): text contrast + horizontal overflow, with realistic data
+  { const p = await (await b.newContext({ viewport: { width: 390, height: 800 } })).newPage(); p.on('pageerror', e => errs.push(e.message));
+    await p.goto(html); await p.evaluate(() => localStorage.clear()); await p.reload();
+    await p.evaluate(() => { S.onboardingDone = true; S.placement.started = true; S.placement.done = true; speak = function(){}; S.starBalance = 99; S.packs = 3; S.tricks = [SKILLS[0].id, SKILLS[1].id]; S.badges = [BADGES[0].id, BADGES[1].id];
+      S.stickers = [{ id: 'pet:duck:3', pet: 'duck', v: 3, base: '', acc: '', bg: 2, rarity: 'legendary', n: 2, date: '2026-10-19' }, { id: '1.1.1.rare', base: '🦊', acc: '🎩', bg: 1, rarity: 'rare', n: 1, date: '2026-10-19' }];
+      SKILLS.slice(0, 6).forEach(s => { skillState(S, s.id).medal = 2; }); });
+    const targets = await p.evaluate(() => { const t = ['welcome', 'placementIntro', 'hub', 'stickers', 'rewards', 'trophies', 'timeup', 'parentPin', 'parent', 'placementDone']; STRANDS.forEach(s => t.push('strand:' + s.id)); SKILLS.forEach(s => t.push('skill:' + s.id)); return t; });
+    const SCAN = function(){
+      const out = []; const app = document.querySelector('#app'); const vw = document.documentElement.clientWidth;
+      const alpha = c => { const m = c.match(/[\d.]+/g); return m.length > 3 ? +m[3] : 1; };
+      const lum = c => { const m = c.match(/[\d.]+/g).map(Number); const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]); };
+      const cr = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+      if(app.scrollWidth > app.clientWidth + 1) out.push('PAGE-HSCROLL');
+      app.querySelectorAll('*').forEach(function(el){
+        const r = el.getBoundingClientRect(); if(!r.width || !r.height) return; if(r.right > vw + 1.5 || r.left < -1.5) out.push('OFF-SCREEN ' + el.tagName + ' ' + (el.textContent || '').trim().slice(0, 16));
+        if(el.closest('svg') || ![...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) return;
+        const cs = getComputedStyle(el); if(cs.visibility === 'hidden' || +cs.opacity === 0) return; if(!/[A-Za-z0-9]/.test(el.textContent)) return;
+        let bg = null, op = 1; for(let e = el; e && e.nodeType === 1; e = e.parentElement){ const s = getComputedStyle(e); op *= +s.opacity; if(alpha(s.backgroundColor) > 0.75){ bg = s.backgroundColor; break; } }
+        const col = cs.color; if(!bg){ for(let e = el; e && e !== app; e = e.parentElement){ if(getComputedStyle(e).backgroundImage !== 'none') return; } bg = 'rgb(110,70,130)'; if(cr(col, bg) < 2.0) out.push('LOW-CONTRAST "' + el.textContent.trim().slice(0, 18) + '" ' + col + ' on gradient'); return; }
+        if(cr(col, bg) < 2.2) out.push('LOW-CONTRAST "' + el.textContent.trim().slice(0, 18) + '" ' + col + ' on ' + bg);
+      });
+      return out;
+    };
+    for(const tg of targets){ const pr = await p.evaluate(([tg, SCAN]) => { window.__noGuard = true; try{ go(tg); }catch(e){ return ['ERR ' + e.message]; } return (new Function('return ' + SCAN))()(); }, [tg, SCAN.toString()]);
+      pr.forEach(x => { const key = 'screen ' + tg.split(':')[0] + ' ' + x.replace(/"[^"]*"/, '"…"'); const e = found.get(key) || { n: 0, ex: x + ' (' + tg + ')', widths: new Set([390]) }; e.n++; found.set(key, e); }); rendered++; }
+    await p.context().close(); }
   await b.close();
   console.log('rendered ' + rendered + ' question screens at widths ' + WIDTHS.join('/'));
   const rows = [...found.entries()].sort(); rows.forEach(([k, e]) => console.log('✗ ' + k + '  [' + e.n + '× w=' + [...e.widths].join('/') + ']  e.g. ' + e.ex));

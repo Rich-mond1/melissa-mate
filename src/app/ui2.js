@@ -297,7 +297,7 @@ ACT.claim = function(d){
 /* ---------------- trophies ---------------- */
 SCREENS.trophies = function(){
   let h = topbar('🏆 Trophies') + '<div class="card center"><p class="qprompt">' + totalMedals(S) + ' medals · ' + S.tricks.length + ' magic tricks</p></div><div class="gap"></div>';
-  h += '<div class="card"><h3>Badges</h3><div class="badgeline" style="justify-content:flex-start">' + BADGES.map(function(b){ const on = S.badges.indexOf(b.id) > -1; return '<span class="badge" style="' + (on ? 'background:#F2C94C;color:#3a2a00' : 'opacity:.45') + '">' + (on ? b.emoji : '🔒') + ' ' + b.label + '</span>'; }).join('') + '</div></div><div class="gap"></div>';
+  h += '<div class="card"><h3>Badges</h3><div class="badgeline" style="justify-content:flex-start">' + BADGES.map(function(b){ const on = S.badges.indexOf(b.id) > -1; return '<span class="badge" style="' + (on ? 'background:#F2C94C;color:#3a2a00' : 'background:#E8EBF5;color:#5B6190') + '">' + (on ? b.emoji : '🔒') + ' ' + b.label + '</span>'; }).join('') + '</div></div><div class="gap"></div>';
   h += '<div class="card"><h3>My magic tricks</h3>' + (S.tricks.length ? S.tricks.map(function(id){ const sk = skillById(id); return sk ? '<div class="prow" style="background:#EEF1FB;color:var(--ink)" data-act="trick" data-id="' + id + '"><span>🎩 ' + esc(sk.trick.title) + '</span><span>→</span></div>' : ''; }).join('') : '<p class="muted">Finish a lesson to unlock your first trick!</p>') + '</div>';
   R(h);
 };
