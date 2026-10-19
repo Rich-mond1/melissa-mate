@@ -33,7 +33,7 @@
       nearby: [c.f, -c.f, 10, -10, 100, -100],
       valid: function(v){ return v > 0 && Number.isInteger(v); },
       hint: fact(c) + '. A bigger unit changes into a smaller unit, so you need MORE of them.',
-      explain: ex(c.big + ' to ' + c.small, [fact(c)+ '.', n + ' × ' + c.f + ' ' + '(the number ' + ZERO[c.f] + '): ' + Array(n).fill(c.f).join(' + ') + ' = ' + a + '.', n + ' ' + c.big + ' = <b>' + a + ' ' + c.small + '</b>. ✅']),
+      explain: ex(c.big + ' to ' + c.small, [fact(c)+ '.', n + ' × ' + c.f + ' (the number ' + ZERO[c.f] + ')' + (n <= 4 ? ': ' + Array(n).fill(c.f).join(' + ') : '') + ' = ' + a + '.', n + ' ' + c.big + ' = <b>' + a + ' ' + c.small + '</b>. ✅']),
       truth: a
     });
   }
@@ -103,11 +103,11 @@
     const nm = { 'm': 'metre', 'cm': 'centimetre', 'km': 'kilometre', 'kg': 'kilogram', 'l': 'litre' };
     return mcqNum({
       prompt: 'How many ' + c.smallName + 's are in 1 ' + c.bigName + '?', answer: c.f, fmt: lab(c.small),
-      wrong: FACTORS.filter(function(f){ return f !== c.f; }).map(function(f){ return { v: f, why: 'Not quite: ' + fact(c) + '.' + (c.f === 1000 ? ' Remember: kilo means a thousand.' : '') }; }).concat([{ v: 1, why: 'There are many more small units in one big unit.' }, { v: 10000, why: 'That is too many. ' + fact(c) + '.' }]),
+      wrong: FACTORS.filter(function(f){ return f !== c.f; }).map(function(f){ return { v: f, why: 'Not quite: ' + fact(c) + '.' + (c.f === 1000 ? (c.big === 'l' ? ' Remember: milli means a thousandth.' : ' Remember: kilo means a thousand.') : '') }; }).concat([{ v: 1, why: 'There are many more small units in one big unit.' }, { v: 10000, why: 'That is too many. ' + fact(c) + '.' }]),
       nearby: [1000, 100, 10],
       valid: function(v){ return v > 0; },
-      hint: c.f === 1000 ? 'Think: kilo means a thousand. Is the answer for ' + c.big + ' a thousand?' : 'A ' + c.bigName + ' is much bigger than a ' + c.smallName + '. How many fit in?',
-      explain: ex('A key fact', [fact(c) + '.', c.f === 1000 ? '“Kilo” and “milli” both come from the number a thousand.' : (c.f === 100 ? '“Centi” is about a hundred.' : 'A centimetre is split into 10 tiny millimetres.'), 'So there are <b>' + c.f + ' ' + c.small + '</b>. ✅']),
+      hint: c.f === 1000 ? 'Think: ' + (c.big === 'l' ? 'milli' : 'kilo') + ' is all about a thousand. Is the answer a thousand?' : 'A ' + c.bigName + ' is much bigger than a ' + c.smallName + '. How many fit in?',
+      explain: ex('A key fact', [fact(c) + '.', c.f === 1000 ? (c.big === 'l' ? '“Milli” means a thousandth, so 1000 ml make 1 litre.' : '“Kilo” means a thousand.') : (c.f === 100 ? '“Centi” means a hundred.' : 'A centimetre is split into 10 tiny millimetres.'), 'So there are <b>' + c.f + ' ' + c.small + '</b>. ✅']),
       truth: Math.pow(10, String(c.f).length - 1)
     });
   }
@@ -132,7 +132,7 @@
       prompt: n + ' ' + c.big + ' ' + k + ' ' + c.small + ' = ? ' + c.small, answer: v, fmt: lab(c.small),
       wrong: [
         { v: n + k, why: 'You added the two numbers. First turn the ' + n + ' ' + c.big + ' into ' + c.small + '.' },
-        { v: n * (c.f / 10) + k, why: 'You multiplied by ' + (c.f / 10) + '. ' + fact(c) + ', so ' + n + ' ' + c.big + ' = ' + (n * c.f) + ' ' + c.small + '.' },
+        { v: n * (c.f / 10) + k, why: 'You multiplied the ' + c.big + ' by ' + (c.f / 10) + '. ' + fact(c) + ', so multiply by ' + c.f + '.' },
         { v: n * c.f * 10 + k, why: 'That is too big. ' + n + ' ' + c.big + ' is only ' + (n * c.f) + ' ' + c.small + '.' },
         { v: n * c.f, why: 'You forgot to add the extra ' + k + ' ' + c.small + '.' }
       ],
@@ -161,7 +161,7 @@
     return mcq2({
       prompt: 'Which is ' + w[pickWord] + ': ' + A + ' or ' + B + '?',
       correct: opt(K.text(target), target),
-      other: opt(K.text(other), other, 'Change them to the same unit first. ' + A + ' = ' + aSmall + ' ' + c.small + ', and ' + B + ' is ' + m + ' ' + c.small + '. Do not just compare ' + n + ' and ' + m + '.'),
+      other: opt(K.text(other), other, 'Change them to the same unit first: ' + A + ' = ' + aSmall + ' ' + c.small + ', and ' + B + ' stays ' + m + ' ' + c.small + '. Do not just compare ' + n + ' and ' + m + '.'),
       hint: 'You cannot compare a ' + c.big + ' number with a ' + c.small + ' number. Change one to the other unit first.',
       explain: ex('Comparing different units', ['Change ' + A + ' into ' + c.small + ': ' + n + ' × ' + c.f + ' = <b>' + aSmall + ' ' + c.small + '</b>.', 'Compare ' + aSmall + ' ' + c.small + ' with ' + m + ' ' + c.small + '. ' + (aSmall > m ? aSmall + ' is bigger.' : m + ' is bigger.'), 'The ' + w[pickWord] + ' one is <b>' + target + '</b>. ✅']),
       truth: K.text([[times(n, c.f), A], [m, B]].sort(function(x, y){ return pickWord === 0 ? y[0] - x[0] : x[0] - y[0]; })[0][1])

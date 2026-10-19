@@ -20,7 +20,6 @@
   function barOp(html){ const t = /<div style="text-align:center;font-weight:900;[^"]*">([^<]*)<\/div>/.exec(html); return t && t[1] === '?' ? 'add' : 'sub'; }
 
   /* ---- one-step templates. Each returns {text, op, x, y, unit}. sentence is x op y ---- */
-  function lim(o){ return o; }
   function oneStep(kind, big, money){
     const nn = sample(NAMES, 2), N1 = nn[0], N2 = nn[1], th = pick(THINGS), an = pick(ANIMALS);
     let x, y, ans;
@@ -65,11 +64,11 @@
     if(p.op === 'add'){
       out.push({ v: Math.abs(p.x - p.y), why: 'You took away. But the story puts the amounts together ("' + p.clue + '"), so we add.' });
       const noCarry = (p.x % 10 + p.y % 10 >= 10) ? ans - 10 : null; if(noCarry) out.push({ v: noCarry, why: 'Good choice to add! But a carry was forgotten: the ones made 10 or more, so carry 1 ten.' });
-      out.push({ v: ans + 10, why: 'Good choice to add! But the carry was added twice. Check the tens column.' });
+      out.push({ v: ans + 10, why: 'Good choice to add! But the answer is 10 too big. Check the tens column.' });
     } else {
       out.push({ v: p.x + p.y, why: 'You added. But the story ("' + p.clue + '") asks us to take away or find the difference, so we subtract.' });
       const sw = swapSub(p.x, p.y); if(sw !== ans) out.push({ v: sw, why: 'Good choice to subtract! But the smaller digit was taken from the bigger one in a column. Exchange instead.' });
-      out.push({ v: ans + 10, why: 'Good choice to subtract! But check the exchange: the next column must go down by 1.' });
+      out.push({ v: ans + 10, why: 'Good choice to subtract! But the answer is 10 too big. Check the tens column: did the next column go down by 1 after an exchange?' });
     }
     return out;
   }
@@ -95,7 +94,7 @@
     return mcq2({ prompt: p.text + '<br>Which sum solves it?', visual: bar,
       correct: opt(K.text(p.op), right), other: opt(K.text(p.op === 'add' ? 'sub' : 'add'), wrong, p.op === 'add' ? 'The story puts amounts together ("' + p.clue + '"). That needs adding, not taking away.' : 'The story takes away or compares ("' + p.clue + '"). That needs subtracting, not adding.'),
       hint: 'Look at the bar model. If the whole is a question mark, add the parts. If the whole is known, take the known part away.',
-      explain: ex('Choosing the operation', [p.op === 'add' ? 'The bar model has a <b>?</b> for the whole, so we put the parts together: <b>add</b>.' : 'The whole is <b>' + p.x + '</b> and we need the missing part, so we <b>subtract</b>.', 'The key words are "' + p.clue + '".', 'The sum is <b>' + right + '</b>. ✅']),
+      explain: ex('Choosing the operation', [p.op === 'add' ? 'The bar model has a <b>?</b> for the whole, so we put the parts together: <b>add</b>.' : 'The whole is <b>' + p.x + '</b> and we need the missing part, so we <b>subtract</b>.', 'Clue words in the story: "' + p.clue + '".', 'The sum is <b>' + right + '</b>. ✅']),
       truth: K.text(p.op === 'add' ? 'add' : 'sub'), decode: function(){ return K.text(barOp(bar)); } });
   }
   function sentenceWithAnswer(p){ // 3 options, each a full number sentence
@@ -109,7 +108,7 @@
         opt(K.text('slip2'), fmt(sg, ans - 10), 'The right operation, but the answer is 10 too small. Check your carrying or exchanging.')],
       hint: 'First decide: add or subtract? Then check the calculation.',
       explain: ex('Choosing the sentence', [explainStory(p), 'The calculation is ' + p.x + ' ' + sg + ' ' + p.y + ' = <b>' + ans + p.unit + '</b>.', 'So the correct sentence is <b>' + fmt(sg, ans) + '</b>. ✅']),
-      truth: K.text(p.x + (p.op === 'add' ? p.y : -p.y) === (p.op === 'add' ? ans : ans) ? 'ok' : 'bad') });
+      truth: K.text(truthOf(p) === ans ? 'ok' : 'bad') });
   }
   function explainStory(p){ return p.op === 'add' ? 'The story joins amounts together ("' + p.clue + '"), so we <b>add</b>.' : 'The story takes away or compares ("' + p.clue + '"), so we <b>subtract</b>.'; }
 

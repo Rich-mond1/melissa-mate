@@ -355,7 +355,7 @@
         { say: 'Here is a handy way to remember: <b>3 groups = 2 groups + 1 more group</b>. For 3 × 4: 2 × 4 = 8, and one more 4 makes <b>12</b>.', vis: { kind: 'groups', args: [3, 4] },
           quiz: { prompt: '2 × 6 = 12. So what is 3 × 6?', options: [{ label: '15', ok: false }, { label: '18', ok: true }, { label: '16', ok: false }], right: 'Yes! 12 + one more 6 = 18.', wrong: 'Add one more group of 6 to 12: 12 + 6 = 18.' } },
         { say: 'Look at the numbers: 12, 21, 24, 27. Add the <b>digits</b>: 1 + 2 = 3, 2 + 1 = 3, 2 + 4 = 6, 2 + 7 = 9. The digits of every number in the 3 times table add up to a number in the 3 times table!', vis: { kind: 'numberLine', args: [{ min: 0, max: 30, minor: 3, major: 3, width: 348, marks: [{ value: 21, kind: 'dot' }] }] },
-          quiz: { prompt: 'Which number is in the 3 times table?', options: [{ label: '25', ok: false }, { label: '27', ok: true }, { label: '29', ok: false }], right: 'Yes! 2 + 7 = 9, and 9 × 3… well 9 is in the 3 times table, and 9 × 3 = 27.', wrong: 'Add the digits: 2 + 7 = 9 is in the 3 times table, so 27 is too (9 × 3 = 27). The digits of 25 and 29 add to 7 and 11.' } }
+          quiz: { prompt: 'Which number is in the 3 times table?', options: [{ label: '25', ok: false }, { label: '27', ok: true }, { label: '29', ok: false }], right: 'Yes! 2 + 7 = 9, and 9 is in the 3 times table. So 27 is too: 9 × 3 = 27.', wrong: 'Add the digits. 2 + 7 = 9 is in the 3 times table, so 27 is too. The digits of 25 add to 7 and of 29 add to 11, which are not.' } }
       ]
     },
     trick: {

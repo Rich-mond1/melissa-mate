@@ -45,18 +45,11 @@
   }
   function randNum(to, o){
     o = o || {};
-    // two-digit or three-digit, ones digit (for 10s) / tens digit (for 100s) chosen to avoid or include halfway
     let n;
-    if(to === 10){
-      const hi = o.big ? randInt(10, 99) : randInt(1, 9), ones = o.noHalf ? pick([1, 2, 3, 4, 6, 7, 8, 9]) : randInt(0, 9);
-      n = (o.big ? hi : randInt(1, 9)) * 10 + ones;
-      if(o.big && chance(0.7)) n = randInt(1, 99) * 10 + ones;   // up to 3 digits
-    } else {
-      const h = randInt(1, 9), t = o.noHalf ? pick([0, 1, 2, 3, 4, 6, 7, 8, 9]) : randInt(0, 9), ones = randInt(0, 9);
-      n = h * 100 + t * 10 + ones;
-    }
-    if(n < 11) n += 10;
-    if(n > 994) n -= 100;
+    do {
+      if(to === 10) n = o.big ? (chance(0.6) ? randInt(100, 994) : randInt(11, 99)) : randInt(11, 98);
+      else n = randInt(110, 990);
+    } while(n % to === 0 || (o.noHalf && n % to === to / 2));
     return n;
   }
 
@@ -95,14 +88,18 @@
     const half = to / 2;
     const inside = target + randInt(-half, half - 1);
     const outs = [target - half - 1, target + half, target - half - 2, target + half + 3, target - to + 2, target + to - 2, target - half - 5].filter(function(v){ return v > 0 && v !== inside && nearest(v, to) !== target; });
-    const whyFor = function(v){ return v + ' rounds to ' + nearest(v, to) + (v === target + half ? ' because halfway rounds UP, so it goes up away from ' + target : '') + ', not ' + target + '.'; };
+    const whyFor = function(v){ return v + ' rounds to ' + nearest(v, to) + ', not ' + target + '.' + (v === target + half ? ' Halfway rounds UP.' : ''); };
     const ds = outs.map(function(v){ return opt(nk(v), String(v), whyFor(v)); });
-    return mcq({
+    const q = mcq({
       prompt: 'Which of these numbers rounds to <b>' + target + '</b> when rounded to the nearest <b>' + to + '</b>?', correct: opt(nk(inside), String(inside)), distractors: ds, keepOrder: false, count: 4,
       hint: 'Numbers that round to ' + target + ' are not too far from it. Test each choice with the 5-or-more rule.',
       explain: ex('Which number rounds to ' + target + '?', [inside + ' is within ' + half + ' of ' + target + ': it rounds to <b>' + target + '</b>.', 'The other numbers round to something else.', 'The answer is <b>' + inside + '</b>. ✅']),
-      truth: nk([inside].concat(outs).filter(function(v){ return nearest(v, to) === target; })[0])
+      truth: 'pending'
     });
+    let tk = null, cnt = 0;
+    q.options.forEach(function(o){ if(nearest(Number(o.label), to) === target){ tk = o.key; cnt++; } });
+    q.truthKey = cnt === 1 ? tk : 'AMBIGUOUS';
+    return q;
   }
   /* typed */
   function numRound(){
@@ -136,11 +133,11 @@
   }
   function qWhoIsRight(){
     const to = pick([10, 100]);
-    let n; do { n = to === 10 ? randInt(11, 98) * 10 + 5 : randInt(1, 9) * 100 + 50 + pick([0, 0, randInt(0, 9)]); } while(n % to === 0);
-    if(n % 10 !== 5 && to === 10) n = Math.floor(n / 10) * 10 + 5;
+    const n = to === 10 ? randInt(1, 98) * 10 + 5 : randInt(1, 9) * 100 + 50 + randInt(0, 9);
     const ans = rnd(n, to), lo = down(n, to), hi = lo + to;
     const names = sample(NAMES, 3);
     const claims = [{ nm: names[0], v: ans, why: '' }, { nm: names[1], v: ans === hi ? lo : hi, why: ans === hi ? 'Halfway rounds UP, not down.' : 'That is the wrong way.' }, { nm: names[2], v: rnd(n, to === 10 ? 100 : 10), why: 'That is the wrong place. We round to the nearest ' + to + '.' }];
+    if(new Set(claims.map(function(c){ return c.v; })).size < 3) return qWhoIsRight();
     const text = shuffle(claims).map(function(c){ return c.nm + ' says ' + c.v + '.'; }).join(' ');
     const ds = claims.slice(1).map(function(c){ return opt(K.text(c.nm), c.nm, c.nm + ' said ' + c.v + '. ' + c.why); });
     const truthName = claims.filter(function(c){ return c.v === nearest(n, to); })[0].nm;
