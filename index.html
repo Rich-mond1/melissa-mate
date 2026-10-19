@@ -1317,7 +1317,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const js = jumps(lo, hi), parts = js.map(function(j){ return j[1] - j[0]; });
     return ex(intro || 'Difference between ' + lo + ' and ' + hi, [
       'Count on from the <b>smaller</b> number, using friendly stops: ' + jumpText(js) + '.',
-      'Add the jumps: ' + parts.join(' + ') + ' = <b>' + (hi - lo) + '</b>.',
+      js.length === 1 ? 'There is only one jump, so the difference is <b>' + (hi - lo) + '</b>.' : 'Add the jumps: ' + parts.join(' + ') + ' = <b>' + (hi - lo) + '</b>.',
       'Check: ' + lo + ' + ' + (hi - lo) + ' = ' + hi + '. ✅'
     ]);
   }
@@ -1381,7 +1381,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const n = pick(NAMES), it = pick(ITEMS), payTxt = pay === 100 ? 'a £1 coin (100p)' : (pay === 200 ? 'a £2 coin (200p)' : 'a £5 note (500p)');
     const prompt = n + ' buys a ' + it + ' for <b>' + price + 'p</b> and pays with ' + payTxt + '. How much change?' + (typed ? ' Answer in pence.' : '');
     const ans = jumpSum(jumps(price, pay)), js = jumps(price, pay);
-    const exp = ex('Change from ' + pay + 'p', ['Count on from the price up to ' + pay + 'p: ' + jumpText(js) + '.', 'Add the jumps: ' + js.map(function(j){ return j[1] - j[0]; }).join(' + ') + ' = <b>' + ans + 'p</b>.', 'Check: ' + price + 'p + ' + ans + 'p = ' + pay + 'p. ✅']);
+    const exp = ex('Change from ' + pay + 'p', ['Count on from the price up to ' + pay + 'p: ' + jumpText(js) + '.', js.length === 1 ? 'There is only one jump, so the change is <b>' + ans + 'p</b>.' : 'Add the jumps: ' + js.map(function(j){ return j[1] - j[0]; }).join(' + ') + ' = <b>' + ans + 'p</b>.', 'Check: ' + price + 'p + ' + ans + 'p = ' + pay + 'p. ✅']);
     const vis = pay === 100 || pay === 200 ? nlVis(price, pay) : '';
     const hint = 'Count on from the price to the amount paid. Stop at the next 10p (or £1) on the way.';
     const wl = wrongList(price, pay).filter(function(w){ return w.v !== pay + price; }).concat([{ v: price, why: 'That is the price. The change is how much more is needed to reach what was paid.' }]);
@@ -1511,11 +1511,11 @@ if(typeof module !== 'undefined') module.exports = V;
     } else {
       const dig = dg(a, 't');
       if(c.op === '+'){
-        t.push('Look at the tens: ' + dig + ' tens + ' + d + ' ' + uw(d, 't') + ' = <b>' + (dig + d) + ' tens</b>.');
-        t.push((dig + d) + ' tens is 1 hundred and ' + (dig + d - 10) + ' tens, so the hundreds go up by 1 and the tens digit is ' + (dig + d - 10) + '.');
+        t.push('Look at the tens: ' + plural(dig, 'ten') + ' + ' + d + ' ' + uw(d, 't') + ' = <b>' + (dig + d) + ' tens</b>.');
+        t.push((dig + d) + ' tens is 1 hundred and ' + plural(dig + d - 10, 'ten') + ', so the hundreds go up by 1 and the tens digit is ' + (dig + d - 10) + '.');
       } else {
-        t.push('We cannot take ' + d + ' ' + uw(d, 't') + ' from ' + dig + ' tens. Swap 1 hundred for 10 tens: ' + (dig + 10) + ' tens.');
-        t.push((dig + 10) + ' tens − ' + d + ' ' + uw(d, 't') + ' = <b>' + (dig + 10 - d) + ' tens</b>, and the hundreds digit goes down by 1.');
+        t.push('We cannot take ' + d + ' ' + uw(d, 't') + ' from ' + plural(dig, 'ten') + '. Swap 1 hundred for 10 tens: ' + (dig + 10) + ' tens.');
+        t.push((dig + 10) + ' tens − ' + d + ' ' + uw(d, 't') + ' = <b>' + plural(dig + 10 - d, 'ten') + '</b>, and the hundreds digit goes down by 1.');
       }
       t.push(a + ' ' + sym(c.op) + ' ' + c.amt + ' = <b>' + c.ans + '</b>. ✅');
     }
@@ -1821,7 +1821,10 @@ if(typeof module !== 'undefined') module.exports = V;
         { say: 'Use the inverse to <b>check</b> your work. Is 523 − 187 = 336 right? Add back: 336 + 187 = 523. Yes! The check lands on the start number.',
           vis: { kind: 'html', args: ['<div style="font:800 22px system-ui;text-align:center;color:var(--vis-ink,#1B1B2F)">523 − 187 = 336<br>336 + 187 = 523 ✔</div>'] },
           quiz: { prompt: 'If 62 + 29 = 91, what is 91 − 29?', options: [{ label: '62', ok: true }, { label: '120', ok: false }, { label: '29', ok: false }], right: 'Yes! Taking away 29 undoes adding 29, so we are back at 62.', wrong: 'Subtraction undoes addition. 91 − 29 takes us back to 62.' } },
-        { say: 'An <b>estimate</b> tells you if an answer is sensible. Round to the nearest ten: 38 → 40 and 53 → 50. So 38 + 53 is about <b>90</b>. The exact answer, 91, is close. ✅', vis: { kind: 'numberLine', args: [{ min: 30, max: 70, minor: 1, major: 10, marks: [{ value: 38 }, { value: 53, color: 'var(--vis-b,#9B51E0)' }] }] } }
+        { say: 'To <b>round</b> to the nearest <b>ten</b>, look at the <b>ones</b> digit. For the nearest <b>hundred</b>, look at the <b>tens</b> digit. <b>5 or more: round up. 4 or less: round down.</b> So 38 → 40, and 463 → 500.', vis: { kind: 'numberLine', args: [{ min: 30, max: 50, minor: 1, major: 10, marks: [{ value: 38 }] }] },
+          quiz: { prompt: 'Round 67 to the nearest ten.', options: [{ label: '70', ok: true }, { label: '60', ok: false }, { label: '67', ok: false }], right: 'Yes! The ones digit is 7, which is 5 or more, so round up to 70.', wrong: 'Look at the ones digit: 7 is 5 or more, so round UP to 70.' } },
+        { say: 'Now <b>estimate</b>: round each number first, then do the easy sum. 38 → 40 and 53 → 50, so 38 + 53 is about <b>90</b>. The exact answer, 91, is close, so it is sensible. ✅', vis: { kind: 'numberLine', args: [{ min: 30, max: 70, minor: 1, major: 10, marks: [{ value: 38 }, { value: 53, color: 'var(--vis-b,#9B51E0)' }] }] },
+          quiz: { prompt: 'Estimate 62 + 29 by rounding each number to the nearest ten.', options: [{ label: '90', ok: true }, { label: '80', ok: false }, { label: '91', ok: false }], right: 'Yes! 62 → 60 and 29 → 30, and 60 + 30 = 90.', wrong: 'Round both numbers first: 62 → 60 and 29 → 30. Then 60 + 30 = 90.' } }
       ]
     },
     trick: {
@@ -2081,7 +2084,7 @@ if(typeof module !== 'undefined') module.exports = V;
             opt(K.text('zero'), 'Write 0 and carry on', 'A zero cannot just be skipped. The ones still need an exchange, and the tens have nothing to give yet.'),
             opt(K.text('flip'), 'Take ' + (c.a % 10) + ' from ' + (c.b % 10) + ' instead', 'The top number is always what we take away FROM.')],
           hint: 'You can only swap a ten for ones if you HAVE a ten. Where can you get tens from?',
-          explain: ex('Zero in the middle', ['The ones column needs help, but the tens digit is <b>0</b>.', 'So first swap <b>1 hundred for 10 tens</b>. The hundreds go down by 1.', 'Then swap 1 ten for 10 ones: you now have ' + (dg(c.a, 2) - 1) + ' hundreds, 9 tens and ' + (c.a % 10 + 10) + ' ones. ✅']),
+          explain: ex('Zero in the middle', ['The ones column needs help, but the tens digit is <b>0</b>.', 'So first swap <b>1 hundred for 10 tens</b>. The hundreds go down by 1.', 'Then swap 1 ten for 10 ones: you now have ' + plural(dg(c.a, 2) - 1, 'hundred') + ', 9 tens and ' + (c.a % 10 + 10) + ' ones. ✅']),
           truth: K.text(dg(c.a, 1) === 0 ? 'h2t' : 'no'), decode: function(){ const A = readRow(vis, 'da'); return K.text(A.charAt(1) === '0' ? 'h2t' : 'no'); } });
       }
     }
@@ -2236,7 +2239,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function twoTruth(q){ let t = q.a; q.sent.forEach(function(s){ t += (s[0] === '+' ? 1 : -1) * s[1]; }); return t; }
   function twoExplain(q){
     const s1 = q.sent[0][0], s2 = q.sent[1][0], u = q.u;
-    return ex('A two-step story', ['<b>Step 1:</b> ' + q.a + ' ' + s1 + ' ' + q.b + ' = <b>' + q.mid + u + '</b>.', '<b>Step 2:</b> ' + q.mid + ' ' + s2 + ' ' + q.c + ' = <b>' + q.ans + u + '</b>.', 'The answer is <b>' + q.ans + u + '</b>. Check it is sensible: it should be a bit ' + (q.ans > q.a ? 'more' : 'less') + ' than ' + q.a + '. ✅']);
+    return ex('A two-step story', ['<b>Step 1:</b> ' + q.a + ' ' + s1 + ' ' + q.b + ' = <b>' + q.mid + u + '</b>.', '<b>Step 2:</b> ' + q.mid + ' ' + s2 + ' ' + q.c + ' = <b>' + q.ans + u + '</b>.', 'The answer is <b>' + q.ans + u + '</b>. Check it is sensible: the story starts at ' + q.a + u + ' and in the end goes ' + (q.ans >= q.a ? 'up' : 'down') + ' by ' + Math.abs(q.ans - q.a) + u + '. ✅']);
   }
   function twoWrongs(q){
     const out = [{ v: q.mid, why: 'That is only the first step. There is a second step in the story!' }];
@@ -2252,9 +2255,9 @@ if(typeof module !== 'undefined') module.exports = V;
       title: 'Solving stories with bar models',
       steps: [
         { say: 'A <b>bar model</b> is a picture of a story. Ana has <b>45</b> stickers. Ben has <b>28</b>. How many altogether? The two parts join to make the whole, which is the <b>?</b>.', vis: { kind: 'barModel', args: [[{ value: 45 }, { value: 28 }], '?'] } },
-        { say: 'Words like <b>altogether</b>, <b>in total</b> and <b>more arrive</b> mean <b>add</b>. 45 + 28 = <b>73</b>.', vis: { kind: 'barModel', args: [[{ value: 45 }, { value: 28 }], 73] },
+        { say: 'Words like <b>altogether</b>, <b>in total</b> and <b>more arrive</b> (amounts joining) mean <b>add</b>. 45 + 28 = <b>73</b>.', vis: { kind: 'barModel', args: [[{ value: 45 }, { value: 28 }], 73] },
           quiz: { prompt: 'A zoo has 36 owls. 19 more owls arrive. Which sum do we use?', options: [{ label: '36 + 19', ok: true }, { label: '36 − 19', ok: false }], right: 'Yes! "More arrive" means the amounts join, so we add: 36 + 19 = 55.', wrong: 'More owls arrive, so there are more of them. We add: 36 + 19 = 55.' } },
-        { say: 'Here the whole is <b>82</b>. Sam gives <b>35</b> away. The part left is the <b>?</b>. Words like <b>left</b>, <b>gives away</b> and <b>how many more</b> mean <b>subtract</b>: 82 − 35 = <b>47</b>.', vis: { kind: 'barModel', args: [[{ value: 35 }, { value: '?' }], 82] } },
+        { say: 'The whole is <b>82</b>. Sam gives <b>35</b> away; the part left is the <b>?</b>. <b>Left</b> and <b>gives away</b> mean <b>subtract</b>: 82 − 35 = <b>47</b>. <b>How many more is needed?</b> finds a gap, so that is a subtraction too.', vis: { kind: 'barModel', args: [[{ value: 35 }, { value: '?' }], 82] } },
         { say: 'Some stories have <b>two steps</b>. A bus has 120 people. 30 get off, then 45 get on. Step 1: 120 − 30 = 90. Step 2: 90 + 45 = <b>135</b>. Do one step at a time!', vis: { kind: 'barModel', args: [[{ value: 90 }, { value: 30 }], 120] },
           quiz: { prompt: 'A box has 200 beads. 50 are lost, then 20 more are added. How many now?', options: [{ label: '170', ok: true }, { label: '130', ok: false }, { label: '270', ok: false }], right: 'Yes! 200 − 50 = 150, then 150 + 20 = 170.', wrong: 'Step 1: 200 − 50 = 150. Step 2: 150 + 20 = 170.' } }
       ]
@@ -2431,7 +2434,7 @@ if(typeof module !== 'undefined') module.exports = V;
       var cnt = o.vs.filter(function(v){ return v > thr; }).length;
       return numeric({ prompt: o.th.intro + ' How many bars show more than ' + thr + '?', visual: o.vis, answer: cnt,
         hint: 'Find ' + thr + ' on the side. Count the bars that go higher than that.',
-        explain: ex('Bars above ' + thr, ['Find ' + thr + ' on the side.', 'Bars taller than that: ' + o.labs.filter(function(l, x){ return o.vs[x] > thr; }).join(', ') + '.', 'There are <b>' + cnt + '</b> bars. ✅']),
+        explain: ex('Bars above ' + thr, ['Find ' + thr + ' on the side.', 'Bars taller than that: ' + o.labs.filter(function(l, x){ return o.vs[x] > thr; }).join(', ') + '.', 'There ' + (cnt === 1 ? 'is' : 'are') + ' <b>' + cnt + '</b> ' + (cnt === 1 ? 'bar' : 'bars') + '. ✅']),
         truth: cnt, decode: function(){ var d = dec(o); return Object.keys(d).filter(function(l){ return d[l] > thr; }).length; } });
     }
     var p = two(k), a = p[0], b = p[1], hi = o.vs[a] > o.vs[b] ? a : b, lo = hi === a ? b : a, diff = o.vs[hi] - o.vs[lo];
@@ -2534,7 +2537,7 @@ if(typeof module !== 'undefined') module.exports = V;
       return mcqNum({ prompt: 'Look at the key. How many ' + o.th.things + ' does ONE symbol stand for?', visual: o.vis, answer: key, count: 3,
         wrong: [{ v: 1, why: 'Look at the key at the bottom: it tells you what one symbol is worth.' }, { v: 2, why: 'Read the key again.' }, { v: 5, why: 'Read the key again.' }],
         hint: 'The key is at the bottom of the picture. It says symbol = a number.',
-        explain: ex('Reading the key', ['The key says: one symbol = <b>' + key + '</b>.', 'So each symbol stands for ' + key + ' ' + o.th.things + '.', 'Answer: <b>' + key + '</b>. ✅']),
+        explain: ex('Reading the key', ['The key says: one symbol = <b>' + key + '</b>.', 'So each symbol stands for ' + plural(key, o.th.things.replace(/s$/, ''), o.th.things) + '.', 'Answer: <b>' + key + '</b>. ✅']),
         truth: key, decode: function(){ return parseFloat(/=\s*([\d.]+)\s*</.exec(o.vis)[1]); } });
     }
     var best = 0; o.cs.forEach(function(c, x){ if(c > o.cs[best]) best = x; });
@@ -2655,12 +2658,12 @@ if(typeof module !== 'undefined') module.exports = V;
 (function(){
   var INKC = 'var(--vis-ink,#1B1B2F)';
   var THEMES = [
-    { intro: 'Children voted for their favourite pet.', things: 'children', labels: ['Dog','Cat','Fish','Rabbit','Hamster','Bird'], ask: function(l){ return 'How many children chose ' + l + '?'; } },
-    { intro: 'Children voted for their favourite fruit.', things: 'children', labels: ['Apple','Banana','Grape','Pear','Plum','Mango'], ask: function(l){ return 'How many children chose ' + l + '?'; } },
-    { intro: 'Ana tallied the weather each day for a month.', things: 'days', labels: ['Sunny','Rainy','Cloudy','Windy','Foggy'], ask: function(l){ return 'How many days were ' + l + '?'; } },
-    { intro: 'Tom tallied the cars that drove past school.', things: 'cars', labels: ['Red','Blue','White','Black','Green','Silver'], ask: function(l){ return 'How many ' + l + ' cars were there?'; } },
-    { intro: 'Mei spotted animals on a trip to the zoo.', things: 'animals', labels: ['Lion','Zebra','Monkey','Parrot','Camel','Panda'], ask: function(l){ return 'How many ' + l + 's did Mei spot?'; } },
-    { intro: 'Leo tallied ice creams sold at the school fair.', things: 'ice creams', labels: ['Vanilla','Mint','Berry','Toffee','Choc'], ask: function(l){ return 'How many ' + l + ' ice creams were sold?'; } }
+    { intro: 'Children voted for their favourite pet.', things: 'children', labels: ['Dog','Cat','Fish','Rabbit','Hamster','Bird'], more: function(a, b){ return 'How many more children chose ' + a + ' than ' + b + '?'; }, ask: function(l){ return 'How many children chose ' + l + '?'; } },
+    { intro: 'Children voted for their favourite fruit.', things: 'children', labels: ['Apple','Banana','Grape','Pear','Plum','Mango'], more: function(a, b){ return 'How many more children chose ' + a + ' than ' + b + '?'; }, ask: function(l){ return 'How many children chose ' + l + '?'; } },
+    { intro: 'Ana tallied the weather each day over a term.', things: 'days', labels: ['Sunny','Rainy','Cloudy','Windy','Foggy'], more: function(a, b){ return 'How many more days were ' + a + ' than ' + b + '?'; }, ask: function(l){ return 'How many days were ' + l + '?'; } },
+    { intro: 'Tom tallied the cars that drove past school.', things: 'cars', labels: ['Red','Blue','White','Black','Green','Silver'], more: function(a, b){ return 'How many more ' + a + ' cars than ' + b + ' cars were there?'; }, ask: function(l){ return 'How many ' + l + ' cars were there?'; } },
+    { intro: 'Mei spotted animals on a trip to the zoo.', things: 'animals', labels: ['Lion','Zebra','Monkey','Parrot','Camel','Panda'], more: function(a, b){ return 'How many more ' + a + 's than ' + b + 's did Mei spot?'; }, ask: function(l){ return 'How many ' + l + 's did Mei spot?'; } },
+    { intro: 'Leo tallied ice creams sold at the school fair.', things: 'ice creams', labels: ['Vanilla','Mint','Berry','Toffee','Choc'], more: function(a, b){ return 'How many more ' + a + ' ice creams than ' + b + ' ice creams were sold?'; }, ask: function(l){ return 'How many ' + l + ' ice creams were sold?'; } }
   ];
   function distinct(k, lo, hi){ var a = []; for(var v = lo; v <= hi; v++) a.push(v); return sample(a, k); }
   function theme(){ return pick(THEMES); }
@@ -2825,7 +2828,7 @@ if(typeof module !== 'undefined') module.exports = V;
       var n = randInt(10, 29), vis3 = V.tally(n);
       return numeric({ prompt: 'How many crossed bundles of 5 can you see?', visual: vis3, answer: bundles(n),
         hint: 'Each crossed bundle has a diagonal line through it. Count the diagonals.',
-        explain: ex('Counting bundles', ['Each bundle is <b>5</b>, with a diagonal line.', 'The tally shows ' + n + ' marks, so ' + n + ' ÷ 5 gives ' + bundles(n) + ' full bundles' + (n % 5 ? ' and ' + (n % 5) + ' singles' : '') + '.', 'Bundles: <b>' + bundles(n) + '</b>. ✅']),
+        explain: ex('Counting bundles', ['Each bundle is <b>5</b>, with a diagonal line.', 'The tally shows ' + n + ' marks, so ' + n + ' ÷ 5 gives ' + bundles(n) + ' full bundles' + (n % 5 ? ' and ' + plural(n % 5, 'single') : '') + '.', 'Bundles: <b>' + bundles(n) + '</b>. ✅']),
         truth: bundles(n), decode: function(){ return (vis3.match(/class="talx"/g) || []).length; },
         wrong: function(v){ return v === n ? 'That is the number of marks. The question asks for bundles of 5.' : ''; } });
     }
@@ -2840,13 +2843,14 @@ if(typeof module !== 'undefined') module.exports = V;
         explain: ex('Checking Sam', ['Count the ' + labs[i] + ' row in fives.', 'It makes <b>' + real + '</b>.', 'Sam said ' + shown + ', so the answer is <b>' + (good ? 'Yes' : 'No') + '</b>. ✅']),
         truth: K.bool(real === shown), decode: function(){ return K.bool(rd() === shown); } });
     }
-    var a = randInt(0, 1), b = a + 1, c = 2, d2 = 3;
+    var order2 = [0, 1, 2, 3].sort(function(x, y){ return cs[y] - cs[x]; });
+    var hi = order2[0], lo = order2[1 + randInt(0, 2)];
     var vis5 = table(labs.map(function(l, x){ return { label: l, n: cs[x], mode: 'tally' }; }));
-    var sumAB = cs[a] + cs[b], diff = Math.abs(sumAB - cs[c]);
-    return numeric({ prompt: th.intro + ' How many more ' + th.things + ' chose ' + labs[a] + ' and ' + labs[b] + ' together than ' + labs[c] + '? (If ' + labs[c] + ' has more, give the difference.)', visual: vis5, answer: diff,
-      hint: 'Step 1: add the ' + labs[a] + ' and ' + labs[b] + ' rows. Step 2: find the difference with ' + labs[c] + '.',
-      explain: ex('Two steps', [labs[a] + ' + ' + labs[b] + ' = ' + cs[a] + ' + ' + cs[b] + ' = <b>' + sumAB + '</b>.', labs[c] + ' has <b>' + cs[c] + '</b>.', 'The difference is <b>' + diff + '</b>. ✅']),
-      truth: Math.abs(cs[a] + cs[b] - cs[c]), decode: function(){ var dd = decodeTable(vis5); return Math.abs(dd[labs[a]] + dd[labs[b]] - dd[labs[c]]); } });
+    var diff = cs[hi] - cs[lo];
+    return numeric({ prompt: th.intro + ' ' + th.more(labs[hi], labs[lo]), visual: vis5, answer: diff,
+      hint: 'Count the ' + labs[hi] + ' row and the ' + labs[lo] + ' row in fives. Then find the difference.',
+      explain: ex('How many more', [labs[hi] + ' has <b>' + cs[hi] + '</b> and ' + labs[lo] + ' has <b>' + cs[lo] + '</b>.', 'Take away: ' + cs[hi] + ' − ' + cs[lo] + '.', 'The difference is <b>' + diff + '</b>. ✅']),
+      truth: diff, decode: function(){ var dd = decodeTable(vis5); return dd[labs[hi]] - dd[labs[lo]]; } });
   }
 
   registerSkill({
@@ -2937,7 +2941,7 @@ if(typeof module !== 'undefined') module.exports = V;
 
   function g1(){
     var o = source(pickKind(), 3, 2, 8, false), f = pick(['together', 'together', 'diff']), k = 3;
-    var a = randInt(0, 2), b = (a + randInt(1, 2)) % 3, A = o.labs[a], B = o.labs[b], t = o.th.intro + ' (' + tell(o) + ')';
+    var a = randInt(0, 2), b = (a + randInt(1, 2)) % 3, A = o.labs[a], B = o.labs[b], t = o.th.intro;
     if(f === 'together'){
       var ans = o.vs[a] + o.vs[b];
       return mcqNum({ prompt: t + ' How many ' + o.th.things + ' did ' + A + ' and ' + B + ' get altogether?', visual: o.vis, answer: ans, count: 3,
@@ -2954,7 +2958,7 @@ if(typeof module !== 'undefined') module.exports = V;
 
   function g2(){
     var o = source(pickKind(), 4, 2, 7, true), f = pick(['together', 'vs', 'gone', 'range', 'added']), k = 4;
-    var order = sortedIdx(o.vs), t = o.th.intro + ' (' + tell(o) + ')';
+    var order = sortedIdx(o.vs), t = o.th.intro;
     if(f === 'together'){
       var p = sample([0, 1, 2, 3], 3), a = p[0], b = p[1], c = p[2], ans = o.vs[a] + o.vs[b] + o.vs[c];
       return mcqNum({ prompt: t + ' How many ' + o.th.things + ' did ' + o.labs[a] + ', ' + o.labs[b] + ' and ' + o.labs[c] + ' get altogether?', visual: o.vis, answer: ans,
@@ -2998,7 +3002,7 @@ if(typeof module !== 'undefined') module.exports = V;
   }
 
   function g3(){
-    var kind = pickKind(), o = source(kind, 5, 2, kind === 'pict' ? 7 : 6, true), t = o.th.intro + ' (' + tell(o) + ')';
+    var kind = pickKind(), o = source(kind, 5, 2, kind === 'pict' ? 7 : 6, true), t = o.th.intro;
     var order = sortedIdx(o.vs), f = pick(['mostafter', 'mostafter', 'vs', 'least2', 'twopairs', 'gone']);
     if(f === 'mostafter'){
       var cur = order[0], x = order[1 + randInt(0, 2)], gap = o.vs[cur] - o.vs[x];
@@ -3007,7 +3011,7 @@ if(typeof module !== 'undefined') module.exports = V;
       var winner = o.vs[x] + n > o.vs[cur] ? x : cur;
       var cands = o.labs.map(function(l, i){ return opt(K.text(l), l, i === x ? o.labs[x] + ' has ' + o.vs[x] + ' + ' + n + ' = ' + (o.vs[x] + n) + ', which is ' + (winner === cur ? 'still less than ' + o.vs[cur] + '.' : 'not the biggest.') : (i === cur ? o.labs[cur] + ' has ' + o.vs[cur] + ' now' + (winner === x ? ', but ' + o.labs[x] + ' will have more.' : ' — check the new total for ' + o.labs[x] + '.') : o.labs[i] + ' is smaller than the others.')); });
       var fm = function(d){ var best = null, tot = {}; Object.keys(d).forEach(function(l){ tot[l] = d[l] + (l === o.labs[x] ? n : 0); if(best === null || tot[l] > tot[best]) best = l; }); return K.text(best); };
-      return mcq({ prompt: t + ' If ' + n + ' more ' + o.th.things + ' are added to ' + o.labs[x] + ', who has the most now?', visual: o.vis, correct: opt(K.text(o.labs[winner]), o.labs[winner]), distractors: cands, keepOrder: true,
+      return mcq({ prompt: t + ' ' + o.labs[x] + ' gets ' + n + ' more ' + o.th.things + '. Who has the most now?', visual: o.vis, correct: opt(K.text(o.labs[winner]), o.labs[winner]), distractors: cands, keepOrder: true,
         hint: 'Step 1: add the extra ' + n + ' to ' + o.labs[x] + '’s number. Step 2: compare everyone.',
         explain: ex('Two steps', ['Step 1: ' + o.labs[x] + ' = ' + o.vs[x] + ' + ' + n + ' = <b>' + (o.vs[x] + n) + '</b>.', 'Step 2: the biggest other number is ' + o.labs[cur] + ' with <b>' + o.vs[cur] + '</b>.', 'So <b>' + o.labs[winner] + '</b> has the most now. ✅']),
         truth: fm(ds(o)), decode: function(){ return fm(ds(o)); } });
@@ -3295,7 +3299,7 @@ if(typeof module !== 'undefined') module.exports = V;
   }
 
   registerSkill({
-    id: 'frac-add-sub', strand: 'fractions', name: 'Adding and subtracting fractions', emoji: '➕', year: 3, order: 480, prereq: ['frac-nonunit'],
+    id: 'frac-add-sub', strand: 'fractions', name: 'Adding and subtracting fractions', emoji: '➕', year: 3, order: 480, prereq: ['frac-nonunit', 'frac-tenths'],
     lesson: {
       title: 'Same size parts',
       steps: [
@@ -3304,7 +3308,7 @@ if(typeof module !== 'undefined') module.exports = V;
         { say: 'Your turn! Blue is 1/5 and purple is 3/5. Add the top numbers and keep the bottom number the same.', vis: { kind: 'fracMix', args: [1, 3, 5, 'add'] },
           quiz: { prompt: 'The bar shows 1/5 + 3/5. What is the answer?', options: [{ label: '4/5', ok: true }, { label: '4/10', ok: false }, { label: '3/5', ok: false }], right: 'Yes! 1 + 3 = 4 and the bottom stays 5.', wrong: 'Add the tops: 1 + 3 = 4. The bottom stays 5 because the parts are still fifths. So 4/5.' } },
         { say: 'To <b>take away</b>, cross parts out. We start with <b>5/8</b> and take away <b>2/8</b>. Crossed-out parts do not count. <b>3</b> parts are left: <b>5/8 − 2/8 = 3/8</b>.', vis: { kind: 'fracMix', args: [5, 2, 8, 'sub'] },
-          quiz: { prompt: 'What is 5/8 − 2/8?', options: [{ label: '3/8', ok: true }, { label: '7/8', ok: false }, { label: '3/0', ok: false }], right: 'Yes! 5 − 2 = 3 and the bottom stays 8.', wrong: 'Take away the tops: 5 − 2 = 3. The bottom stays 8. So 3/8.' } },
+          quiz: { prompt: 'What is 5/8 − 2/8?', options: [{ label: '3/8', ok: true }, { label: '7/8', ok: false }, { label: '3/16', ok: false }], right: 'Yes! 5 − 2 = 3 and the bottom stays 8.', wrong: 'Take away the tops: 5 − 2 = 3. The bottom stays 8. So 3/8.' } },
         { say: 'Adding can fill up a whole bar! <b>3/8 + 5/8 = 8/8</b>, and 8/8 is <b>one whole</b>. In this skill our answers stay within one whole.', vis: { kind: 'fracMix', args: [3, 5, 8, 'add'] } }
       ]
     },
@@ -3486,8 +3490,8 @@ if(typeof module !== 'undefined') module.exports = V;
     const p = unitPair([2, 3, 4, 5, 6, 8, 10]), a = p[0], b = p[1];
     const claimBig = chance(0.5) ? a : b, other = claimBig === a ? b : a;
     const isTrue = bigger(claimBig, other);
-    const T = opt(K.bool(true), 'True', 'It IS true: with 1 on top, the smaller the bottom number the bigger the piece.');
-    const Fa = opt(K.bool(false), 'False', 'It is false. A bigger bottom number means smaller pieces, so 1/' + (claimBig[1]) + ' is NOT bigger than 1/' + other[1] + '.');
+    const T = opt(K.bool(true), 'True', 'It is false. A bigger bottom number means smaller pieces, so 1/' + claimBig[1] + ' is NOT bigger than 1/' + other[1] + '.');
+    const Fa = opt(K.bool(false), 'False', 'It IS true: with 1 on top, the smaller the bottom number the bigger the piece, so 1/' + claimBig[1] + ' is bigger than 1/' + other[1] + '.');
     return mcq2({
       prompt: 'True or false? ' + F(claimBig[0], claimBig[1]) + ' is bigger than ' + F(other[0], other[1]) + '.', visual: '',
       correct: isTrue ? T : Fa, other: isTrue ? Fa : T,
@@ -3513,14 +3517,14 @@ if(typeof module !== 'undefined') module.exports = V;
   }
 
   registerSkill({
-    id: 'frac-compare-order', strand: 'fractions', name: 'Comparing and ordering fractions', emoji: '⚖️', year: 3, order: 470, prereq: ['frac-nonunit'],
+    id: 'frac-compare-order', strand: 'fractions', name: 'Comparing and ordering fractions', emoji: '⚖️', year: 3, order: 470, prereq: ['frac-nonunit', 'frac-tenths'],
     lesson: {
       title: 'Which fraction is bigger?',
       steps: [
         { say: 'When the bottom numbers are the <b>same</b>, the parts are the same size. So the fraction with <b>more parts coloured</b> is bigger. Here 3/5 is bigger than 2/5.', vis: { kind: 'fracBars', args: [[[3, 5], [2, 5]]] },
           quiz: { prompt: 'Which is bigger, 2/7 or 5/7?', options: [{ label: '2/7', ok: false }, { label: '5/7', ok: true }], right: 'Yes! The parts are the same size, and 5 parts is more than 2 parts.', wrong: 'Both are sevenths, so compare the top numbers: 5 is bigger than 2. So 5/7 is bigger.' } },
         { say: 'Now look at <b>unit fractions</b> (1 on top). Here is 1/2 and 1/4. Half a bar is much longer than a quarter of a bar.', vis: { kind: 'fracBars', args: [[[1, 2], [1, 4]]] } },
-        { say: 'Surprise! The <b>bigger</b> the bottom number, the <b>smaller</b> the fraction. More pieces means each piece is smaller. So <b>1/2 > 1/4 > 1/8</b>.', vis: { kind: 'fracBars', args: [[[1, 2], [1, 4], [1, 8]]] },
+        { say: 'Surprise! When the top is <b>1</b>, the <b>bigger</b> the bottom number, the <b>smaller</b> the fraction. More pieces means each piece is smaller. So <b>1/2 > 1/4 > 1/8</b>.', vis: { kind: 'fracBars', args: [[[1, 2], [1, 4], [1, 8]]] },
           quiz: { prompt: 'Which is bigger, 1/3 or 1/6?', options: [{ label: '1/3', ok: true }, { label: '1/6', ok: false }], right: 'Yes! Thirds are bigger pieces than sixths.', wrong: 'A whole cut into 3 pieces gives bigger pieces than one cut into 6. So 1/3 is bigger.' } }
       ]
     },
@@ -3645,7 +3649,7 @@ if(typeof module !== 'undefined') module.exports = V;
       opt(fK(p.n, p.e), F(p.n, p.e), 'You changed the bottom number but not the top. Both must be multiplied by ' + p.k + '.'),
       opt(fK(p.n + p.k, p.e), F(p.n + p.k, p.e), 'You ADDED ' + p.k + ' to the top. Equivalent fractions come from multiplying.'),
       opt(fK(p.n + 1, p.e), F(p.n + 1, p.e), 'Close, but not the same size. Multiply the top by ' + p.k + ' exactly.'),
-      opt(fK(p.m, p.e + p.d), F(p.m, p.e + p.d), 'You added the bottom numbers. The bottom is ' + p.d + ' × ' + p.k + ' = ' + p.e + '.')
+      opt(fK(p.m, p.e + p.d), F(p.m, p.e + p.d), 'The top is right but the bottom is too big. Multiply the bottom by the same number as the top: ' + p.d + ' × ' + p.k + ' = ' + p.e + '.')
     ];
     FAMS.forEach(function(f){ f.forEach(function(dd){ for(let k = 1; k < dd; k++) ds.push(opt(fK(k, dd), F(k, dd), 'That is a different size from ' + p.n + '/' + p.d + '.')); }); });
     return mcq({
@@ -3661,8 +3665,8 @@ if(typeof module !== 'undefined') module.exports = V;
     let m = p.m;
     if(!same){ m = (p.m > 1 && chance(0.5)) ? p.m - 1 : p.m + 1; if(m >= p.e) m = p.m - 1; }
     const vis = wallRender([[p.n, p.d], [m, p.e]], false);
-    const yes = opt(K.bool(true), 'Yes', 'The two bars are the same length, so they ARE the same amount.');
-    const no = opt(K.bool(false), 'No', 'Look at the shaded lengths: they are different, so the fractions are not equal.');
+    const yes = opt(K.bool(true), 'Yes', 'Look at the shaded lengths: the colour stops in different places, so the fractions are NOT the same amount.');
+    const no = opt(K.bool(false), 'No', 'The colour stops in the same place on both bars, so they ARE the same amount: ' + p.n + '/' + p.d + ' = ' + p.m + '/' + p.e + '.');
     return mcq2({
       prompt: 'Are ' + F(p.n, p.d) + ' and ' + F(m, p.e) + ' the same amount?', visual: vis,
       correct: same ? yes : no, other: same ? no : yes,
@@ -3745,7 +3749,7 @@ if(typeof module !== 'undefined') module.exports = V;
   }
 
   registerSkill({
-    id: 'frac-equivalent', strand: 'fractions', name: 'Equivalent fractions', emoji: '🧱', year: 3, order: 460, prereq: ['frac-nonunit'],
+    id: 'frac-equivalent', strand: 'fractions', name: 'Equivalent fractions', emoji: '🧱', year: 3, order: 460, prereq: ['frac-nonunit', 'frac-tenths'],
     lesson: {
       title: 'Same amount, different numbers',
       steps: [
@@ -3894,7 +3898,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return shade({
       prompt: 'Colour ' + n + '/' + d + ' of the bar.', den: d, num: n,
       hint: 'The bottom number (' + d + ') says how many equal parts the bar has. Tap exactly ' + n + ' of them.',
-      explain: ex('Colouring ' + n + '/' + d, ['The bar is cut into <b>' + d + '</b> equal parts.', 'The top number <b>' + n + '</b> says how many parts to colour.', 'Colour <b>' + n + '</b> parts and leave ' + (d - n) + ' white. ✅'])
+      explain: ex('Colouring ' + n + '/' + d, ['The bar is cut into <b>' + d + '</b> equal parts.', 'The top number <b>' + n + '</b> says how many parts to colour.', 'Colour <b>' + plural(n, 'part') + '</b> and leave ' + (d - n) + ' white. ✅'])
     });
   }
 
@@ -3906,7 +3910,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return numeric({
       prompt: (kind === 'set' ? 'There are ' + d + ' counters. ' + n + '/' + d + ' of them are coloured.' : 'The ' + what + ' is split into ' + d + ' equal ' + unit + '. ' + n + '/' + d + ' of it is coloured.') + ' How many ' + unit + ' are NOT coloured?', visual: vis, answer: w,
       hint: 'Count the white ' + unit + ' in the picture, or take the coloured ones away from ' + d + '.',
-      explain: ex('Counting the white ' + unit, ['There are <b>' + d + '</b> ' + unit + ' altogether.', '<b>' + n + '</b> are coloured.', d + ' − ' + n + ' = <b>' + w + '</b> ' + unit + ' are white. ✅']),
+      explain: ex('Counting the white ' + unit, ['There are <b>' + d + '</b> ' + unit + ' altogether.', '<b>' + n + '</b> are coloured.', d + ' − ' + n + ' = <b>' + plural(w, unit.replace(/s$/, '')) + '</b> ' + (w === 1 ? 'is' : 'are') + ' white. ✅']),
       truth: w, decode: function(){ const r = readPic(vis); return r.den - r.num; },
       wrong: function(v){ return v === n ? 'That is the number of COLOURED ' + unit + '. We want the white ones.' : v === d ? 'That is ALL the ' + unit + '.' : ''; }
     });
@@ -4070,7 +4074,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const q = mcq({
       prompt: 'Which number line has the ? at ' + n + '/' + d + '?', visual: '',
       correct: opt(fK(n, d), line01(d, n, { width: 240 })), distractors: shuffle(ds), count: Math.min(3, d - 1 >= 3 ? 3 : 2),
-      hint: 'Each line is cut into ' + d + ' equal steps. Count ' + n + ' steps along from 0.',
+      hint: 'Each line is cut into ' + d + ' equal steps. Count ' + plural(n, 'step') + ' along from 0.',
       explain: ex('Placing ' + n + '/' + d, ['The line from 0 to 1 is cut into <b>' + d + '</b> equal steps.', 'The top number says to walk <b>' + plural(n, 'step') + '</b> from 0.', 'Only one line has its ? at <b>' + n + '/' + d + '</b>. ✅']),
       truth: fK(n * 3, d * 3)
     });
@@ -4114,8 +4118,8 @@ if(typeof module !== 'undefined') module.exports = V;
     if(!right && (a === n || a < 1 || a >= d)) a = n === 1 ? 2 : n - 1;
     const vis = line01(d, n, {});
     const nm = pick(['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Aisha', 'Kai']);
-    const yes = opt(K.bool(true), 'Yes', 'The ? really is at that fraction. Count the jumps from 0 again.');
-    const no = opt(K.bool(false), 'No', 'Count the jumps from 0 to the ? again — it IS at a different fraction.');
+    const yes = opt(K.bool(true), 'Yes', 'Count the jumps from 0 again: the ? is at ' + n + '/' + d + ', not ' + a + '/' + d + '.');
+    const no = opt(K.bool(false), 'No', 'Count the jumps from 0 again: the ? really IS at ' + a + '/' + d + ', so ' + nm + ' is right.');
     return mcq2({
       prompt: nm + ' says the ? is at ' + a + '/' + d + '. Is ' + nm + ' right?', visual: vis,
       correct: right ? yes : no, other: right ? no : yes,
@@ -4309,7 +4313,7 @@ if(typeof module !== 'undefined') module.exports = V;
   }
 
   registerSkill({
-    id: 'frac-of-quantity', strand: 'fractions', name: 'Fractions of amounts', emoji: '🧮', year: 3, order: 440, prereq: ['frac-nonunit', 'multdiv-2-5-10'],
+    id: 'frac-of-quantity', strand: 'fractions', name: 'Fractions of amounts', emoji: '🧮', year: 3, order: 440, prereq: ['frac-nonunit', 'multdiv-2-5-10', 'multdiv-3', 'multdiv-4'],
     lesson: {
       title: 'A fraction of a number',
       steps: [
@@ -4419,7 +4423,7 @@ if(typeof module !== 'undefined') module.exports = V;
             hint: 'Count all the slices for the bottom number, then the coloured slices for the top number.',
             explain: ex('Reading the pizza', [
               'There are <b>' + d + '</b> equal slices altogether — that is the bottom number.',
-              '<b>' + n + '</b> slices are coloured — that is the top number.',
+              '<b>' + plural(n, 'slice') + '</b> ' + (n === 1 ? 'is' : 'are') + ' coloured — that is the top number.',
               'So <b>' + n + '/' + d + '</b> of the pizza is coloured. ✅'
             ]),
             truth: fKey(n, d), decode: function(){ const r = V.decodeFractionCircle(vis); return fKey(r.num, r.den); }
@@ -4440,7 +4444,7 @@ if(typeof module !== 'undefined') module.exports = V;
           return shade({
             prompt: 'Colour ' + n + '/' + d + ' of the bar.', den: d, num: n,
             hint: 'The bottom number (' + d + ') says how many equal parts there are. Tap exactly ' + n + ' of them.',
-            explain: ex('Colouring ' + n + '/' + d, ['The bar is cut into <b>' + d + '</b> equal parts.', 'The top number <b>' + n + '</b> says how many to colour.', 'Colour <b>' + n + '</b> parts and leave the other ' + (d - n) + ' white. ✅'])
+            explain: ex('Colouring ' + n + '/' + d, ['The bar is cut into <b>' + d + '</b> equal parts.', 'The top number <b>' + n + '</b> says how many to colour.', 'Colour <b>' + plural(n, 'part') + '</b> and leave the other ' + (d - n) + ' white. ✅'])
           });
         }
         const picks = [];
@@ -4500,7 +4504,7 @@ if(typeof module !== 'undefined') module.exports = V;
       prompt: 'The bar is cut into 10 equal parts. What fraction is coloured?', visual: vis,
       correct: opt(fK(n, 10), F(n, 10)), distractors: fracWrongs(n, 'Count the coloured parts again. The top number is how many are coloured.').map(function(x){ return opt(fK(x.n, x.d), F(x.n, x.d), x.why); }), keepOrder: true,
       hint: 'There are 10 parts in all (bottom number). Count only the coloured ones for the top number.',
-      explain: ex('Reading tenths', ['The bar has <b>10</b> equal parts, so the bottom number is 10 (tenths).', '<b>' + n + '</b> parts are coloured.', 'So ' + TENTHS[n] + ' is coloured: <b>' + n + '/10</b>. ✅']),
+      explain: ex('Reading tenths', ['The bar has <b>10</b> equal parts, so the bottom number is 10 (tenths).', '<b>' + plural(n, 'part') + '</b> ' + (n === 1 ? 'is' : 'are') + ' coloured.', 'So ' + TENTHS[n] + ' is coloured: <b>' + n + '/10</b>. ✅']),
       truth: fK(n * 3, 30),
       decode: function(){ const r = V.decodeFractionBar(vis); return fK(r.num, r.den); }
     });
@@ -4918,10 +4922,10 @@ if(typeof module !== 'undefined') module.exports = V;
         // which picture is a ...?
         const target = pick(T1);
         const tv = draw(target, { width: 120 }), tf = polyFacts(tv);
-        const ds = shuffle(T1).filter(function(x){ return !IS[target](FACT[x]) && !IS[x](tf); }).map(function(x){ return opt(K.text(x), draw(x, { width: 120 }), 'That picture shows ' + art(x) + ', which ' + DEF[x] + '. A ' + target + ' ' + DEF[target] + '.'); });
+        const ds = shuffle(T1).filter(function(x){ return !IS[target](FACT[x]) && !IS[x](tf); }).map(function(x){ return opt(K.text(x), draw(x, { width: 120 }), 'That picture shows ' + art(x) + ', which ' + DEF[x] + '. ' + cap(art(target)) + ' ' + DEF[target] + '.'); });
         const q = mcq({
           prompt: 'Which picture shows ' + art(target) + '?', visual: '', correct: opt(K.text(target), tv), distractors: ds, count: 3,
-          hint: 'Say what a ' + target + ' is like, then count the sides on each picture.',
+          hint: 'Say what ' + art(target) + ' is like, then count the sides on each picture.',
           explain: ex('Finding ' + art(target), [artB(target) + ' ' + DEF[target] + '.', 'Count the sides on each picture and look for corners.', 'Only one picture fits: ' + art(target).replace(target, '<b>' + target + '</b>') + '. ✅']),
           truth: K.text(target)
         });
@@ -4958,7 +4962,7 @@ if(typeof module !== 'undefined') module.exports = V;
           return mcq({
             prompt: 'What kind of triangle is this?', visual: vis, correct: opt(K.text(target), target), distractors: ds, count: 3, keepOrder: true,
             hint: 'Look for a square corner first. Then compare the lengths of the three sides.',
-            explain: ex('Sorting triangles', ['Right angles: <b>' + f.ra + '</b>. Equal sides: <b>' + (f.allEq ? 'all 3' : (f.eqMax === 2 ? '2' : 'none')) + '</b>.', 'An <b>equilateral</b> has 3 equal sides, an <b>isosceles</b> has 2, a <b>scalene</b> has none, a <b>right-angled</b> triangle has a square corner.', 'This is a <b>' + target + '</b>. ✅']),
+            explain: ex('Sorting triangles', ['Right angles: <b>' + f.ra + '</b>. Equal sides: <b>' + (f.allEq ? 'all 3' : (f.eqMax === 2 ? '2' : 'none')) + '</b>.', 'An <b>equilateral</b> has 3 equal sides, an <b>isosceles</b> has 2, a <b>scalene</b> has none, a <b>right-angled</b> triangle has a square corner.', 'This is ' + art(target).replace(target, '<b>' + target + '</b>') + '. ✅']),
             truth: K.text(nameOf(polyFacts(vis))), decode: function(){ return K.text(nameOf(decFacts(vis))); }
           });
         }
@@ -5007,6 +5011,9 @@ if(typeof module !== 'undefined') module.exports = V;
     'triangular prism': ['a camping tent', 'a tent with triangle ends']
   };
   const PROPN = { f: 'flat faces', e: 'edges', v: 'vertices' };
+  const POLY = ['cube', 'cuboid', 'square-based pyramid', 'triangular prism'];
+  const SING = { f: 'flat face', e: 'edge', v: 'vertex' };
+  function propN(p, n){ return n === 1 ? SING[p] : PROPN[p]; }
   function art(n){ return /^[aeiou]/.test(n) ? 'an ' + n : 'a ' + n; }
   function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
   function artB(n){ return (/^[aeiou]/.test(n) ? 'An ' : 'A ') + '<b>' + n + '</b>'; }
@@ -5069,10 +5076,10 @@ if(typeof module !== 'undefined') module.exports = V;
   /* counting questions */
   const HINTP = { f: 'A face is a flat surface you could put a sticker on. Count them all: top, bottom and the sides.', e: 'An edge is where two faces meet. Count top edges, bottom edges, then the edges going up and down.', v: 'A vertex is a corner, where edges meet. Count the corners on the top, then the bottom.' };
   function countQ(pool, props){
-    const name = pick(pool), p = pick(props), vis = V.shape3D(name);
+    const name = pick(pool), vis = V.shape3D(name), p = H[name].c > 0 ? 'f' : pick(props);
     const a = V.FACTS3D[name][{ f: 'flat', e: 'edges', v: 'vertices' }[p]];
     const wrong = [];
-    ['f', 'e', 'v'].forEach(function(o){ if(o !== p) wrong.push({ v: V.FACTS3D[name][{ f: 'flat', e: 'edges', v: 'vertices' }[o]], why: 'That is the number of ' + PROPN[o] + '. The question asks about ' + PROPN[p] + '.' }); });
+    ['f', 'e', 'v'].forEach(function(o){ if(o !== p && H[name].c === 0) wrong.push({ v: V.FACTS3D[name][{ f: 'flat', e: 'edges', v: 'vertices' }[o]], why: 'That is the number of ' + PROPN[o] + '. The question asks about ' + PROPN[p] + '.' }); });
     return mcqNum({
       prompt: 'How many <b>' + PROPN[p] + '</b> does ' + art(name) + ' have?', visual: vis, answer: a, wrong: wrong, nearby: [1, -1, 2, -2, 3, 4, -4], valid: function(v){ return v >= 0 && v <= 14; },
       hint: HINTP[p],
@@ -5081,11 +5088,13 @@ if(typeof module !== 'undefined') module.exports = V;
     });
   }
   function whichHasQ(pool, props, count){
-    const p = pick(props), target = pick(pool), val = H[target][p];
+    const p = pick(props);
+    if(p !== 'f') pool = pool.filter(function(n){ return H[n].c === 0; });
+    const target = pick(pool), val = H[target][p];
     const clue = p === 'f' ? cnt(val, 'flat face') : p === 'e' ? cnt(val, 'edge') : cnt(val, 'vertex', 'vertices');
     const ds = shuffle(pool.filter(function(n){ return H[n][p] !== val; })).map(function(x){ return opt(K.text(x), x, cap(art(x)) + ' has ' + cnt(H[x][p], p === 'f' ? 'flat face' : p === 'e' ? 'edge' : 'vertex', p === 'v' ? 'vertices' : undefined) + ', not ' + val + '.'); });
     const q = mcq({
-      prompt: 'Which 3D shape has <b>' + clue + '</b>?', visual: '', correct: opt(K.text(target), target), distractors: ds, count: count,
+      prompt: 'Which 3D shape has <b>' + clue + '</b>?', visual: '', correct: opt(K.text(target), target), distractors: ds, count: Math.min(count, ds.length + 1),
       hint: 'Picture each shape and count its ' + PROPN[p] + '. Rule out the ones that have a different number.',
       explain: ex('Counting ' + PROPN[p], [cap(art(target)) + ' has <b>' + clue + '</b>.', 'The others have different numbers, e.g. ' + art(ds[0].key.slice(2)) + ' has ' + cnt(H[ds[0].key.slice(2)][p], p === 'f' ? 'flat face' : p === 'e' ? 'edge' : 'vertex', p === 'v' ? 'vertices' : undefined) + '.', 'So the answer is the <b>' + target + '</b>. ✅']),
       truth: 'pending'
@@ -5106,14 +5115,15 @@ if(typeof module !== 'undefined') module.exports = V;
     const target = pick(five);
     let kinds = null;
     for(let t = 0; t < 40 && !kinds; t++){
-      const k = sample(['f', 'c', 'e', 'v'], randInt(2, 3));
+      const k = H[target].c > 0 ? ['f', 'c'] : sample(['f', 'c', 'e', 'v'], randInt(2, 3));
       const fit = five.filter(function(n){ return k.every(function(x){ return H[n][x] === H[target][x]; }); });
       if(fit.length === 1) kinds = k;
     }
-    kinds = kinds || ['f', 'c', 'e', 'v'];
+    kinds = kinds || (H[target].c > 0 ? ['f', 'c'] : ['f', 'c', 'e', 'v']);
     const clues = kinds.map(function(k){ return clueText(H[target][k], k); });
     const ds = shuffle(NAMES.filter(function(n){ return n !== target && kinds.some(function(k){ return H[n][k] !== H[target][k]; }); })).map(function(x){
       const bad = kinds.filter(function(k){ return H[x][k] !== H[target][k]; })[0];
+      if(H[x].c > 0 && (bad === 'e' || bad === 'v')) return opt(K.text(x), x, cap(art(x)) + ' has a curved surface, but the riddle says ' + clueText(H[target].c, 'c') + '.');
       return opt(K.text(x), x, cap(art(x)) + ' has ' + clueText(H[x][bad], bad) + ', but the riddle says ' + clueText(H[target][bad], bad) + '.');
     });
     const q = mcq({
@@ -5128,14 +5138,14 @@ if(typeof module !== 'undefined') module.exports = V;
     return q;
   }
   function sumQ(){
-    const a = pick(NAMES), b = pick(NAMES), p = pick(['e', 'v', 'f']);
+    const a = pick(NAMES), b = pick(NAMES), p = (H[a].c > 0 || H[b].c > 0) ? 'f' : pick(['e', 'v', 'f']);
     const vis = '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">' + V.shape3D(a) + V.shape3D(b) + '</div>';
     const ans = H[a][p] + H[b][p];
     const key = { f: 'flat', e: 'edges', v: 'vertices' }[p];
     return numeric({
       prompt: 'How many <b>' + PROPN[p] + '</b> do these two shapes have <b>altogether</b>?', visual: vis, answer: ans,
       hint: 'Count the ' + PROPN[p] + ' of the first shape, then of the second shape, then add.',
-      explain: ex('Two shapes', [cap(art(a)) + ' has <b>' + H[a][p] + '</b> ' + PROPN[p] + '.', cap(art(b)) + ' has <b>' + H[b][p] + '</b> ' + PROPN[p] + '.', H[a][p] + ' + ' + H[b][p] + ' = <b>' + ans + '</b>. ✅']),
+      explain: ex('Two shapes', [cap(art(a)) + ' has <b>' + H[a][p] + '</b> ' + propN(p, H[a][p]) + '.', cap(art(b)) + ' has <b>' + H[b][p] + '</b> ' + propN(p, H[b][p]) + '.', H[a][p] + ' + ' + H[b][p] + ' = <b>' + ans + '</b>. ✅']),
       truth: H[b][p] + H[a][p], decode: function(){ return vis.split('<svg').slice(1).reduce(function(t, s){ return t + V.FACTS3D[kind3D('<svg' + s)][key]; }, 0); },
       wrong: function(v){ return v === H[a][p] || v === H[b][p] ? 'That is only one of the shapes. Add both.' : ''; }
     });
@@ -5179,7 +5189,7 @@ if(typeof module !== 'undefined') module.exports = V;
     });
   }
   function tfQ(){
-    const name = pick(NAMES.filter(function(n){ return n !== 'cuboid'; })), p = pick(['f', 'e', 'v']);
+    const name = pick(NAMES.filter(function(n){ return n !== 'cuboid'; })), p = H[name].c > 0 ? 'f' : pick(['f', 'e', 'v']);
     const vis = V.shape3D(name), key = { f: 'flat', e: 'edges', v: 'vertices' }[p];
     const real = H[name][p];
     const isTrue = chance(0.5);
@@ -5359,7 +5369,7 @@ if(typeof module !== 'undefined') module.exports = V;
       prompt: 'It is ' + h + ' o’clock. Look at the small angle between the two hands. Is it ' + (bridge ? 'acute, right or obtuse?' : 'smaller than, bigger than, or a right angle?'), visual: vis,
       correct: opt(K.text(cat), labs[cat]), distractors: ds, count: 3,
       hint: 'At 3 o’clock the hands make a perfect square corner. Is ' + h + ' o’clock closer together than that, or further apart?',
-      explain: ex('Angle between clock hands', ['Each hour on a clock is one twelfth of a turn, so the hands at ' + h + ' o’clock are ' + Math.min(h, 12 - h) + ' hour-gaps apart.', 'At 3 o’clock there are 3 gaps and the angle is a right angle.', Math.min(h, 12 - h) === 3 ? 'Here there are 3 gaps too.' : 'Here there are ' + (Math.min(h, 12 - h) < 3 ? 'fewer' : 'more') + ' gaps.', 'So the angle is <b>' + labs[cat] + '</b>' + (bridge ? ' (Year 4 words: acute = smaller, obtuse = bigger)' : '') + '. ✅']),
+      explain: ex('Angle between clock hands', ['Each hour on a clock is one twelfth of a turn, so the hands at ' + h + ' o’clock are ' + plural(Math.min(h, 12 - h), 'hour-gap') + ' apart.', 'At 3 o’clock there are 3 gaps and the angle is a right angle.', Math.min(h, 12 - h) === 3 ? 'Here there are 3 gaps too.' : 'Here there are ' + (Math.min(h, 12 - h) < 3 ? 'fewer' : 'more') + ' gaps.', 'So the angle is <b>' + labs[cat] + '</b>' + (bridge ? ' (Year 4 words: acute = smaller, obtuse = bigger)' : '') + '. ✅']),
       truth: K.text(degCat(Math.min(30 * h, 360 - 30 * h))), decode: function(){ const d = V.decodeClock(vis); const hh = d.h % 12; return K.text(degCat(Math.min(30 * hh, 360 - 30 * hh))); }
     });
   }
@@ -5507,10 +5517,10 @@ if(typeof module !== 'undefined') module.exports = V;
     function add(px, py, why){ if(px < 0 || py < 0 || px > maxV || py > maxV) return; const k = ck(px, py); if(px === x && py === y) return; if(seen[k]) return; seen[k] = 1; out.push(opt(k, lab(px, py), why)); }
     (extraFirst || []).forEach(function(e){ add(e[0], e[1], e[2]); });
     add(y, x, 'You swapped the numbers. Go ALONG the corridor first (x), then UP the stairs (y): the first number is across.');
-    add(x + 1, y, 'The dot is ' + x + ' steps along, not ' + (x + 1) + '. Count the steps along the bottom again.');
-    add(x - 1, y, 'The dot is ' + x + ' steps along, not ' + (x - 1) + '. Count the steps along the bottom again.');
-    add(x, y + 1, 'The dot is ' + y + ' steps up, not ' + (y + 1) + '. Count the steps up the side again.');
-    add(x, y - 1, 'The dot is ' + y + ' steps up, not ' + (y - 1) + '. Count the steps up the side again.');
+    add(x + 1, y, 'The dot is ' + plural(x, 'step') + ' along, not ' + (x + 1) + '. Count the steps along the bottom again.');
+    add(x - 1, y, 'The dot is ' + plural(x, 'step') + ' along, not ' + (x - 1) + '. Count the steps along the bottom again.');
+    add(x, y + 1, 'The dot is ' + plural(y, 'step') + ' up, not ' + (y + 1) + '. Count the steps up the side again.');
+    add(x, y - 1, 'The dot is ' + plural(y, 'step') + ' up, not ' + (y - 1) + '. Count the steps up the side again.');
     for(let a = 0; a <= maxV; a++) for(let b = 0; b <= maxV; b++) add(a, b, 'Check both numbers: along first, then up.');
     return out;
   }
@@ -5520,7 +5530,7 @@ if(typeof module !== 'undefined') module.exports = V;
       prompt: 'What are the <b>coordinates</b> of the red dot? (Write them as (across, up).)', visual: vis,
       correct: opt(ck(x, y), lab(x, y)), distractors: pointOpts(x, y, maxV), keepOrder: true, count: 4,
       hint: 'Start at 0. Count the steps ALONG the bottom to be under the dot, then count the steps UP. Along first, then up.',
-      explain: ex('Reading coordinates', ['From the corner (0), go <b>along</b> the bottom: <b>' + x + '</b> steps to be under the dot.', 'Then go <b>up</b>: <b>' + y + '</b> steps to reach it.', 'The coordinates are <b>' + lab(x, y) + '</b>. ✅']),
+      explain: ex('Reading coordinates', ['From the corner (0), go <b>along</b> the bottom: <b>' + x + '</b> ' + (x === 1 ? 'step' : 'steps') + ' to be under the dot.', 'Then go <b>up</b>: <b>' + y + '</b> ' + (y === 1 ? 'step' : 'steps') + ' to reach it.', 'The coordinates are <b>' + lab(x, y) + '</b>. ✅']),
       truth: ck(x, y), decode: function(){ const d = V.decodeGrid(vis); return ck(d.x, d.y); }
     });
   }
@@ -5541,7 +5551,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const ds = pointOpts(x, y, maxV).map(function(o){ const m = /\((\d+), (\d+)\)/.exec(o.label); return opt(o.key, V.grid(maxV, [+m[1], +m[2]]), 'That dot is at ' + o.label + '. ' + (o.key === ck(y, x) ? 'You swapped the numbers.' : 'Count along first, then up.')); });
     const q = mcq({
       prompt: 'Which grid has a dot at <b>' + lab(x, y) + '</b>?', visual: '', correct: opt(ck(x, y), V.grid(maxV, [x, y])), distractors: ds, keepOrder: true, count: count,
-      hint: 'Start at 0. Go ALONG ' + x + ' steps, then UP ' + y + ' steps. Check each grid for a dot in that place.',
+      hint: 'Start at 0. Go ALONG ' + plural(x, 'step') + ', then UP ' + plural(y, 'step') + '. Check each grid for a dot in that place.',
       explain: ex('Plotting ' + lab(x, y), ['The first number, <b>' + x + '</b>, says how far to go along.', 'The second number, <b>' + y + '</b>, says how far to go up.', 'Only one grid has its dot at <b>' + lab(x, y) + '</b>. ✅']),
       truth: ck(x, y)
     });
@@ -5606,7 +5616,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return numeric({
       prompt: 'The two red dots are on the same ' + (horiz ? 'row' : 'column') + '. How many steps apart are they?', visual: vis, answer: b - a,
       hint: 'Count the steps from one dot to the other along the grid lines. Do not count the dot you start on.',
-      explain: ex('Steps between two points', ['The dots are at ' + lab(pts[0][0], pts[0][1]) + ' and ' + lab(pts[1][0], pts[1][1]) + '.', 'Only the ' + (horiz ? 'first' : 'second') + ' number changes: from ' + a + ' to ' + b + '.', b + ' − ' + a + ' = <b>' + (b - a) + '</b> steps. ✅']),
+      explain: ex('Steps between two points', ['The dots are at ' + lab(pts[0][0], pts[0][1]) + ' and ' + lab(pts[1][0], pts[1][1]) + '.', 'Only the ' + (horiz ? 'first' : 'second') + ' number changes: from ' + a + ' to ' + b + '.', b + ' − ' + a + ' = <b>' + (b - a) + '</b> ' + ((b - a) === 1 ? 'step' : 'steps') + '. ✅']),
       truth: Math.max(b, a) - Math.min(a, b),
       decode: function(){ const d = decodePts(vis); return Math.abs(d[0].x - d[1].x) + Math.abs(d[0].y - d[1].y); },
       wrong: function(v){ return v === b - a + 1 ? 'You counted the starting dot too. Count the steps between the dots.' : ''; }
@@ -6059,7 +6069,7 @@ if(typeof module !== 'undefined') module.exports = V;
         { say: 'This triangle is <b>not</b> symmetrical about the dashed line. The corner on the left has no partner on the right, so the halves would not fit.', vis: { kind: 'symShape', args: ['rtriangle', 0] },
           quiz: { prompt: 'Would the two halves of this triangle match if you folded it on the dashed line?', options: [{ label: 'Yes', ok: false }, { label: 'No', ok: true }], right: 'Right! The halves are different, so it is not symmetrical.', wrong: 'The left half is much taller than the right half. They would not match.' } },
         { say: 'The line has to be in the right place! This rectangle is symmetrical about a line down its <b>middle</b>, but this dashed line is off to one side, so the halves are <b>different sizes</b>.', vis: { kind: 'symShape', args: ['rectangle', 34] },
-          quiz: { prompt: 'Is this dashed line a line of symmetry?', options: [{ label: 'Yes', ok: false }, { label: 'No', ok: true }], right: 'Yes, you spotted it: the line is not in the middle, so it is not.', wrong: 'The left part is bigger than the right part. The line is not in the middle.' } },
+          quiz: { prompt: 'Is this dashed line a line of symmetry?', options: [{ label: 'Yes', ok: false }, { label: 'No', ok: true }], right: 'Well spotted! The line is not in the middle, so it is not a line of symmetry.', wrong: 'The left part is bigger than the right part. The line is not in the middle.' } },
         { say: '<b>Year 4 idea:</b> if you know one half of a symmetrical picture, you can draw the other half. Each point goes the <b>same distance</b> from the line on the other side. 3 dots on one side means <b>6 dots</b> in the whole pattern.', vis: { kind: 'symShape', args: ['arrow', 0] } }
       ]
     },
@@ -6244,7 +6254,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const q = randInt(1, 4), cw = chance(0.5), start = pick(DIRS), vis = R(start, q, cw, q < 4);
     return mcqNum({
       prompt: 'The arrow turns round the circle, following the red curve. How many <b>right angles</b> is that?', visual: vis, answer: q,
-      wrong: [{ v: q + 1, why: 'Count the quarters the red curve covers again: it covers ' + q + ', not ' + (q + 1) + '.' }, { v: q - 1, why: 'The red curve covers ' + q + ' quarters, not ' + (q - 1) + '.' }, { v: 2 * q, why: 'Each quarter is one right angle. Do not double the number.' }],
+      wrong: [{ v: q + 1, why: 'Count the quarters the red curve covers again: it covers ' + q + ', not ' + (q + 1) + '.' }, { v: q - 1, why: 'The red curve covers ' + plural(q, 'quarter') + ', not ' + (q - 1) + '.' }, { v: 2 * q, why: 'Each quarter is one right angle. Do not double the number.' }],
       valid: function(v){ return v >= 1 && v <= 8; }, count: 3,
       hint: 'Each quarter of the circle (N to E, E to S, S to W, W to N) is one right angle. How many quarters does the red curve go through?',
       explain: ex('Counting right angles in a turn', ['One quarter turn is one right angle.', 'The red curve covers <b>' + q + '</b> quarter' + (q === 1 ? '' : 's') + '.', 'So the turn is <b>' + q + '</b> right angle' + (q === 1 ? '' : 's') + '. ✅']),
@@ -6255,7 +6265,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const q = randInt(1, 4);
     return mcqNum({
       prompt: 'How many <b>right angles</b> make <b>' + TNAME[q] + '</b>?', visual: '', answer: q,
-      wrong: [{ v: q === 4 ? 2 : q * 2, why: 'A quarter turn is 1 right angle, so ' + TNAME[q] + ' is ' + q + ' quarters, not ' + (q * 2) + '.' }, { v: q + 1, why: 'Each quarter turn is one right angle. ' + cap(TNAME[q]) + ' is ' + q + ' quarters.' }, { v: q - 1, why: 'Each quarter turn is one right angle. ' + cap(TNAME[q]) + ' is ' + q + ' quarters.' }],
+      wrong: [{ v: q === 4 ? 2 : q * 2, why: 'A quarter turn is 1 right angle, so ' + TNAME[q] + ' is ' + plural(q, 'quarter') + ', not ' + (q * 2) + '.' }, { v: q + 1, why: 'Each quarter turn is one right angle. ' + cap(TNAME[q]) + ' is ' + plural(q, 'quarter') + '.' }, { v: q - 1, why: 'Each quarter turn is one right angle. ' + cap(TNAME[q]) + ' is ' + plural(q, 'quarter') + '.' }],
       valid: function(v){ return v >= 1 && v <= 8; }, count: 4,
       hint: 'A quarter turn is the same as one right angle (a square corner). A full turn is all the way round.',
       explain: ex('Turns and right angles', ['A full turn is all the way round: <b>4</b> right angles.', cap(TNAME[q]) + ' is <b>' + q + '</b> out of 4 quarters.', 'So it is <b>' + q + '</b> right angle' + (q === 1 ? '' : 's') + '. ✅']),
@@ -6299,12 +6309,12 @@ if(typeof module !== 'undefined') module.exports = V;
   function sumTurnsQ(){
     const a = randInt(1, 3), b = randInt(1, 4 - a), who = pick(ACTORS), cwv = chance(0.5);
     const tot = a + b;
-    const ds = [1, 2, 3, 4].filter(function(n){ return n !== tot; }).map(function(n){ return opt(K.text(TSHORT[n]), TNAME[n], a + ' quarter' + (a === 1 ? '' : 's') + ' + ' + b + ' quarter' + (b === 1 ? '' : 's') + ' makes ' + tot + ' quarters, not ' + n + '.'); });
+    const ds = [1, 2, 3, 4].filter(function(n){ return n !== tot; }).map(function(n){ return opt(K.text(TSHORT[n]), TNAME[n], a + ' quarter' + (a === 1 ? '' : 's') + ' + ' + b + ' quarter' + (b === 1 ? '' : 's') + ' makes ' + plural(tot, 'quarter') + ', not ' + n + '.'); });
     return mcq({
       prompt: who + ' makes ' + TNAME[a] + ' ' + cwWord(cwv) + ', then ' + TNAME[b] + ' more, the same way round. What turn is that <b>altogether</b>?', visual: '',
       correct: opt(K.text(TSHORT[tot]), TNAME[tot]), distractors: ds, keepOrder: true, count: 4,
       hint: 'Count the quarters. A quarter turn is 1, a half turn is 2, a three-quarter turn is 3.',
-      explain: ex('Adding turns', [cap(TNAME[a]) + ' is <b>' + a + '</b> quarter' + (a === 1 ? '' : 's') + '.', cap(TNAME[b]) + ' is <b>' + b + '</b> quarter' + (b === 1 ? '' : 's') + '.', a + ' + ' + b + ' = ' + tot + ' quarters, which is <b>' + TNAME[tot] + '</b>. ✅']),
+      explain: ex('Adding turns', [cap(TNAME[a]) + ' is <b>' + a + '</b> quarter' + (a === 1 ? '' : 's') + '.', cap(TNAME[b]) + ' is <b>' + b + '</b> quarter' + (b === 1 ? '' : 's') + '.', a + ' + ' + b + ' = ' + plural(tot, 'quarter') + ', which is <b>' + TNAME[tot] + '</b>. ✅']),
       truth: K.text(['', 'quarter', 'half', 'three-quarter', 'full'][(a * 90 + b * 90) / 90])
     });
   }
@@ -6654,7 +6664,7 @@ if(typeof module !== 'undefined') module.exports = V;
         prompt: 'The pattern keeps going for ' + N + ' shapes. How many ' + target + 's will there be?', visual: vis, answer: cnt,
         hint: 'How many ' + target + 's are in ONE repeat? Then see how many whole repeats fit into ' + N + '.',
         explain: ex('Counting the ' + target + 's', [
-          'One repeat has <b>' + L + '</b> shapes and <b>' + perUnit + '</b> of them ' + (perUnit === 1 ? 'is a ' : 'are ') + target + (perUnit === 1 ? '' : 's') + '.',
+          'One repeat has <b>' + L + '</b> shapes and <b>' + perUnit + '</b> of them ' + (perUnit === 1 ? (/^[aeiou]/.test(target) ? 'is an ' : 'is a ') : 'are ') + target + (perUnit === 1 ? '' : 's') + '.',
           N + ' shapes is ' + Math.floor(N / L) + ' whole repeats' + (N % L ? ' plus ' + (N % L) + ' extra shapes (' + unit.slice(0, N % L).join(', ') + ')' : '') + '.',
           'Altogether there are <b>' + cnt + '</b> ' + target + (cnt === 1 ? '' : 's') + '. ✅'
         ]),
@@ -7536,7 +7546,7 @@ if(typeof module !== 'undefined') module.exports = V;
     m4: { label: 'in the 4 times table', comp: 'nm4', fn: function(n){ return n % 4 === 0; }, how: 'Count in 4s to check: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48.' },
     nm4: { label: 'not in the 4 times table', comp: 'm4', fn: function(n){ return n % 4 !== 0; }, how: 'Count in 4s to check: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48.' },
     gt50: { label: 'more than 50', comp: 'le50', fn: function(n){ return n > 50; }, how: 'Is it bigger than 50? 51 is, 50 is not.' },
-    le50: { label: 'no more than 50', comp: 'gt50', fn: function(n){ return n <= 50; }, how: 'Is it bigger than 50? 51 is, 50 is not.' }
+    le50: { label: '50 or less', comp: 'gt50', fn: function(n){ return n <= 50; }, how: 'Is it bigger than 50? 51 is, 50 is not.' }
   };
   const AXES = { par: ['even', 'odd'], m5: ['m5', 'nm5'], m10: ['m10', 'nm10'], big: ['gt50', 'le50'] };
   const AXPAIRS = [['par', 'm5'], ['par', 'big'], ['m5', 'big'], ['m10', 'big']];
@@ -7906,7 +7916,7 @@ if(typeof module !== 'undefined') module.exports = V;
 
   /* ------------------------------------------------------------ the skill */
   registerSkill({
-    id: 'logic-sorting', strand: 'logic', name: 'Sorting and odd one out', emoji: '🧺', year: 3, order: 920, prereq: ['logic-patterns'],
+    id: 'logic-sorting', strand: 'logic', name: 'Sorting and odd one out', emoji: '🧺', year: 3, order: 920, prereq: ['logic-patterns', 'multdiv-2-5-10'],
     lesson: {
       title: 'Sorting with rules',
       steps: [
@@ -7914,7 +7924,7 @@ if(typeof module !== 'undefined') module.exports = V;
         { say: 'This number has one dot left on its own. A number with one left over is <b>odd</b>. 7 dots make 3 pairs and 1 spare. So <b>7 is odd</b>.', vis: { kind: 'dots', args: [7, { cols: 2 }] },
           quiz: { prompt: 'Look at the dots: 9 dots in pairs. Is 9 odd or even?', options: [{ label: 'Odd', ok: true }, { label: 'Even', ok: false }], right: 'Yes! 9 makes 4 pairs and 1 left over, so it is odd.', wrong: '9 dots make 4 pairs with 1 left over. A number with one left over is odd.' } },
         { say: 'Check the <b>last digit</b>. <b>Multiples of 5</b> end in <b>0 or 5</b>. <b>Multiples of 10</b> end in <b>0</b>. All of these are multiples of 5, but only 10, 20 and 30 are multiples of 10.', vis: { kind: 'lgCards', args: [[5, 10, 15, 20, 25, 30]] } },
-        { say: 'A <b>Carroll diagram</b> sorts with two rules at once. 12 is even <b>and</b> not a multiple of 5, so it goes in the top-left box. Every number must match both its headings.', vis: { kind: 'lgCarroll', args: [{ cols: ['m5', 'nm5'], rows: ['even', 'odd'], cells: { 'even|m5': [10, 20], 'even|nm5': [12, 18], 'odd|m5': [15, 25], 'odd|nm5': [7, 21] } }] },
+        { say: 'A <b>Carroll diagram</b> sorts with two rules at once. 12 is even <b>and</b> not a multiple of 5, so it goes in the top-right box. Every number must match both its headings.', vis: { kind: 'lgCarroll', args: [{ cols: ['m5', 'nm5'], rows: ['even', 'odd'], cells: { 'even|m5': [10, 20], 'even|nm5': [12, 18], 'odd|m5': [15, 25], 'odd|nm5': [7, 21] } }] },
           quiz: { prompt: 'Which box does 35 go in?', options: [{ label: 'Odd and a multiple of 5', ok: true }, { label: 'Even and a multiple of 5', ok: false }, { label: 'Odd and not a multiple of 5', ok: false }], right: 'Yes! 35 is odd and it ends in 5.', wrong: '35 ends in 5, so it is a multiple of 5. It ends in an odd digit, so it is odd.' } },
         { say: 'In an <b>odd one out</b> puzzle, test <b>every</b> number with the rule. Which of 20, 30, 45, 50 is not a multiple of 10? Only <b>45</b> fails, because it does not end in 0.', vis: { kind: 'lgCards', args: [[20, 30, 45, 50]] } }
       ]
@@ -8711,7 +8721,7 @@ if(typeof module !== 'undefined') module.exports = V;
     },
     trick: {
       title: 'Start at zero, big marks then small',
-      say: 'First check the object starts exactly at <b>0</b>. Then say the last <b>big number</b> you pass, then count the <b>small marks</b> after it. 5 is half-way between big numbers, 1 mark = 1 mm.',
+      say: 'First check the object starts exactly at <b>0</b>. Then say the last <b>big number</b> you pass, then count the <b>small marks</b> after it. The long mark half-way between two big numbers is 5 mm, and every small mark is 1 mm.',
       vis: { kind: 'ruler', args: [9.4, { emoji: '🥕' }] },
       example: 'Last big number is <b>9</b>, then <b>4</b> small marks: <b>9 cm 4 mm</b> = 94 mm'
     },
@@ -8963,7 +8973,7 @@ if(typeof module !== 'undefined') module.exports = V;
   const GRAM_THINGS = [['a paper clip', 1], ['a feather', 2], ['a pencil', 8], ['a slice of bread', 40], ['an egg', 60], ['a chocolate bar', 100], ['an apple', 150], ['a mobile phone', 170], ['a tennis ball', 58]];
   const KG_THINGS = [['a bag of potatoes', 2500], ['a watermelon', 3000], ['a cat', 4000], ['a bag of rice', 5000], ['a school bag full of books', 6000], ['a big pumpkin', 8000], ['a bicycle', 12000], ['a suitcase', 15000], ['a washing machine', 70000]];
   function gTxt(v){ return v + ' g'; }
-  function kgTxt(v){ return Number.isInteger(v) ? v + ' kg' : Math.floor(v) + '½ kg'; }
+  function kgTxt(v){ return Number.isInteger(v) ? v + ' kg' : (v < 1 ? '' : Math.floor(v)) + '½ kg'; }
   function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
   function dv(html, step){ return Math.round(V.decodeDial(html) / step) * step; }   // needle angle -> value, snapped to the scale step
   function rd(v){ return Math.round(v * 1000) / 1000; }
@@ -9128,9 +9138,13 @@ if(typeof module !== 'undefined') module.exports = V;
     });
   }
   function t2Diff(){
-    const sc = S_HALF; let a, b;
-    do { a = randInt(3, 9) * 50; b = randInt(1, 6) * 50; } while(a - b < 50);
-    const p = sample([['melon', '🍈'], ['pumpkin', '🎃'], ['cabbage', '🥬'], ['pineapple', '🍍'], ['coconut', '🥥'], ['lemon bag', '🍋']], 2);
+    const sc = S_HALF; let a, b, p;
+    // realistic masses (g, in 50s): [name, emoji, lowest, highest]
+    const FR = [['lemon', '🍋', 50, 100], ['banana', '🍌', 100, 200], ['apple', '🍎', 100, 200], ['orange', '🍊', 150, 250], ['pear', '🍐', 150, 250], ['avocado', '🥑', 150, 250], ['potato', '🥔', 150, 300], ['coconut', '🥥', 350, 450], ['small cabbage', '🥬', 350, 450]];
+    do {
+      p = sample(FR, 2);
+      a = randInt(p[0][2] / 50, p[0][3] / 50) * 50; b = randInt(p[1][2] / 50, p[1][3] / 50) * 50;
+    } while(a - b < 50);
     const va = dial(a, sc), vb = dial(b, sc);
     const vis = '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px"><div style="text-align:center;font-weight:800;width:170px">' + p[0][1] + ' ' + p[0][0] + '<div style="width:170px">' + va + '</div></div><div style="text-align:center;font-weight:800;width:170px">' + p[1][1] + ' ' + p[1][0] + '<div style="width:170px">' + vb + '</div></div></div>';
     const d = a - b;
@@ -9142,7 +9156,7 @@ if(typeof module !== 'undefined') module.exports = V;
         { v: d + 50, why: 'Check your take-away: ' + a + ' − ' + b + '.' },
         { v: d - 50, why: 'Check your take-away: ' + a + ' − ' + b + '.' }
       ],
-      nearby: [100, -100],
+      nearby: [100, -100, 150, -150, 200, 250, 300],
       valid: function(v){ return v > 0; },
       hint: 'Read both scales in grams, then take the smaller number from the bigger one.',
       explain: ex('How much heavier?', ['The ' + p[0][0] + ' is <b>' + a + ' g</b>. The ' + p[1][0] + ' is <b>' + b + ' g</b>.', 'Difference: ' + a + ' − ' + b + '.', 'The ' + p[0][0] + ' is <b>' + d + ' g</b> heavier. ✅']),
@@ -9191,7 +9205,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return numeric({
       prompt: 'The scale shows kilograms. How many grams is that?', visual: vis, answer: g, unit: 'g',
       hint: 'First read the kilograms. Then remember 1 kg = 1000 g.',
-      explain: ex('Kilograms to grams', ['The needle shows <b>' + kgTxt(val) + '</b>.', '1 kg = 1000 g' + (Number.isInteger(val) ? '.' : ', and ½ kg = 500 g.'), Number.isInteger(val) ? val + ' × 1000 = <b>' + g + ' g</b>. ✅' : Math.floor(val) + ' kg = ' + Math.floor(val) * 1000 + ' g, plus 500 g = <b>' + g + ' g</b>. ✅']),
+      explain: ex('Kilograms to grams', ['The needle shows <b>' + kgTxt(val) + '</b>.', '1 kg = 1000 g' + (Number.isInteger(val) ? '.' : ', and ½ kg = 500 g.'), Number.isInteger(val) ? val + ' × 1000 = <b>' + g + ' g</b>. ✅' : val < 1 ? 'Half of 1000 g is 500 g, so ½ kg = <b>' + g + ' g</b>. ✅' : Math.floor(val) + ' kg = ' + Math.floor(val) * 1000 + ' g, plus 500 g = <b>' + g + ' g</b>. ✅']),
       truth: val * 10 * 100, decode: function(){ return dv(vis, 0.5) * 1000; },
       wrong: function(v){ return v === val * 100 ? '1 kg is 1000 g, not 100 g.' : v === val ? 'That is the kilograms. Multiply by 1000 to get grams.' : ''; }
     });
@@ -9230,13 +9244,21 @@ if(typeof module !== 'undefined') module.exports = V;
 /* MEASURE — money: coins and notes, £ and p, adding, change, "enough money?" (all amounts kept in PENCE) */
 (function(){
   const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
-  const ITEMS = ['a bun', 'an apple', 'a pencil', 'a rubber', 'a lolly', 'a comic', 'a sticker book', 'a balloon', 'a postcard', 'a bookmark', 'a keyring', 'a banana', 'a sharpener', 'a cookie'];
-  const ITEM_PL = ['buns', 'apples', 'pencils', 'rubbers', 'lollies', 'comics', 'sticker books', 'balloons', 'postcards', 'bookmarks', 'keyrings', 'bananas', 'sharpeners', 'cookies'];
+  // realistic prices in pence (o = one, m = many, lo..hi = sensible price range)
+  const ITEMS = [
+    { o: 'a bun', m: 'buns', lo: 30, hi: 80 }, { o: 'an apple', m: 'apples', lo: 20, hi: 60 }, { o: 'a pencil', m: 'pencils', lo: 10, hi: 95 },
+    { o: 'a rubber', m: 'rubbers', lo: 10, hi: 50 }, { o: 'a lolly', m: 'lollies', lo: 20, hi: 70 }, { o: 'a sticker book', m: 'sticker books', lo: 50, hi: 95 },
+    { o: 'a balloon', m: 'balloons', lo: 10, hi: 50 }, { o: 'a postcard', m: 'postcards', lo: 20, hi: 60 }, { o: 'a bookmark', m: 'bookmarks', lo: 20, hi: 70 },
+    { o: 'a keyring', m: 'keyrings', lo: 50, hi: 95 }, { o: 'a banana', m: 'bananas', lo: 10, hi: 40 }, { o: 'a sharpener', m: 'sharpeners', lo: 10, hi: 40 },
+    { o: 'a cookie', m: 'cookies', lo: 30, hi: 80 }
+  ];
+  function priceOf(it){ return randInt(it.lo / 5, it.hi / 5) * 5; }
 
   function mt(p){ return p < 100 ? p + 'p' : '£' + (p % 100 === 0 ? String(p / 100) : (p / 100).toFixed(2)); }   // natural text
   function fp(p){ return '£' + (p / 100).toFixed(2); }                                                           // option label, pounds mode
   function fq(p){ return p + 'p'; }                                                                              // option label, pence mode
-  function fmtFor(a){ return a >= 100 ? fp : fq; }
+  function fm(p){ return p < 100 ? fq(p) : fp(p); }   // under £1 shows pence (60p), otherwise pounds (£1.60)
+  function fmtFor(a){ return fm; }
   function sumKey(list){ const c = {}; list.forEach(function(d){ c[d] = (c[d] || 0) + 1; }); return Object.keys(c).reduce(function(t, d){ return t + (+d) * c[d]; }, 0); }  // independent: denomination x how many
   function sum(list){ return list.reduce(function(a, b){ return a + b; }, 0); }
   function desc(list){ return list.slice().sort(function(a, b){ return b - a; }); }
@@ -9270,7 +9292,7 @@ if(typeof module !== 'undefined') module.exports = V;
     }
     return st;
   }
-  function two(){ const a = randInt(0, ITEMS.length - 1); let b = randInt(0, ITEMS.length - 1); while(b === a) b = randInt(0, ITEMS.length - 1); return [ITEMS[a], ITEMS[b]]; }
+  function two(){ return sample(ITEMS, 2); }
   // the "count up" way of finding change, as words
   function countUp(price, pay){
     const next = Math.ceil(price / 10) * 10;
@@ -9383,7 +9405,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const lowball = list.reduce(function(t, c){ return t + (c >= 100 ? c / 100 : c); }, 0);
     const smalls = sum(list.filter(function(c){ return c < 100; }));
     return mcqNum({
-      prompt: 'How much money is this?', visual: vis, answer: total, fmt: fp,
+      prompt: 'How much money is this?', visual: vis, answer: total, fmt: fm,
       wrong: [
         { v: lowball, why: 'A £1 coin is worth 100p, not 1p (and a £2 coin is 200p).' },
         { v: smalls, why: 'You left out the pound coins. Add them too.' },
@@ -9417,7 +9439,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return mcqNum({
       prompt: '£' + pounds + '.' + pad2(pence) + ' is the same as how many pence?', answer: p, fmt: fq,
       wrong: [
-        { v: pence, why: 'You forgot the ' + pounds + ' whole pound(s). Each £1 is 100p.' },
+        { v: pence, why: 'You forgot the ' + plural(pounds, 'whole pound') + '. Each £1 is 100p.' },
         { v: pounds * 100, why: 'You forgot the ' + pence + ' pence on the end.' },
         { v: p * 10, why: 'Only £1 = 100p. Do not add extra zeros.' },
         { v: pounds * 100 + (pence % 10) * 10 + Math.floor(pence / 10), why: 'The pence digits got swapped.' }
@@ -9429,11 +9451,11 @@ if(typeof module !== 'undefined') module.exports = V;
     });
   }
   function t2Add(){
-    const a = randInt(3, 14) * 5, b = randInt(3, 12) * 5 + (chance(0.4) ? 2 : 0), tot = a + b, it = two(), nm = pick(NAMES);
+    const it = two(), nm = pick(NAMES), a = priceOf(it[0]), b = priceOf(it[1]) + (chance(0.4) ? 2 : 0), tot = a + b;
     const sub = Math.abs(a - b);
     return mcqNum({
-      prompt: nm + ' buys ' + it[0] + ' for ' + mt(a) + ' and ' + it[1] + ' for ' + mt(b) + '. How much does ' + nm + ' spend altogether?',
-      answer: tot, fmt: fmtFor(tot),
+      prompt: nm + ' buys ' + it[0].o + ' for ' + mt(a) + ' and ' + it[1].o + ' for ' + mt(b) + '. How much does ' + nm + ' spend altogether?',
+      answer: tot, fmt: fm,
       wrong: [
         { v: sub, why: '"Altogether" means ADD the two prices, not take one away.' },
         { v: tot - 10, why: 'Check the tens: when the pence add to more than 10 you need to carry.' },
@@ -9443,14 +9465,14 @@ if(typeof module !== 'undefined') module.exports = V;
       nearby: [5, -5, 20, -20, 10, -10, 1, -1, 30],
       valid: function(v){ return v > 0 && (tot >= 100 || true); },
       hint: 'Add the two prices. Add the pence in the units first, then the tens.',
-      explain: ex('Adding two prices', ['Add ' + mt(a) + ' and ' + mt(b) + ', in pence: ' + a + 'p + ' + b + 'p.', 'Tens: ' + Math.floor(a / 10) * 10 + ' + ' + Math.floor(b / 10) * 10 + ' = ' + (Math.floor(a / 10) * 10 + Math.floor(b / 10) * 10) + '. Units: ' + (a % 10) + ' + ' + (b % 10) + ' = ' + (a % 10 + b % 10) + '.', 'Together: ' + tot + 'p' + (tot >= 100 ? ', which is <b>' + fp(tot) + '</b>' : '') + '. So the answer is <b>' + fmtFor(tot)(tot) + '</b>. ✅']),
+      explain: ex('Adding two prices', ['Add ' + mt(a) + ' and ' + mt(b) + ', in pence: ' + a + 'p + ' + b + 'p.', 'Tens: ' + Math.floor(a / 10) * 10 + ' + ' + Math.floor(b / 10) * 10 + ' = ' + (Math.floor(a / 10) * 10 + Math.floor(b / 10) * 10) + '. Units: ' + (a % 10) + ' + ' + (b % 10) + ' = ' + (a % 10 + b % 10) + '.', 'Together: ' + tot + 'p' + (tot >= 100 ? ', which is <b>' + fp(tot) + '</b>' : '') + '. So the answer is <b>' + fm(tot) + '</b>. ✅']),
       truth: (a + 100) + (b - 100)
     });
   }
   function t2Change(){
-    const price = randInt(1, 19) * 5, ch = 100 - price, nm = pick(NAMES), it = pick(ITEMS);
+    const it = pick(ITEMS), price = priceOf(it), ch = 100 - price, nm = pick(NAMES);
     return mcqNum({
-      prompt: nm + ' pays with a £1 coin for ' + it + ' that costs ' + price + 'p. How much change does ' + nm + ' get?',
+      prompt: nm + ' pays with a £1 coin (100p) for ' + it.o + ' that costs ' + price + 'p. How much change does ' + nm + ' get?',
       answer: ch, fmt: fq,
       wrong: [
         { v: price, why: 'That is the price. The change is what is left from £1.' },
@@ -9466,11 +9488,11 @@ if(typeof module !== 'undefined') module.exports = V;
     });
   }
   function t2Enough(){
-    const nm = pick(NAMES), it = pick(ITEMS);
+    const nm = pick(NAMES), item = pick(ITEMS), it = item.o;
     let has, price;
     do {
-      has = randInt(8, 36) * 5; price = has + randInt(-6, 6) * 5;
-    } while(price < 20 || price === has && chance(0.5));
+      price = priceOf(item); has = price + randInt(-6, 6) * 5;
+    } while(has < 10 || (price === has && chance(0.5)));
     const list = coinsFor(has, [5, 10, 20, 50, 100], 6);
     const vis = V.coins(list);
     const enough = has >= price;
@@ -9487,11 +9509,11 @@ if(typeof module !== 'undefined') module.exports = V;
   /* ------------------------------ tier 3 ------------------------------ */
   function t3TwoStep(){
     const pay = pick([100, 100, 200]);
-    let a, b;
-    do { a = randInt(5, pay === 100 ? 70 : 140) ; b = randInt(5, pay === 100 ? 60 : 130); if(pay === 100){ a = Math.round(a / 1); } } while(a + b >= pay || a + b < pay - 90 || a === b);
-    const nm = pick(NAMES), it = two(), spent = a + b, ch = pay - spent;
+    let a, b, it;
+    do { it = two(); a = randInt(it[0].lo, it[0].hi); b = randInt(it[1].lo, it[1].hi); } while(a + b >= pay || a + b < pay - 90 || a === b);
+    const nm = pick(NAMES), spent = a + b, ch = pay - spent;
     return numeric({
-      prompt: nm + ' buys ' + it[0] + ' for ' + mt(a) + ' and ' + it[1] + ' for ' + mt(b) + '. ' + nm + ' pays with ' + (pay === 100 ? 'a £1 coin' : 'a £2 coin') + '. How many pence change does ' + nm + ' get?',
+      prompt: nm + ' buys ' + it[0].o + ' for ' + mt(a) + ' and ' + it[1].o + ' for ' + mt(b) + '. ' + nm + ' pays with ' + (pay === 100 ? 'a £1 coin (100p)' : 'a £2 coin (200p)') + '. How many pence change does ' + nm + ' get?',
       answer: ch, unit: 'p',
       hint: 'Step 1: add the two prices. Step 2: count up (or take away) from what ' + nm + ' paid.',
       explain: ex('Two steps', ['Spent: ' + a + 'p + ' + b + 'p = <b>' + spent + 'p</b>.', 'Paid: ' + mt(pay) + ' = ' + pay + 'p.', 'Change: ' + pay + 'p − ' + spent + 'p = <b>' + ch + 'p</b>. ✅']),
@@ -9501,11 +9523,13 @@ if(typeof module !== 'undefined') module.exports = V;
   }
   function t3Change(){
     const pay = pick([500, 500, 1000]);
-    const price = pay === 500 ? randInt(21, 98) * 5 : randInt(21, 189) * 5;
-    const ch = pay - price, nm = pick(NAMES), it = pick(['a book', 'a toy rocket', 'a football', 'a puzzle', 'a board game', 'a T-shirt', 'a pencil case', 'a kite']);
+    const GOODS = [['a book', 150, 900], ['a toy rocket', 150, 900], ['a football', 300, 900], ['a puzzle', 250, 900], ['a board game', 400, 950], ['a T-shirt', 400, 950], ['a pencil case', 150, 600], ['a kite', 200, 800]];
+    let g, lo, hi;
+    do { g = pick(GOODS); lo = g[1]; hi = Math.min(g[2], pay - 5); } while(lo >= hi);
+    const price = randInt(lo / 5, hi / 5) * 5, ch = pay - price, nm = pick(NAMES), it = g[0];
     return mcqNum({
       prompt: it.charAt(0).toUpperCase() + it.slice(1) + ' costs ' + mt(price) + '. ' + nm + ' pays with a ' + mt(pay) + ' note. How much change does ' + nm + ' get?',
-      answer: ch, fmt: fmtFor(ch),
+      answer: ch, fmt: fm,
       wrong: [
         { v: ch + 100, why: 'Careful: you may have given £1 too much. Count up to the next pound, then on to the note.' },
         { v: ch - 100, why: 'Careful: you may have given £1 too little. Check the jump to the next pound.' },
@@ -9516,7 +9540,7 @@ if(typeof module !== 'undefined') module.exports = V;
       nearby: [50, -50, 5, -5, 20, -20],
       valid: function(v){ return v > 0; },
       hint: 'Count up from the price to the next pound, then up to the note. Add the jumps.',
-      explain: ex('Change from ' + mt(pay), [countUp(price, pay) || ('Take ' + mt(price) + ' from ' + mt(pay) + '.'), 'Add the jumps up: that gives <b>' + fmtFor(ch)(ch) + '</b>.', 'Check: ' + mt(price) + ' + ' + mt(ch) + ' = ' + mt(pay) + '. ✅']),
+      explain: ex('Change from ' + mt(pay), [countUp(price, pay) || ('Take ' + mt(price) + ' from ' + mt(pay) + '.'), 'Add the jumps up: that gives <b>' + fm(ch) + '</b>.', 'Check: ' + mt(price) + ' + ' + mt(ch) + ' = ' + mt(pay) + '. ✅']),
       truth: (Math.ceil(price / 100) * 100 - price) + (pay - Math.ceil(price / 100) * 100)
     });
   }
@@ -9531,7 +9555,7 @@ if(typeof module !== 'undefined') module.exports = V;
     list = desc(list);
     const vis = V.coins(list);
     return mcqNum({
-      prompt: 'How much money is this?', visual: vis, answer: total, fmt: fp,
+      prompt: 'How much money is this?', visual: vis, answer: total, fmt: fm,
       wrong: [
         { v: total - list[0] + list[0] / 100, why: 'A note is worth many pounds — a ' + mt(list[0]) + ' note is ' + list[0] + 'p, not ' + list[0] / 100 + 'p.' },
         { v: total - list[0], why: 'The note was left out. Add it too!' },
@@ -9564,9 +9588,9 @@ if(typeof module !== 'undefined') module.exports = V;
     return q;
   }
   function t3Times(){
-    const n = randInt(3, 6), price = pick([15, 20, 25, 30, 35, 40, 45]), k = randInt(0, ITEM_PL.length - 1), nm = pick(NAMES);
+    const n = randInt(3, 6), item = pick(ITEMS), price = Math.min(priceOf(item), 60), nm = pick(NAMES);
     return numeric({
-      prompt: nm + ' buys ' + n + ' ' + ITEM_PL[k] + '. Each one costs ' + price + 'p. How many pence do they cost altogether?',
+      prompt: nm + ' buys ' + n + ' ' + item.m + '. Each one costs ' + price + 'p. How many pence do they cost altogether?',
       answer: n * price, unit: 'p',
       hint: 'Add ' + price + 'p again and again ' + n + ' times, or multiply ' + price + ' × ' + n + '.',
       explain: ex('Lots of the same price', [n + ' lots of ' + price + 'p.', price + ' × ' + n + ' = ' + Array(n).fill(price).join(' + ') + '.', 'The total is <b>' + (n * price) + 'p</b>. ✅']),
@@ -9575,14 +9599,14 @@ if(typeof module !== 'undefined') module.exports = V;
     });
   }
   function t3Enough(){
-    const nm = pick(NAMES), k = randInt(0, ITEM_PL.length - 1), n = randInt(2, 5), price = randInt(3, 19) * 5, tot = n * price;
+    const nm = pick(NAMES), item = pick(ITEMS), n = randInt(2, 5), price = priceOf(item), tot = n * price;
     let has;
     do { has = tot + randInt(-8, 8) * 5; } while(has < 20 || has > 600);
     const list = coinsFor(has, [5, 10, 20, 50, 100, 200], 7);
     const vis = V.coins(list);
     const enough = has >= tot;
     return mcq2({
-      prompt: nm + ' has these coins and wants ' + n + ' ' + ITEM_PL[k] + ' at ' + mt(price) + ' each. Does ' + nm + ' have enough money?', visual: vis,
+      prompt: nm + ' has these coins and wants ' + n + ' ' + item.m + ' at ' + mt(price) + ' each. Does ' + nm + ' have enough money?', visual: vis,
       correct: opt(K.bool(enough), enough ? 'Yes' : 'No', ''),
       other: opt(K.bool(!enough), enough ? 'No' : 'Yes', enough ? 'The ' + n + ' items cost ' + mt(tot) + ' and ' + nm + ' has ' + mt(has) + '. That is enough.' : 'The ' + n + ' items cost ' + mt(tot) + ' but ' + nm + ' only has ' + mt(has) + '.'),
       hint: 'Two jobs: find the cost of all the items, and add up the coins. Then compare.',
@@ -9837,12 +9861,12 @@ if(typeof module !== 'undefined') module.exports = V;
     });
   }
   const STORY = [
-    ['a rabbit run', 'a fence', 'How long is the fence?'], ['a picture', 'ribbon for a frame', 'How much ribbon is needed?'],
-    ['a garden', 'a path edge', 'How long is the path edge?'], ['a playground', 'a rope', 'How long is the rope?'],
-    ['a card', 'a gold border', 'How long is the border?'], ['a pond', 'a safety fence', 'How long is the fence?']
+    ['a rabbit run', 'a fence', 'How long is the fence?', 'm'], ['a picture', 'ribbon for a frame', 'How much ribbon is needed?', 'cm'],
+    ['a garden', 'a path edge', 'How long is the path edge?', 'm'], ['a playground', 'a rope', 'How long is the rope?', 'm'],
+    ['a card', 'a gold border', 'How long is the border?', 'cm'], ['a pond', 'a safety fence', 'How long is the fence?', 'm']
   ];
   function t2Story(){
-    const st = pick(STORY), nm = pick(NAMES), m = chance(0.5), u = m ? 'm' : 'cm';
+    const st = pick(STORY), nm = pick(NAMES), u = st[3], m = u === 'm';
     let w, h; do { w = m ? randInt(5, 15) : randInt(10, 30); h = m ? randInt(3, 9) : randInt(5, 18); } while(w === h || w - h < 2 || w * h === 2 * (w + h));
     const vis = V.extra.perim.render(rect(w, h, false, u)), P = 2 * (w + h);
     return mcqNum({
@@ -10018,7 +10042,7 @@ if(typeof module !== 'undefined') module.exports = V;
         { say: 'On a ruler, every <b>centimetre</b> has <b>10 millimetres</b> in it. This line is 3 cm. That is 3 × 10 = <b>30 mm</b>.', vis: { kind: 'ruler', args: [3] } },
         { say: 'A <b>metre</b> is a long stride. <b>1 m = 100 cm</b>. So 2 m = 100 cm + 100 cm = <b>200 cm</b>.', vis: { kind: 'html', args: ['<div style="font:800 20px system-ui;text-align:center;line-height:1.8">1 m = 100 cm<br>2 m = 200 cm<br>3 m = 300 cm</div>'] },
           quiz: { prompt: 'How many centimetres are in 4 metres?', options: [{ label: '400 cm', ok: true }, { label: '40 cm', ok: false }, { label: '104 cm', ok: false }], right: 'Yes! 4 × 100 = 400 cm.', wrong: '1 m is 100 cm, so 4 m is 4 × 100 = 400 cm. (Not times 10!)' } },
-        { say: '<b>Kilo</b> means <b>a thousand</b>. So <b>1 kg = 1000 g</b>. The needle at the end of this scale is 1000 g, which is 1 kg.', vis: { kind: 'dial', args: [1000, 1000, { major: 250, minor: 50, unit: 'g' }] } },
+        { say: '<b>Kilo</b> means <b>a thousand</b>. So <b>1 kg = 1000 g</b> and <b>1 km = 1000 m</b>. The needle at the end of this scale is 1000 g, which is 1 kg.', vis: { kind: 'dial', args: [1000, 1000, { major: 250, minor: 50, unit: 'g' }] } },
         { say: '<b>1 litre = 1000 ml</b>. A full 1 litre jug holds 1000 ml. 2 litres would be 2 × 1000 = <b>2000 ml</b>.', vis: { kind: 'jug', args: [1000, 1000, { major: 250, minor: 50, unit: 'ml' }] },
           quiz: { prompt: 'How many millilitres are in 3 litres?', options: [{ label: '3000 ml', ok: true }, { label: '300 ml', ok: false }, { label: '30 ml', ok: false }], right: 'Yes! 3 × 1000 = 3000 ml.', wrong: '1 litre = 1000 ml, so 3 litres = 3 × 1000 = 3000 ml.' } },
         { say: 'Big unit → small unit: <b>multiply</b> (you get MORE of them). Small unit → big unit: <b>divide</b> (you get FEWER). 500 cm ÷ 100 = <b>5 m</b>.', vis: { kind: 'html', args: ['<div style="font:800 18px system-ui;text-align:center;line-height:1.8">m → cm : × 100<br>cm → m : ÷ 100<br>kg → g : × 1000<br>g → kg : ÷ 1000</div>'] } }
@@ -10317,7 +10341,7 @@ if(typeof module !== 'undefined') module.exports = V;
       steps: [
         { say: '<b>Equal groups</b> means the same number in every group. Here are <b>3 groups</b> with <b>4</b> dots in each group.', vis: { kind: 'groups', args: [3, 4] },
           quiz: { prompt: 'How many dots are in each group?', options: [{ label: '3', ok: false }, { label: '4', ok: true }, { label: '12', ok: false }], right: 'Yes! Each group has 4 dots. There are 3 groups.', wrong: 'Look inside ONE ring and count: there are 4 dots in each group (3 is how many groups).' } },
-        { say: 'We can add up the groups: <b>3 groups of 4</b> is <b>4 + 4 + 4 = 12</b>. Adding the same number again and again is <b>repeated addition</b>. We write it as <b>3 × 4 = 12</b>.', vis: { kind: 'groups', args: [4, 3] },
+        { say: 'We can add up the groups: <b>4 groups of 3</b> is <b>3 + 3 + 3 + 3 = 12</b>. Adding the same number again and again is <b>repeated addition</b>. We write it as <b>4 × 3 = 12</b>.', vis: { kind: 'groups', args: [4, 3] },
           quiz: { prompt: 'This picture has 4 groups with 3 dots in each. Which repeated addition matches it?', options: [{ label: '3 + 3 + 3 + 3', ok: true }, { label: '4 + 4 + 4', ok: false }, { label: '4 + 3', ok: false }], right: 'Yes! Four groups, and each one is worth 3.', wrong: 'Write the size of one group (3) once for each group. There are 4 groups, so 3 + 3 + 3 + 3.' } },
         { say: 'An <b>array</b> is dots in neat <b>rows</b> and <b>columns</b>. Rows go <b>across</b>. This array has <b>3 rows</b> of <b>5</b>: 5 + 5 + 5 = 15, so <b>3 × 5 = 15</b>.', vis: { kind: 'array', args: [3, 5] },
           quiz: { prompt: 'Which multiplication matches 3 rows of 5?', options: [{ label: '3 × 5 = 15', ok: true }, { label: '3 + 5 = 8', ok: false }, { label: '3 × 5 = 8', ok: false }], right: 'Yes! 3 rows of 5 is 3 × 5 = 15.', wrong: 'Rows of 5, three times: that is multiplying. 3 × 5 = 15 (not 3 + 5).' } },
@@ -10623,7 +10647,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function repeated(n, m){ let t = 0; for(let i = 0; i < m; i++) t += n; return t; }
 
   registerSkill({
-    id: 'multdiv-2digit-partition', strand: 'multdiv', name: 'Multiplying 2-digit numbers', emoji: '🧱', year: 3, order: 380, prereq: ['multdiv-arrays-groups', 'number-place-value'],
+    id: 'multdiv-2digit-partition', strand: 'multdiv', name: 'Multiplying 2-digit numbers', emoji: '🧱', year: 3, order: 380, prereq: ['multdiv-arrays-groups', 'number-place-value', 'multdiv-3', 'multdiv-4'],
     lesson: {
       title: 'Split, multiply, add',
       steps: [
@@ -10677,7 +10701,7 @@ if(typeof module !== 'undefined') module.exports = V;
           return mcq({
             prompt: 'Which shows ' + n + ' split into tens and ones?',
             correct: opt(K.text(label), label), distractors: cands.slice(1).filter(function(c){ return c.a + c.b !== n || c.a % 10 !== 0; }).map(function(c){ return opt(K.text(lab(c)), lab(c), c.why); }), keepOrder: true, count: 4,
-            hint: 'The tens digit is worth ten times as much. ' + n + ' has ' + tn(tdig) + ' and ' + s.o + ' ones.',
+            hint: 'The tens digit is worth ten times as much. ' + n + ' has ' + tn(tdig) + ' and ' + plural(s.o, 'one') + '.',
             explain: ex('Partitioning ' + n, [n + ' has <b>' + tdig + '</b> ' + (tdig === 1 ? 'ten' : 'tens') + ' and <b>' + s.o + '</b> ones.', tn(tdig) + ' is <b>' + s.t + '</b>.', 'So ' + n + ' = <b>' + label + '</b>. ✅']),
             truth: K.text(good.length === 1 ? lab(good[0]) : 'bad')
           });
@@ -11144,7 +11168,7 @@ if(typeof module !== 'undefined') module.exports = V;
   }
 
   registerSkill({
-    id: 'multdiv-word', strand: 'multdiv', name: 'Multiplying & dividing stories', emoji: '📖', year: 3, order: 390, prereq: ['multdiv-arrays-groups'],
+    id: 'multdiv-word', strand: 'multdiv', name: 'Multiplying & dividing stories', emoji: '📖', year: 3, order: 390, prereq: ['multdiv-arrays-groups', 'multdiv-3', 'multdiv-4'],
     lesson: {
       title: 'Which operation? Read, picture, choose',
       steps: [
@@ -11475,7 +11499,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return q;
   }
   function qTwoStep(cfg, rg){
-    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 1));
+    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
     const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
     return numeric({
@@ -11574,8 +11598,8 @@ if(typeof module !== 'undefined') module.exports = V;
       steps: [
         { say: 'Times tables are <b>equal jumps</b>. The frog jumps in <b>5s</b>: 5, 10, 15. After <b>3 jumps</b> it is on <b>15</b>. That is <b>3 × 5 = 15</b>.', vis: { kind: 'numberLine', args: [{ min: 0, max: 20, minor: 5, major: 5, marks: [{ value: 15, kind: 'dot' }] }] } },
         { say: 'A times fact can be a picture too. This array has <b>4 rows</b> and <b>5 dots</b> in each row. Count in 5s: 5, 10, 15, 20. So <b>4 × 5 = 20</b>.', vis: { kind: 'array', args: [4, 5] } },
-        { say: 'The <b>10 times table</b> is the easiest: just put a <b>0</b> on the end! Here are <b>3 groups of 10</b>, so <b>3 × 10 = 30</b>. And 7 × 10 = 70.', vis: { kind: 'groups', args: [3, 10] },
-          quiz: { prompt: 'What is 6 × 10?', options: [{ label: '16', ok: false }, { label: '60', ok: true }, { label: '610', ok: false }], right: 'Yes! Put a 0 on the end of 6 and you get 60.', wrong: '6 × 10 means 6 tens. Put a 0 on the end of 6: it is 60.' } },
+        { say: 'The <b>10 times table</b> is the easiest: each digit moves <b>one place to the left</b>, into the tens, and 0 fills the ones. Here are <b>3 groups of 10</b>, so <b>3 × 10 = 30</b>. And 7 × 10 = 70.', vis: { kind: 'groups', args: [3, 10] },
+          quiz: { prompt: 'What is 6 × 10?', options: [{ label: '16', ok: false }, { label: '60', ok: true }, { label: '610', ok: false }], right: 'Yes! The 6 moves one place to the left, into the tens, so 6 × 10 = 60.', wrong: '6 × 10 means 6 tens. The 6 moves one place to the left, into the tens, with 0 ones: it is 60.' } },
         { say: 'The <b>2 times table</b> is all about <b>doubles</b>. Here are <b>6 groups of 2</b>. Double 6 is 6 + 6 = 12, so <b>6 × 2 = 12</b>.', vis: { kind: 'groups', args: [6, 2] } },
         { say: 'Every number in the <b>5 times table</b> ends in <b>0 or 5</b>: 5, 10, 15, 20, 25, 30, 35 … Count in 5s on the line. The dot is on <b>35</b>.', vis: { kind: 'numberLine', args: [{ min: 0, max: 50, minor: 5, major: 5, marks: [{ value: 35, kind: 'dot' }] }] },
           quiz: { prompt: 'Which number is in the 5 times table?', options: [{ label: '42', ok: false }, { label: '35', ok: true }, { label: '28', ok: false }], right: 'Yes! 35 ends in 5, and 7 × 5 = 35.', wrong: 'Numbers in the 5 times table end in 0 or 5. Only 35 does: 7 × 5 = 35.' } }
@@ -11583,7 +11607,7 @@ if(typeof module !== 'undefined') module.exports = V;
     },
     trick: {
       title: 'Add a zero, double it, halve it',
-      say: '<b>10s:</b> put a 0 on the end. <b>2s:</b> double the number. <b>5s:</b> they end in 0 or 5, and 5 × is <b>half</b> of 10 ×. Here is 2 × 7: double 7 makes 14.',
+      say: '<b>10s:</b> each digit moves one place to the left (7 × 10 = 70). <b>2s:</b> double the number. <b>5s:</b> they end in 0 or 5, and 5 × is <b>half</b> of 10 ×. Here is 2 × 7: double 7 makes 14.',
       vis: { kind: 'array', args: [2, 7] },
       example: '2 × 7 = double 7 = <b>14</b> &nbsp;•&nbsp; 10 × 7 = <b>70</b> &nbsp;•&nbsp; 5 × 7 = half of 70 = <b>35</b>'
     },
@@ -11852,7 +11876,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return q;
   }
   function qTwoStep(cfg, rg){
-    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 1));
+    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
     const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
     return numeric({
@@ -12223,7 +12247,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return q;
   }
   function qTwoStep(cfg, rg){
-    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 1));
+    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
     const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
     return numeric({
@@ -12591,7 +12615,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return q;
   }
   function qTwoStep(cfg, rg){
-    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 1));
+    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
     const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
     return numeric({
@@ -12964,7 +12988,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return q;
   }
   function qTwoStep(cfg, rg){
-    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 1));
+    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
     const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
     return numeric({
@@ -13036,11 +13060,11 @@ if(typeof module !== 'undefined') module.exports = V;
   function q9Digits(){
     const n = randInt(2, 9), p = P(9, n), tens = Math.floor(p / 10), ones = p % 10;
     return mcqNum({
-      prompt: 'The digits of every answer in the 9 times table add up to 9. Fill the gap:  <b>9 × ' + n + ' = ' + tens + '▢</b>', answer: ones,
+      prompt: 'The digits of every answer from 9 × 1 to 9 × 10 add up to 9. Fill the gap:  <b>9 × ' + n + ' = ' + tens + '▢</b>', answer: ones,
       wrong: [{ v: tens, why: tens + ' is the digit already there. Find what must be added to ' + tens + ' to make 9.' }, { v: 9, why: 'The two digits must add up to 9 in total, and the first digit is already ' + tens + '.' }, { v: 9 - tens + 1, why: 'Close! ' + tens + ' + ' + (9 - tens + 1) + ' = ' + (10) + ', one too many.' }],
       nearby: [1, -1, 2, -2, 3], valid: function(v){ return v >= 0 && v <= 9; }, count: 4,
       hint: 'The two digits add up to 9. What do you add to ' + tens + ' to reach 9?',
-      explain: ex('The 9s digit rule', ['The digits of an answer in the 9s add up to 9.', 'The first digit is ' + tens + ', and ' + tens + ' + <b>' + ones + '</b> = 9.', 'So 9 × ' + n + ' = <b>' + p + '</b>, and the missing digit is ' + ones + '. ✅']),
+      explain: ex('The 9s digit rule', ['The digits of each answer from 9 × 1 to 9 × 10 add up to 9.', 'The first digit is ' + tens + ', and ' + tens + ' + <b>' + ones + '</b> = 9.', 'So 9 × ' + n + ' = <b>' + p + '</b>, and the missing digit is ' + ones + '. ✅']),
       truth: 9 - Math.floor(9 * n / 10)
     });
   }
@@ -13097,7 +13121,7 @@ if(typeof module !== 'undefined') module.exports = V;
           quiz: { prompt: '5 × 7 = 35. What is 6 × 7?', options: [{ label: '41', ok: false }, { label: '42', ok: true }, { label: '40', ok: false }], right: 'Yes! 35 + 7 = 42.', wrong: 'Add one more group of 7: 35 + 7 = 42.' } },
         { say: 'The <b>9s finger trick</b>: hold up 10 fingers. For 9 × 4, fold down finger <b>4</b>. <b>3</b> fingers on the left, <b>6</b> on the right. The answer is <b>36</b>!', vis: { kind: 'fingers', args: [4] },
           quiz: { prompt: 'For 9 × 6 you fold finger 6. That leaves 5 fingers on the left and 4 on the right. What is 9 × 6?', options: [{ label: '45', ok: false }, { label: '54', ok: true }, { label: '56', ok: false }], right: 'Yes! 5 tens and 4 ones makes 54.', wrong: 'Left fingers are the tens (5), right fingers are the ones (4). So 54.' } },
-        { say: 'The digits of every answer in the 9s <b>add up to 9</b>: 18 (1 + 8), 27 (2 + 7), 36 (3 + 6). Here are 3 groups of 9, and <b>27</b> is one of them.', vis: { kind: 'groups', args: [3, 9] } },
+        { say: 'The digits of every answer from <b>9 × 1 to 9 × 10</b> <b>add up to 9</b>: 18 (1 + 8), 27 (2 + 7), 36 (3 + 6). Here are 3 groups of 9, and <b>27</b> is one of them.', vis: { kind: 'groups', args: [3, 9] } },
         { say: '<b>11 ×</b> a single digit repeats the digit: 11 × 3 = 33. And <b>12 ×</b> is 10 × plus 2 ×: 12 × 3 = 30 + 6 = 36.', vis: { kind: 'array', args: [3, 11] },
           quiz: { prompt: 'What is 11 × 8?', options: [{ label: '88', ok: true }, { label: '19', ok: false }, { label: '80', ok: false }], right: 'Yes! Repeat the 8: 88.', wrong: 'For 11 times a single digit, write the digit twice: 88.' } },
         { say: 'The <b>7 times table</b>: split 7 into 5 + 2. For 7 × 6: 5 × 6 = 30 and 2 × 6 = 12. Add them: 30 + 12 = <b>42</b>.', vis: { kind: 'array', args: [7, 6] } }
@@ -13105,7 +13129,7 @@ if(typeof module !== 'undefined') module.exports = V;
     },
     trick: {
       title: 'The 9s finger trick',
-      say: 'Hold up all 10 fingers. For <b>9 × 3</b>, fold down the <b>3rd</b> finger. Fingers on the <b>left</b> are the tens (2). Fingers on the <b>right</b> are the ones (7). The digits of a 9s answer always add to 9.',
+      say: 'Hold up all 10 fingers. For <b>9 × 3</b>, fold down the <b>3rd</b> finger. Fingers on the <b>left</b> are the tens (2). Fingers on the <b>right</b> are the ones (7). From 9 × 1 to 9 × 10, the digits of the answer always add to 9.',
       vis: { kind: 'fingers', args: [3] },
       example: '9 × 6 → fold finger 6 → 5 on the left, 4 on the right → <b>54</b> &nbsp; (5 + 4 = 9 ✓)'
     },
@@ -13374,7 +13398,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return q;
   }
   function qTwoStep(cfg, rg){
-    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 1));
+    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
     const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
     return numeric({
@@ -13563,7 +13587,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const d = pick(DIVS), n = randInt(2, 12), p = P(d, n), who = pick(NAMES), it = pick(SHARE_ITEMS), share = chance(0.5), two = chance(0.4), k = randInt(1, 6);
     if(two){
       return numeric({
-        prompt: who + ' has ' + p + ' ' + it + '. ' + (share ? 'She shares them equally between ' + d + ' friends.' : 'She puts them in bags of ' + d + '.') + ' Then ' + k + ' ' + (share ? 'more are added to each friend’s pile' : 'more bags are added') + '. How many ' + (share ? it + ' does each friend have now' : 'bags are there now') + '?', answer: n + k,
+        prompt: who + ' has ' + p + ' ' + it + '. ' + (share ? who + ' shares them equally between ' + d + ' friends.' : who + ' puts them in bags of ' + d + '.') + ' Then ' + k + ' ' + (share ? 'more are added to each friend’s pile' : 'more bags are added') + '. How many ' + (share ? it + ' does each friend have now' : 'bags are there now') + '?', answer: n + k,
         hint: 'Two steps. First work out ' + p + ' ÷ ' + d + '. Then add ' + k + '.',
         explain: ex('Two steps', ['Step 1: ' + p + ' ÷ ' + d + ' = <b>' + n + '</b> (' + d + ' × ' + n + ' = ' + p + ').', 'Step 2: ' + n + ' + ' + k + ' = <b>' + (n + k) + '</b>.', 'So the answer is ' + (n + k) + '. ✅']),
         truth: p / d + k, wrong: function(v){ return v === n ? n + ' is only step 1. Now add ' + k + '.' : ''; }
@@ -13577,7 +13601,7 @@ if(typeof module !== 'undefined') module.exports = V;
   }
 
   registerSkill({
-    id: 'multdiv-division-facts', strand: 'multdiv', name: 'Division facts', emoji: '➗', year: 3, order: 350, prereq: ['multdiv-2-5-10'],
+    id: 'multdiv-division-facts', strand: 'multdiv', name: 'Division facts', emoji: '➗', year: 3, order: 350, prereq: ['multdiv-2-5-10', 'multdiv-3', 'multdiv-4'],
     lesson: {
       title: 'Sharing, grouping and fact families',
       steps: [
@@ -14035,9 +14059,9 @@ if(typeof module !== 'undefined') module.exports = V;
           quiz: { prompt: 'Which is bigger, 472 or 389?', options: [{ label: '472', ok: true }, { label: '389', ok: false }], right: 'Yes! 4 hundreds beat 3 hundreds.', wrong: 'Look at the hundreds first: 4 hundreds is more than 3 hundreds, so 472 is bigger.' } },
         { say: 'Same hundreds? Look at the <b>tens</b>. <b>409</b> and <b>490</b> both have 4 hundreds. Tens: 0 and 9. So <b>490 is bigger</b>, even though 409 has a 9 at the end!', vis: { kind: 'baseTen', args: [4, 0, 9] },
           quiz: { prompt: 'Which is smaller, 538 or 583?', options: [{ label: '538', ok: true }, { label: '583', ok: false }], right: 'Yes! Tens: 3 is less than 8.', wrong: 'Same hundreds, so compare tens: 3 tens is less than 8 tens, so 538 is smaller.' } },
-        { say: 'The symbols <b>&lt;</b> and <b>&gt;</b> are like a hungry crocodile. Its mouth opens towards the <b>bigger</b> number. 409 &lt; 490, and 490 &gt; 409. If they are the same, we write <b>=</b>.', vis: { kind: 'numberLine', args: [{ min: 400, max: 500, minor: 10, major: 50, marks: [{ value: 450 }] }] },
+        { say: 'The symbols <b>&lt;</b> and <b>&gt;</b> are like a hungry crocodile. Its mouth opens towards the <b>bigger</b> number. 409 &lt; 490, and 490 &gt; 409. If they are the same, we write <b>=</b>.', vis: { kind: 'numberLine', args: [{ min: 400, max: 500, minor: 10, major: 50, marks: [{ value: 409 }, { value: 490, color: '#9B51E0' }] }] },
           quiz: { prompt: 'Which symbol goes in the box? 620 ▢ 602', options: [{ label: '&lt; (less than)', ok: false }, { label: '&gt; (greater than)', ok: true }, { label: '= (equal to)', ok: false }], right: 'Yes! Tens: 2 is more than 0, so 620 &gt; 602.', wrong: 'Same hundreds, so compare tens: 2 tens is more than 0 tens. 620 is bigger, so 620 &gt; 602.' } },
-        { say: 'To <b>put numbers in order</b>, find the smallest first, then the next one. Order <b>325, 253, 235</b> from smallest: 235, 253, 325.', vis: { kind: 'numberLine', args: [{ min: 200, max: 400, minor: 50, major: 50, marks: [{ value: 250 }] }] },
+        { say: 'To <b>put numbers in order</b>, find the smallest first, then the next one. Order <b>325, 253, 235</b> from smallest: 235, 253, 325.', vis: { kind: 'numberLine', args: [{ min: 200, max: 400, minor: 10, major: 50, marks: [{ value: 235 }, { value: 253, color: '#9B51E0' }, { value: 325, color: '#F2994A' }] }] },
           quiz: { prompt: 'Which is the smallest: 614, 641 or 461?', options: [{ label: '614', ok: false }, { label: '641', ok: false }, { label: '461', ok: true }], right: 'Yes! 4 hundreds is the least.', wrong: '461 has only 4 hundreds, the other two have 6. So 461 is the smallest.' } }
       ]
     },
@@ -14546,6 +14570,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function dg(n){ return [Math.floor(n / 100), Math.floor(n / 10) % 10, n % 10]; }
   const PL = ['hundreds', 'tens', 'ones'];
   const PL1 = ['hundreds', 'tens', 'ones'];
+  function PU(n, i){ return n + ' ' + (n === 1 ? ['hundred', 'ten', 'one'][i] : PL[i]); }
   const BLOCKS_HINT = 'Big blue squares are hundreds, purple sticks are tens and yellow cubes are ones. Count each kind, then write them side by side: hundreds, tens, ones.';
 
   /* wrong answers for "blocks -> number" */
@@ -14556,8 +14581,8 @@ if(typeof module !== 'undefined') module.exports = V;
     w.push({ v: h + t + o, why: 'You added up the digits. Instead, write them side by side: ' + plural(h, 'hundred') + ', ' + plural(t, 'ten') + ', ' + plural(o, 'one') + '.' });
     if(t === 0) w.push({ v: h * 10 + o, why: 'No purple sticks means 0 tens. Write a 0 in the tens place to hold it.' });
     if(o === 0) w.push({ v: h * 10 + t, why: 'No yellow cubes means 0 ones. Write a 0 in the ones place to hold it.' });
-    w.push({ v: val(h, t + 1, o), why: 'Count the purple sticks again, there are ' + t + ' of them.' });
-    w.push({ v: val(h, t, o + 1), why: 'Count the yellow cubes again, there are ' + o + ' of them.' });
+    w.push({ v: val(h, t + 1, o), why: 'Count the purple sticks again, there ' + (t === 1 ? 'is 1 of them' : 'are ' + t + ' of them') + '.' });
+    w.push({ v: val(h, t, o + 1), why: 'Count the yellow cubes again, there ' + (o === 1 ? 'is 1 of them' : 'are ' + o + ' of them') + '.' });
     return w;
   }
 
@@ -14633,9 +14658,9 @@ if(typeof module !== 'undefined') module.exports = V;
   }
   function valueExplain(p){
     return ex('The value of the ' + p.d + ' in ' + p.n, [
-      p.n + ' = <b>' + p.ds[0] + '</b> hundreds + <b>' + p.ds[1] + '</b> tens + <b>' + p.ds[2] + '</b> ones.',
+      p.n + ' = <b>' + PU(p.ds[0], 0) + '</b> + <b>' + PU(p.ds[1], 1) + '</b> + <b>' + PU(p.ds[2], 2) + '</b>.',
       'The ' + p.d + ' is in the <b>' + PL[p.idx] + '</b> place.',
-      p.idx === 2 ? p.d + ' ones is just <b>' + p.d + '</b>.' : p.d + ' ' + PL[p.idx] + ' = ' + p.d + ' × ' + (p.idx === 0 ? 100 : 10) + ' = <b>' + p.ans + '</b>. ✅'
+      p.idx === 2 ? PU(p.d, 2) + ' is just <b>' + p.d + '</b>.' : PU(p.d, p.idx) + ' = ' + p.d + ' × ' + (p.idx === 0 ? 100 : 10) + ' = <b>' + p.ans + '</b>. ✅'
     ]);
   }
   function valueWrongs(p){
@@ -14701,7 +14726,7 @@ if(typeof module !== 'undefined') module.exports = V;
             const w = [];
             if(t === 0) w.push({ v: h * 10 + o, why: 'There are no tens, so a 0 must hold the tens place: ' + n + ', not ' + (h * 10 + o) + '.' });
             if(o === 0) w.push({ v: h * 10 + t, why: 'There are no ones, so a 0 must hold the ones place: ' + n + ', not ' + (h * 10 + t) + '.' });
-            if(t !== 0 && o !== 0){ w.push({ v: o * 100 + t * 10 + h, why: 'You wrote the digits backwards. The hundreds digit goes first.' }); w.push({ v: h + t + o, why: 'You added the digits. Write them side by side instead.' }); w.push({ v: Number('' + h + '0' + t + '0' + o), why: 'You wrote the zeros as well. Just write the digit for each column.' }); }
+            if(t !== 0 && o !== 0){ w.push({ v: o * 100 + t * 10 + h, why: 'You wrote the digits backwards. The hundreds digit goes first.' }); w.push({ v: h + t + o, why: 'You added the digits. Write them side by side instead.' }); w.push({ v: Number('' + h * 100 + t * 10 + o), why: 'You wrote the value of each part side by side (' + h * 100 + ', ' + t * 10 + ', ' + o + '). Each column only holds ONE digit.' }); }
             else { w.push({ v: Number('' + h + '0' + (t || o)), why: 'Careful, there is one missing column to hold with a 0, not two.' }); w.push({ v: h + t + o, why: 'You added the digits. Write them side by side instead.' }); w.push({ v: t === 0 ? h * 100 + o * 10 : h * 100 + t, why: 'The ' + (t === 0 ? o : t) + ' is in the wrong column. Check hundreds, tens, ones.' }); }
             return mcqNum({
               prompt: 'What number is <b>' + parts + '</b>?', answer: n, wrong: w, nearby: [10, -10, 100, -100, 1],
@@ -14738,9 +14763,9 @@ if(typeof module !== 'undefined') module.exports = V;
             const h = randInt(3, 9), t = randInt(0, 9), o = randInt(0, 9), n = val(h, t, o), X = chance(0.7) ? h - 1 : h - 2;
             const ans = t + 10 * (h - X);
             return numeric({
-              prompt: n + ' = ' + X + ' hundreds + <b>?</b> tens + ' + o + ' ones. What number goes in the gap?', answer: ans,
-              hint: 'Taking a hundred out of ' + n + ' leaves less in the hundreds. Remember that 1 hundred is the same as 10 tens.',
-              explain: ex('Partitioning ' + n + ' another way', [n + ' = ' + h + ' hundreds + ' + t + ' tens + ' + o + ' ones.', 'We only use ' + X + ' hundreds, so ' + (h - X) + ' hundred' + (h - X === 1 ? '' : 's') + ' (' + (h - X) * 100 + ') turn into ' + (h - X) * 10 + ' tens.', t + ' tens + ' + (h - X) * 10 + ' tens = <b>' + ans + '</b> tens.', X * 100 + ' + ' + ans * 10 + ' + ' + o + ' = ' + n + '. ✅']),
+              prompt: n + ' = ' + plural(X, 'hundred') + ' + <b>?</b> tens + ' + plural(o, 'one') + '. What number goes in the gap?', answer: ans,
+              hint: 'Using fewer hundreds means the missing hundreds must be written as tens instead. Remember that 1 hundred is the same as 10 tens.',
+              explain: ex('Partitioning ' + n + ' another way', [n + ' = ' + plural(h, 'hundred') + ' + ' + plural(t, 'ten') + ' + ' + plural(o, 'one') + '.', 'We only use ' + plural(X, 'hundred') + ', so ' + (h - X) + ' hundred' + (h - X === 1 ? '' : 's') + ' (' + (h - X) * 100 + ') turn into ' + (h - X) * 10 + ' tens.', plural(t, 'ten') + ' + ' + (h - X) * 10 + ' tens = <b>' + ans + '</b> tens.', X * 100 + ' + ' + ans * 10 + ' + ' + o + ' = ' + n + '. ✅']),
               truth: (n - X * 100 - o) / 10,
               wrong: function(v){ return v === t ? 'That is the tens digit. But the hundred you took out turns into 10 more tens.' : (v === t + 1 ? 'One hundred is 10 tens, not 1 ten.' : ''); }
             });
@@ -14750,14 +14775,14 @@ if(typeof module !== 'undefined') module.exports = V;
             return numeric({
               prompt: 'How many tens are there altogether in <b>' + n + '</b>?', answer: ans,
               hint: 'Each hundred is worth 10 tens. How many tens do the hundreds give? Then add the tens.',
-              explain: ex('Tens in ' + n, [h + ' hundreds = ' + h + ' × 10 = <b>' + h * 10 + '</b> tens.', 'Plus ' + plural(t, 'more ten') + '.', h * 10 + ' + ' + t + ' = <b>' + ans + '</b> tens. ✅']),
+              explain: ex('Tens in ' + n, [plural(h, 'hundred') + ' = ' + h + ' × 10 = <b>' + h * 10 + '</b> tens.', 'Plus ' + plural(t, 'more ten') + '.', h * 10 + ' + ' + t + ' = <b>' + ans + '</b> tens. ✅']),
               truth: Number(String(n).slice(0, -1)),
               wrong: function(v){ return v === t ? 'That is only the tens digit. The hundreds turn into tens too.' : (v === h ? 'That is the hundreds digit. 1 hundred = 10 tens.' : ''); }
             });
           }
           case 3: { // same as?
             const h = randInt(2, 9), t = randInt(0, 8), o = randInt(0, 9), n = val(h, t, o);
-            const lab = function(x, T, y){ return x + ' hundred' + (x === 1 ? '' : 's') + ' + ' + T + ' tens + ' + y + ' ones'; };
+            const lab = function(x, T, y){ return plural(x, 'hundred') + ' + ' + plural(T, 'ten') + ' + ' + plural(y, 'one'); };
             const useTensOnly = chance(0.25);
             const X = useTensOnly ? 0 : h - 1, T = useTensOnly ? h * 10 + t : t + 10;
             const cands = [[X, t, o, 'Moving a hundred out means adding 10 tens, not leaving the tens alone.'], [X, t + 1, o, 'One hundred is 10 tens, not 1 ten.'], [h, t + 10, o, 'You kept all the hundreds AND added 10 more tens.'], [X, t + 100, o, 'One hundred is 10 tens, not 100 tens.'], [h - 2, t + 10, o, 'Taking out 2 hundreds needs 20 more tens.'], [X, T, o + 10, 'The ones are still ' + o + '. They do not change.'], [X, T + 1, o, 'Count again: the total in tens is off by one.'], [X, T - 1, o, 'Count again: the total in tens is off by one.']];
@@ -14781,7 +14806,7 @@ if(typeof module !== 'undefined') module.exports = V;
             return mcqNum({
               prompt: 'What number do these blocks show? Careful: there are lots of purple sticks!', visual: vis, answer: n, wrong: w, nearby: [10, -10, 100, -100],
               hint: 'Count the value of each kind: hundreds × 100, tens × 10, ones × 1. Then add them up.',
-              explain: ex('Blocks with lots of tens', [plural(h, 'hundred') + ' = <b>' + h * 100 + '</b>.', t + ' tens = ' + t + ' × 10 = <b>' + t * 10 + '</b>.', o + ' ones = <b>' + o + '</b>.', h * 100 + ' + ' + t * 10 + ' + ' + o + ' = <b>' + n + '</b>. ✅']),
+              explain: ex('Blocks with lots of tens', [plural(h, 'hundred') + ' = <b>' + h * 100 + '</b>.', t + ' tens = ' + t + ' × 10 = <b>' + t * 10 + '</b>.', plural(o, 'one') + ' = <b>' + o + '</b>.', h * 100 + ' + ' + t * 10 + ' + ' + o + ' = <b>' + n + '</b>. ✅']),
               truth: Number('' + (h + 1) + (t - 10) + o),
               decode: function(){ return V.decodeBaseTen(vis); }
             });
@@ -14863,7 +14888,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const n = randInt(11, 98); if(n % 10 === 5) return qCloser();
     const lo = down(n, 10), hi = lo + 10, vis = lineFor(n, 10), near = nearest(n, 10), far = near === lo ? hi : lo;
     return mcq2({
-      prompt: 'Is <b>' + n + '</b> closer to <b>' + lo + '</b> or to <b>' + hi + '</b>?', visual: vis, correct: opt(nk(near), String(near)), other: opt(nk(far), String(far), 'Look at the dot: it is ' + (Math.abs(n - far)) + ' steps from ' + far + ' but only ' + Math.abs(n - near) + ' from ' + near + '.'),
+      prompt: 'Is <b>' + n + '</b> closer to <b>' + lo + '</b> or to <b>' + hi + '</b>?', visual: vis, correct: opt(nk(near), String(near)), other: opt(nk(far), String(far), 'Look at the dot: it is ' + plural(Math.abs(n - far), 'step') + ' from ' + far + ' but only ' + Math.abs(n - near) + ' from ' + near + '.'),
       hint: 'Count the little steps from the dot to each end. The smaller number of steps wins.',
       explain: ex('Closer to which ten?', [n + ' is ' + Math.abs(n - near) + ' away from ' + near + '.', n + ' is ' + Math.abs(n - far) + ' away from ' + far + '.', 'Fewer steps to <b>' + near + '</b>, so it is closer to ' + near + '. ✅']),
       truth: nk(n - lo < hi - n ? lo : hi), decode: function(){ const d = readLine(vis); return nk(nearest(d, 10)); }
@@ -14888,7 +14913,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const q = mcq({
       prompt: 'Which of these numbers rounds to <b>' + target + '</b> when rounded to the nearest <b>' + to + '</b>?', correct: opt(nk(inside), String(inside)), distractors: ds, keepOrder: false, count: 4,
       hint: 'Numbers that round to ' + target + ' are not too far from it. Test each choice with the 5-or-more rule.',
-      explain: ex('Which number rounds to ' + target + '?', [inside + ' is within ' + half + ' of ' + target + ': it rounds to <b>' + target + '</b>.', 'The other numbers round to something else.', 'The answer is <b>' + inside + '</b>. ✅']),
+      explain: ex('Which number rounds to ' + target + '?', [(function(){ const dd = Math.abs(inside - target), oth = inside < target ? target - to : target + to; return dd === 0 ? inside + ' is already a multiple of ' + to + ', so it stays as <b>' + target + '</b>.' : dd === half ? inside + ' is exactly halfway between ' + oth + ' and ' + target + ', and halfway rounds UP, so it rounds to <b>' + target + '</b>.' : inside + ' is only ' + dd + ' away from ' + target + ' but ' + (to - dd) + ' away from ' + oth + ', so it rounds to <b>' + target + '</b>.'; })(), 'The other numbers round to something else.', 'The answer is <b>' + inside + '</b>. ✅']),
       truth: 'pending'
     });
     let tk = null, cnt = 0;
@@ -15085,10 +15110,10 @@ if(typeof module !== 'undefined') module.exports = V;
     return ex('Converting ' + a, [h + ' is less than 12, so it is the <b>morning</b> (am).', 'The hour stays <b>' + h12 + '</b>.', a + ' is <b>' + b + '</b>. ✅']);
   }
   const EVENTS = [
-    { w: 'wakes up', h: 7, m: 0 }, { w: 'has breakfast', h: 7, m: 30 }, { w: 'starts school', h: 8, m: 45 }, { w: 'has morning break', h: 10, m: 15 },
-    { w: 'goes swimming', h: 9, m: 0 }, { w: 'watches the sunrise', h: 6, m: 20 }, { w: 'gets home from school', h: 15, m: 30 }, { w: 'has tea', h: 17, m: 45 },
-    { w: 'goes to bed', h: 20, m: 0 }, { w: 'has football practice', h: 16, m: 15 }, { w: 'goes to a birthday party', h: 14, m: 0 }, { w: 'watches the fireworks', h: 19, m: 30 },
-    { w: 'reads a bedtime story', h: 19, m: 45 }, { w: 'has a snack after school', h: 15, m: 15 }
+    { w: 'wakes up for school', h: 7, m: 0 }, { w: 'has breakfast before school', h: 7, m: 30 }, { w: 'starts school', h: 8, m: 45 }, { w: 'has morning break at school', h: 10, m: 15 },
+    { w: 'goes swimming before school', h: 7, m: 15 }, { w: 'watches the sunrise', h: 6, m: 20 }, { w: 'gets home from school', h: 15, m: 30 }, { w: 'has tea in the evening', h: 17, m: 45 },
+    { w: 'goes to bed at night', h: 20, m: 0 }, { w: 'has football practice after school', h: 16, m: 15 }, { w: 'goes to a birthday party in the afternoon', h: 14, m: 0 }, { w: 'watches the fireworks after dark', h: 19, m: 30 },
+    { w: 'reads a bedtime story at night', h: 19, m: 45 }, { w: 'has a snack after school', h: 15, m: 15 }, { w: 'goes swimming after school', h: 16, m: 30 }, { w: 'eats lunch at school', h: 12, m: 15 }
   ];
 
   registerSkill({
@@ -15121,7 +15146,7 @@ if(typeof module !== 'undefined') module.exports = V;
             prompt: nm + ' ' + ev.w + ' at ' + txt + '. Is that am or pm?',
             correct: opt(K.text(ap), ap, ''), other: opt(K.text(ap === 'am' ? 'pm' : 'am'), ap === 'am' ? 'pm' : 'am', ap === 'am' ? 'This is early in the day, before noon, so it is the morning: am.' : 'This is after noon, in the afternoon or evening, so it is pm.'),
             hint: 'am is the morning (before lunchtime). pm is the afternoon, evening and night. When does this happen in a day?',
-            explain: ex('am or pm?', [nm + ' ' + ev.w + (ap === 'am' ? ' in the <b>morning</b>.' : ' in the <b>afternoon or evening</b>.'), 'Morning is <b>am</b>. Afternoon, evening and night are <b>pm</b>.', 'So ' + txt + ' is ' + txt + ' <b>' + ap + '</b>. ✅']),
+            explain: ex('am or pm?', ['It makes sense for ' + nm + ' to do this at ' + txt + (ap === 'am' ? ' in the <b>morning</b>.' : ' in the <b>afternoon or evening</b>.'), 'Morning is <b>am</b>. Afternoon, evening and night are <b>pm</b>.', 'So ' + txt + ' is ' + txt + ' <b>' + ap + '</b>. ✅']),
             truth: K.text(ev.h >= 12 ? 'pm' : 'am')
           });
           return ok;
@@ -15309,16 +15334,16 @@ if(typeof module !== 'undefined') module.exports = V;
   /* ---- explanations ---- */
   function countOn(s, e){
     const d = e - s, sm = s % 60, em = e % 60, steps = [];
-    if(Math.floor(s / 60) === Math.floor(e / 60)) steps.push('Count on from ' + dig(s) + ' to ' + dig(e) + ' in 5s: that is <b>' + d + ' minutes</b>.');
+    if(Math.floor(s / 60) === Math.floor(e / 60)) steps.push('Count on from ' + dig(s) + ' to ' + dig(e) + ' in 5s: that is <b>' + plural(d, 'minute') + '</b>.');
     else if(sm === 0){
       const hrs = (e - s - em) / 60;
       steps.push(dig(s) + ' to ' + dig(s + hrs * 60) + ' is <b>' + plural(hrs, 'hour') + '</b>.');
-      if(em) steps.push(dig(e - em) + ' to ' + dig(e) + ' is <b>' + em + ' minutes</b>.');
+      if(em) steps.push(dig(e - em) + ' to ' + dig(e) + ' is <b>' + plural(em, 'minute') + '</b>.');
     } else {
       const nxt = s + (60 - sm), mid = (e - em - nxt) / 60;
-      steps.push('Jump to the next o’clock: ' + dig(s) + ' to ' + dig(nxt) + ' is <b>' + (60 - sm) + ' minutes</b>.');
+      steps.push('Jump to the next o’clock: ' + dig(s) + ' to ' + dig(nxt) + ' is <b>' + plural(60 - sm, 'minute') + '</b>.');
       if(mid > 0) steps.push(dig(nxt) + ' to ' + dig(nxt + mid * 60) + ' is <b>' + plural(mid, 'hour') + '</b>.');
-      if(em) steps.push('Then ' + dig(e - em) + ' to ' + dig(e) + ' is <b>' + em + ' minutes</b>.');
+      if(em) steps.push('Then ' + dig(e - em) + ' to ' + dig(e) + ' is <b>' + plural(em, 'minute') + '</b>.');
     }
     steps.push('All together: <b>' + durLabel(d) + '</b>. ✅');
     return steps;
@@ -15326,7 +15351,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function explainFinish(s, d){
     const e = s + d, sm = s % 60, hrs = Math.floor(d / 60), rem = d % 60, steps = ['Start at <b>' + dig(s) + '</b>.'];
     if(hrs) steps.push('Add ' + plural(hrs, 'hour') + ': ' + dig(s) + ' → ' + dig(s + hrs * 60) + '.');
-    if(rem) steps.push('Add ' + rem + ' minutes: ' + sm + ' + ' + rem + ' = ' + (sm + rem) + (sm + rem >= 60 ? ', which is past 60, so the hour moves on' : '') + '. It ends at <b>' + dig(e) + '</b>. ✅');
+    if(rem) steps.push('Add ' + plural(rem, 'minute') + ': ' + sm + ' + ' + rem + ' = ' + (sm + rem) + (sm + rem === 60 ? ', which reaches 60, so the hour moves on' : sm + rem > 60 ? ', which is more than 60, so the hour moves on' : '') + '. It ends at <b>' + dig(e) + '</b>. ✅');
     else steps.push('It ends at <b>' + dig(e) + '</b>. ✅');
     return steps;
   }
@@ -15334,9 +15359,9 @@ if(typeof module !== 'undefined') module.exports = V;
     const e = s + d, sm = s % 60, rem = d % 60, out = [];
     function add(t, why){ const tt = ((t % 720) + 720) % 720; out.push({ t: tt, why: why }); }
     add(s - d, 'Finishing is LATER than starting, so we add the time on, not take it away.');
-    if(rem && sm + rem >= 60) add(e - 60, 'The minutes went past 60, so the hour must move on: ' + sm + ' + ' + rem + ' = ' + (sm + rem) + '.');
-    if(rem && sm + rem < 60) add(e + 60, 'Not past 60 minutes yet, so the hour does not change.');
-    if(rem) add(s + Math.floor(d / 60) * 60, 'You added the hours but forgot the ' + rem + ' extra minutes.');
+    if(rem && sm + rem >= 60) add(e - 60, 'The minutes reached 60 or more, so the hour must move on: ' + sm + ' + ' + rem + ' = ' + (sm + rem) + '.');
+    if(rem && sm + rem < 60) add(e + 60, 'The minutes have not reached 60 yet, so the hour does not change.');
+    if(rem) add(s + Math.floor(d / 60) * 60, 'You added the hours but forgot the ' + plural(rem, 'extra minute') + '.');
     add(e + 30, 'Check the adding again.'); add(e - 30, 'Check the adding again.');
     add(e + 60, 'Check the adding again.'); add(e - 60, 'Check the adding again.');
     add(e + 10, 'Check the adding again.'); add(e - 10, 'Check the adding again.');
@@ -15359,8 +15384,8 @@ if(typeof module !== 'undefined') module.exports = V;
       if(dec > 0 && dec < 600) out.push({ v: dec, why: 'You took the times away like ordinary numbers. Minutes only go up to 60, so count on in jumps instead.' });
       const sep = (eh - sh) * 60 + Math.abs(em - sm);
       out.push({ v: sep, why: 'You took the smaller minutes from the bigger. Count on to the next o’clock first instead.' });
-      if(sm) out.push({ v: d - (60 - sm) + 0, why: 'You forgot the minutes up to the next o’clock (' + (60 - sm) + ' minutes).' });
-      if(em && eh > sh) out.push({ v: d - em, why: 'You forgot the last ' + em + ' minutes after the o’clock.' });
+      if(sm) out.push({ v: d - (60 - sm) + 0, why: 'You forgot the minutes up to the next o’clock (' + plural(60 - sm, 'minute') + ').' });
+      if(em && eh > sh) out.push({ v: d - em, why: 'You forgot the last ' + plural(em, 'minute') + ' after the o’clock.' });
       out.push({ v: d + 10, why: 'Count the jumps again carefully.' }); out.push({ v: d - 10, why: 'Count the jumps again carefully.' });
     } else {
       out.push({ v: (eh - sh) * 60 + Math.abs(em - sm), why: 'You took the smaller minutes from the bigger. Count on from the start instead.' });
@@ -15442,7 +15467,7 @@ if(typeof module !== 'undefined') module.exports = V;
       return numeric({ prompt: 'How many days are there in ' + nm1 + ' and ' + nm2 + ' together (a normal year)?', answer: a + b, unit: 'days', hint: 'Work out each month first (use the rhyme), then add.', explain: ex('Two months', [nm1 + ' has ' + a + ' days.', nm2 + ' has ' + b + ' days.', a + ' + ' + b + ' = <b>' + (a + b) + '</b> days. ✅']), truth: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31].slice(i, i + 2).reduce(function(x, y){ return x + y; }, 0) });
     }
     const q = pick([[3, 45], [2, 30], [1, 15]]);
-    return numeric({ prompt: 'How many minutes are there in ' + q[0] + ' quarter' + (q[0] > 1 ? 's' : '') + ' of an hour?', answer: q[1], unit: 'minutes', hint: 'A quarter of an hour is 15 minutes. Count in 15s.', explain: ex('Quarters of an hour', ['1 quarter of an hour = 15 minutes.', q[0] + ' quarters = ' + Array(q[0]).fill(15).join(' + ') + '.', 'That is <b>' + q[1] + '</b> minutes. ✅']), truth: 15 * q[0] });
+    return numeric({ prompt: 'How many minutes are there in ' + q[0] + ' quarter' + (q[0] > 1 ? 's' : '') + ' of an hour?', answer: q[1], unit: 'minutes', hint: 'A quarter of an hour is 15 minutes. Count in 15s.', explain: ex('Quarters of an hour', ['1 quarter of an hour = 15 minutes.', plural(q[0], 'quarter') + ' = ' + Array(q[0]).fill(15).join(' + ') + '.', 'That is <b>' + q[1] + '</b> minutes. ✅']), truth: 15 * q[0] });
   }
 
   registerSkill({
@@ -15454,7 +15479,7 @@ if(typeof module !== 'undefined') module.exports = V;
         { say: 'Handy time facts: <b>60 seconds</b> = 1 minute, <b>60 minutes</b> = 1 hour, <b>24 hours</b> = 1 day, <b>7 days</b> = 1 week, <b>12 months</b> = 1 year.', vis: { kind: 'html', args: ['<table style="border-collapse:collapse;margin:0 auto;font-weight:800;color:var(--vis-ink,#1B1B2F)"><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">60 seconds</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 minute</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">60 minutes</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 hour</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">24 hours</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 day</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">7 days</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 week</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">12 months</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 year</td></tr></table>'] },
           quiz: { prompt: 'How many minutes are there in 1 hour?', options: [{ label: '60', ok: true }, { label: '100', ok: false }, { label: '24', ok: false }], right: 'Yes! 60 minutes make 1 hour.', wrong: 'An hour is 60 minutes (12 numbers × 5). Not 100, and 24 is the hours in a day.' } },
         { say: 'Half hours: from 3:30 to 4:00 is <b>30 minutes</b>. From 4:00 to 5:00 is <b>1 hour</b>. So 3:30 to 5:00 is <b>1 hour 30 minutes</b>.', vis: { kind: 'clockPair', args: [3, 30, 5, 0] } },
-        { say: 'Across the hour, jump to the next o’clock first. This line shows minutes after 3 o’clock. A film starts at <b>3:40</b> and ends at <b>4:15</b> (75). Jump 20 minutes to 4:00, then 15 more: <b>35 minutes</b>.', vis: { kind: 'numberLine', args: [{ min: 0, max: 75, minor: 5, major: 15, width: 348, marks: [{ value: 40, kind: 'dot' }] }] },
+        { say: 'Across the hour, jump to the next o’clock first. A film starts at <b>3:40</b> and ends at <b>4:15</b>. The line counts minutes after 3 o’clock, and the dot is 3:40. Jump 20 minutes to 4:00, then 15 more: <b>35 minutes</b>.', vis: { kind: 'numberLine', args: [{ min: 0, max: 75, minor: 5, major: 15, width: 348, marks: [{ value: 40, kind: 'dot' }] }] },
           quiz: { prompt: 'A cartoon starts at 5:50 and ends at 6:20. How long is it?', options: [{ label: '30 minutes', ok: true }, { label: '70 minutes', ok: false }, { label: '40 minutes', ok: false }], right: 'Yes! 5:50 to 6:00 is 10 minutes, and 6:00 to 6:20 is 20 more: 30 minutes.', wrong: 'Jump to the o’clock: 5:50 to 6:00 is 10 minutes. Then 6:00 to 6:20 is 20. 10 + 20 = 30 minutes.' } },
         { say: '“Finishes at” problems: start at the start time and add on. A class starts at <b>4:20</b> and lasts <b>30 minutes</b>. 20 + 30 = 50 minutes past 4, so it finishes at <b>4:50</b>.', vis: { kind: 'clock', args: [4, 20] },
           quiz: { prompt: 'A show starts at 4:20 and lasts 30 minutes. When does it finish?', options: [{ label: '4:50', ok: true }, { label: '5:20', ok: false }, { label: '4:30', ok: false }], right: 'Yes! 4:20 + 30 minutes = 4:50.', wrong: 'Add 30 minutes to 4:20. 20 + 30 = 50, so it finishes at 4:50.' } }
@@ -15544,7 +15569,7 @@ if(typeof module !== 'undefined') module.exports = V;
         }
         if(f === 3){ // finishes at, minutes
           const sh = randInt(1, 9), sm = pick([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 8, 12, 17, 22, 38, 43, 47, 52]), d = pick([15, 20, 25, 30, 35, 40, 45, 50, 55, 65, 70, 75, 80, 85, 95]), nm = pick(NAMES), th = pick(THINGS);
-          return finishMcq(sh * 60 + sm, d, nm + '’s ' + th + ' starts at the time on the clock and lasts ' + durLabel(d) + '. When does it finish?', 'Add the hours first, then the minutes. If the minutes pass 60, the hour moves on.');
+          return finishMcq(sh * 60 + sm, d, nm + '’s ' + th + ' starts at the time on the clock and lasts ' + durLabel(d) + '. When does it finish?', 'Add the hours first, then the minutes. If the minutes reach 60, the hour moves on.');
         }
         if(f === 4) return typedFact();
         if(f === 5) return chance(0.5) ? typedFact() : monthQ();
@@ -15794,7 +15819,7 @@ if(typeof module !== 'undefined') module.exports = V;
 
   function wrongs(h, m){
     const out = [], k = Math.floor(m / 5), r = m % 5;
-    if(r > 0) out.push({ h: h, m: k * 5, why: 'That forgets the little ticks! After the ' + k + ' (' + k * 5 + ' minutes) there are ' + r + ' more tick marks to count.' });
+    if(r > 0) out.push({ h: h, m: k * 5, why: 'That forgets the little ticks! After the ' + k + ' (' + k * 5 + ' minutes) there ' + (r === 1 ? 'is 1 more tick mark' : 'are ' + r + ' more tick marks') + ' to count.' });
     if(r > 1 && k * 5 + r * 5 < 60) out.push({ h: h, m: k * 5 + r * 5, why: 'The little ticks are worth 1 minute each, not 5. Count the numbers in 5s, then the ticks in 1s.' });
     if(m < 59) out.push({ h: h, m: m + 1, why: 'Almost! You went one tick too far. Count the ticks again carefully.' });
     if(m > 1) out.push({ h: h, m: m - 1, why: 'Almost! You stopped one tick too soon. Count the ticks again carefully.' });
@@ -15802,24 +15827,24 @@ if(typeof module !== 'undefined') module.exports = V;
     if(m >= 10 && sw < 60 && sw !== m) out.push({ h: h, m: sw, why: 'The digits are the wrong way round. Say the minutes slowly: ' + countStr(m) + (r ? ', then ' + ticksStr(m) : '') + '.' });
     if(m > 30) out.push({ h: nx(h), m: m, why: 'The short hand has not reached ' + nx(h) + ' yet. The hour is the number it has just passed: ' + h + '.' });
     else out.push({ h: pv(h), m: m, why: 'The short hand has already passed ' + h + ', so the hour is ' + h + '.' });
-    if(m > 30) out.push({ h: nx(h), m: 60 - m, why: 'That mixes up “past” and “to”. The long hand shows ' + m + ' minutes PAST ' + h + '.' });
+    if(m > 30) out.push({ h: nx(h), m: 60 - m, why: 'That mixes up “past” and “to”. The long hand shows ' + plural(m, 'minute') + ' PAST ' + h + '.' });
     shuffle([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, 21, 22, 23, 24, 26, 27, 28, 29, 31, 32, 33, 34, 36, 37, 38, 39]).forEach(function(mm){ out.push({ h: h, m: mm, why: 'Count the long hand again: numbers in 5s, then the little ticks in 1s.' }); });
     return out;
   }
   function toOpts(list){ return list.map(function(w){ return opt(K.time(w.h, w.m), dig(w.h, w.m), w.why); }); }
   function explainRead(h, m){
     const k = Math.floor(m / 5), r = m % 5;
-    const s1 = 'The <b>short</b> hand has just passed the <b>' + h + '</b>' + (m > 30 ? ' (it is now nearly at the ' + nx(h) + ', but the hour is still ' + h + ')' : '') + '.';
-    const s2 = k === 0 ? 'The <b>long</b> hand has gone ' + r + ' ticks past the 12: <b>' + r + ' minutes</b>.'
-      : r === 0 ? 'The <b>long</b> hand is on the <b>' + k + '</b>. Count in 5s: ' + countStr(m) + '. That is <b>' + m + ' minutes</b>.'
-      : 'The <b>long</b> hand is ' + r + ' tick' + (r > 1 ? 's' : '') + ' after the <b>' + k + '</b>. Count in 5s: ' + countStr(m) + (k > 1 ? ' (' + k * 5 + ')' : '') + '. Then in 1s: ' + ticksStr(m) + '. That is <b>' + m + ' minutes</b>.';
-    return ex('Reading ' + dig(h, m), [s1, s2, 'So the time is <b>' + dig(h, m) + '</b>' + (m > 30 ? ' — that is ' + (60 - m) + ' minutes to ' + nx(h) : '') + '. ✅']);
+    const s1 = m > 30 ? 'The <b>short</b> hand has passed the <b>' + h + '</b> and is on its way to the ' + nx(h) + ', but it has not reached the ' + nx(h) + ' yet. So the hour is still <b>' + h + '</b>.' : 'The <b>short</b> hand has just passed the <b>' + h + '</b>, so the hour is <b>' + h + '</b>.';
+    const s2 = k === 0 ? 'The <b>long</b> hand has gone ' + plural(r, 'tick') + ' past the 12: <b>' + plural(r, 'minute') + '</b>.'
+      : r === 0 ? 'The <b>long</b> hand is on the <b>' + k + '</b>. Count in 5s: ' + countStr(m) + '. That is <b>' + plural(m, 'minute') + '</b>.'
+      : 'The <b>long</b> hand is ' + plural(r, 'tick') + ' after the <b>' + k + '</b>. Count in 5s: ' + countStr(m) + (k > 1 ? ' (' + k * 5 + ')' : '') + '. Then in 1s: ' + ticksStr(m) + '. That is <b>' + plural(m, 'minute') + '</b>.';
+    return ex('Reading ' + dig(h, m), [s1, s2, 'So the time is <b>' + dig(h, m) + '</b>' + (m > 30 ? ' — that is ' + plural(60 - m, 'minute') + ' to ' + nx(h) : '') + '. ✅']);
   }
   function laterWrongs(h, m, d){
     const ts = m + d, c = ts >= 60, out = [];
     const right = norm(h, ts);
     if(c){
-      out.push({ h: h, m: ts - 60, why: 'The minutes went past 60, so the hour must move on! ' + m + ' + ' + d + ' = ' + ts + ' minutes = 1 hour ' + (ts - 60) + ' minutes.' });
+      out.push({ h: h, m: ts - 60, why: 'The minutes reached 60 or more, so the hour must move on! ' + m + ' + ' + d + ' = ' + ts + ' minutes = 1 hour ' + plural(ts - 60, 'minute') + '.' });
       out.push({ h: nx(nx(h)), m: ts - 60, why: 'Only ONE hour is added when we pass 60 minutes, not two.' });
     } else {
       out.push({ h: nx(h), m: ts, why: 'We have not reached 60 minutes, so the hour does not change. ' + m + ' + ' + d + ' = ' + ts + '.' });
@@ -15842,7 +15867,7 @@ if(typeof module !== 'undefined') module.exports = V;
         { say: 'Now count the little ticks in <b>1s</b>. Three ticks past the 4: 20, <b>21, 22, 23</b>. So the time is <b>4:23</b>, or 23 minutes past 4.', vis: { kind: 'clock', args: [4, 23] } },
         { say: 'Past 30, you can also count back to the top. Here the long hand is 3 ticks after the 9 (45): <b>48 minutes</b>. That is 12 minutes to 8. It is <b>7:48</b>.', vis: { kind: 'clock', args: [7, 48] },
           quiz: { prompt: 'The long hand is 2 ticks after the 7, and the short hand has just passed 10. What time is it?', options: [{ label: '10:37', ok: true }, { label: '10:27', ok: false }, { label: '10:07', ok: false }], right: 'Yes! 7 × 5 = 35, plus 2 ticks = 37. It is 10:37.', wrong: 'Count in 5s to the 7: 35. Then add 2 ticks: 37. So 10:37.' } },
-        { say: 'What time is it <b>5 minutes later</b>? Add 5 to the minutes. If you go past 60, the hour moves on! 4:57 + 5 minutes = <b>5:02</b>.', vis: { kind: 'clock', args: [4, 57] },
+        { say: 'What time is it <b>5 minutes later</b>? Add 5 to the minutes. If you reach 60 or more, the hour moves on! 4:57 + 5 minutes = <b>5:02</b>.', vis: { kind: 'clock', args: [4, 57] },
           quiz: { prompt: 'It is 4:57. What is the time 5 minutes later?', options: [{ label: '5:02', ok: true }, { label: '4:62', ok: false }, { label: '4:02', ok: false }], right: 'Yes! 57 + 5 = 62, which is 1 hour and 2 minutes. 5:02!', wrong: '57 + 5 = 62. That is past 60, so the hour moves on to 5 and we have 2 minutes: 5:02.' } }
       ]
     },
@@ -15871,14 +15896,14 @@ if(typeof module !== 'undefined') module.exports = V;
             wrong: [{ v: k * 5, why: 'You forgot the little ticks after the number. Add them in 1s.' }, { v: k * 5 + r * 5, why: 'The little ticks are 1 minute each, not 5.' }, { v: m + 1, why: 'One tick too far. Count again.' }, { v: m - 1, why: 'One tick too few. Count again.' }],
             valid: function(v){ return v > 0 && v < 60; }, nearby: [2, -2, 3, -3, 5, -5, 10],
             hint: 'Count in 5s to the number, then add the ticks after it.',
-            explain: ex('Minutes past ' + h, ['Long hand has passed the <b>' + k + '</b>' + (k === 0 ? ' (the 12)' : '') + (k ? ': counting in 5s gives ' + k * 5 + ' minutes' : '') + '.', 'Then <b>' + r + '</b> tick' + (r > 1 ? 's' : '') + ' more: ' + ticksStr(m) + '.', 'So it is <b>' + m + ' minutes</b> past ' + h + '. ✅']),
+            explain: ex('Minutes past ' + h, ['Long hand has passed the <b>' + k + '</b>' + (k === 0 ? ' (the 12)' : '') + (k ? ': counting in 5s gives ' + k * 5 + ' minutes' : '') + '.', 'Then <b>' + plural(r, 'tick') + '</b> more: ' + ticksStr(m) + '.', 'So it is <b>' + plural(m, 'minute') + '</b> past ' + h + '. ✅']),
             truth: (m - r) + r, decode: function(){ return V.decodeClock(vis).m; }
           });
         }
-        const sp = m + ' minutes past ' + h;
+        const sp = plural(m, 'minute') + ' past ' + h;
         return mcq({
           prompt: 'Which words match the clock?', visual: vis,
-          correct: opt(K.time(h, m), sp), distractors: wrongs(h, m).filter(function(w){ return w.m < 30 || w.m === m; }).map(function(w){ return opt(K.time(w.h, w.m), w.m + ' minutes past ' + w.h, w.why); }), keepOrder: true, count: 3,
+          correct: opt(K.time(h, m), sp), distractors: wrongs(h, m).filter(function(w){ return w.m < 30 || w.m === m; }).map(function(w){ return opt(K.time(w.h, w.m), plural(w.m, 'minute') + ' past ' + w.h, w.why); }), keepOrder: true, count: 3,
           hint: 'Count in 5s, then in 1s. Say the minutes, then “past”, then the hour.',
           explain: explainRead(h, m).replace('So the time is', 'In words: <b>' + sp + '</b>. The time is'),
           truth: K.time(h, parseInt(sp, 10)), decode: function(){ return ck(vis); }
@@ -15903,7 +15928,7 @@ if(typeof module !== 'undefined') module.exports = V;
             wrong: [{ v: mm, why: 'That is the minutes PAST ' + h + '. We need the minutes still to go until ' + nx(h) + ': take it away from 60.' }, { v: 50 - mm + 10 + 1, why: 'Check your take-away: 60 minus the minutes past.' }],
             valid: function(v){ return v > 0 && v < 60; }, nearby: [1, -1, 2, -2, 10, -10, 5, -5],
             hint: 'Read the minutes past the hour first. A whole hour is 60 minutes.',
-            explain: ex('Minutes until ' + nx(h), ['Reading the clock: <b>' + dig(h, mm) + '</b>, so ' + mm + ' minutes past ' + h + '.', 'One hour is 60 minutes: 60 − ' + mm + ' = <b>' + (60 - mm) + '</b>.', 'It is <b>' + (60 - mm) + ' minutes</b> until ' + nx(h) + '. ✅']),
+            explain: ex('Minutes until ' + nx(h), ['Reading the clock: <b>' + dig(h, mm) + '</b>, so ' + plural(mm, 'minute') + ' past ' + h + '.', 'One hour is 60 minutes: 60 − ' + mm + ' = <b>' + (60 - mm) + '</b>.', 'It is <b>' + plural(60 - mm, 'minute') + '</b> until ' + nx(h) + '. ✅']),
             truth: 60 - mm, decode: function(){ return 60 - V.decodeClock(vis).m; }
           });
         }
@@ -15924,8 +15949,8 @@ if(typeof module !== 'undefined') module.exports = V;
           return mcq({
             prompt: 'What time will it be ' + d + ' minutes later?', visual: v2,
             correct: opt(K.time(t.h, t.m), dig(t.h, t.m)), distractors: laterWrongs(h, mm, d).map(function(w){ return opt(K.time(w.h, w.m), dig(w.h, w.m), w.why); }), keepOrder: true,
-            hint: 'Read the clock, add the minutes, and if the total goes past 60, take 60 off and move the hour on.',
-            explain: ex(d + ' minutes later', ['The clock shows <b>' + dig(h, mm) + '</b>.', mm + ' + ' + d + ' = ' + (mm + d) + ' minutes' + (mm + d >= 60 ? '. That is past 60, so it is the next hour and ' + (mm + d - 60) + ' minutes.' : ', still the same hour.'), 'The time is <b>' + dig(t.h, t.m) + '</b>. ✅']),
+            hint: 'Read the clock, add the minutes, and if the total reaches 60 or more, take 60 off and move the hour on.',
+            explain: ex(d + ' minutes later', ['The clock shows <b>' + dig(h, mm) + '</b>.', mm + ' + ' + d + ' = ' + (mm + d) + ' minutes' + (mm + d >= 60 ? '. That reaches 60 or more, so it is the next hour and ' + plural(mm + d - 60, 'minute') + '.' : ', still the same hour.'), 'The time is <b>' + dig(t.h, t.m) + '</b>. ✅']),
             truth: (function(){ const tot = (h % 12) * 60 + mm + d; return K.time(Math.floor(tot / 60) % 12 || 12, tot % 60); })(),
             decode: function(){ const dd = V.decodeClock(v2), n2 = norm(dd.h, dd.m + d); return K.time(n2.h, n2.m); }
           });
@@ -15944,7 +15969,7 @@ if(typeof module !== 'undefined') module.exports = V;
           return numeric({
             prompt: 'How many minutes until ' + nx(h) + ' o’clock? Type the number.', visual: v2, answer: 60 - mm, unit: 'minutes',
             hint: 'Read the minutes past the hour, then see how many more make 60.',
-            explain: ex('Minutes until ' + nx(h), ['The clock shows <b>' + dig(h, mm) + '</b>.', 'Count on to 60: from ' + mm + ' to 60 is 60 − ' + mm + ' = <b>' + (60 - mm) + '</b>.', 'It is <b>' + (60 - mm) + '</b> minutes until ' + nx(h) + '. ✅']),
+            explain: ex('Minutes until ' + nx(h), ['The clock shows <b>' + dig(h, mm) + '</b>.', 'Count on to 60: from ' + mm + ' to 60 is 60 − ' + mm + ' = <b>' + (60 - mm) + '</b>.', 'It is <b>' + plural(60 - mm, 'minute') + '</b> until ' + nx(h) + '. ✅']),
             truth: 60 - mm, decode: function(){ return 60 - V.decodeClock(v2).m; },
             wrong: function(v){ return v === mm ? 'That is the minutes PAST the hour. Use 60 minus it.' : ''; }
           });
@@ -15954,7 +15979,7 @@ if(typeof module !== 'undefined') module.exports = V;
           return numeric({
             prompt: 'It is ' + dig(h, mm) + '. After ' + d + ' more minutes, how many minutes past the hour will it be?', visual: '', answer: t.m, unit: 'minutes',
             hint: 'Add the minutes. If the total is 60 or more, take 60 off.',
-            explain: ex('Adding minutes', [mm + ' + ' + d + ' = ' + (mm + d) + '.', mm + d >= 60 ? 'That is more than 60, so take away 60: ' + (mm + d) + ' − 60 = <b>' + t.m + '</b>.' : 'That is under 60, so no hour is added.', 'It will be <b>' + dig(t.h, t.m) + '</b>, which is <b>' + t.m + '</b> minutes past the hour. ✅']),
+            explain: ex('Adding minutes', [mm + ' + ' + d + ' = ' + (mm + d) + '.', mm + d >= 60 ? 'That is more than 60, so take away 60: ' + (mm + d) + ' − 60 = <b>' + t.m + '</b>.' : 'That is under 60, so no hour is added.', 'It will be <b>' + dig(t.h, t.m) + '</b>, which is <b>' + plural(t.m, 'minute') + '</b> past the hour. ✅']),
             truth: tot % 60,
             wrong: function(v){ return v === mm + d ? 'You did not take 60 off. 60 minutes is a whole hour.' : ''; }
           });
@@ -15965,7 +15990,7 @@ if(typeof module !== 'undefined') module.exports = V;
           prompt: 'Which clock shows ' + dig(h, m) + '?', visual: '',
           correct: opt(K.time(h, m), V.smallClock(h, m)), distractors: wr, keepOrder: true, count: 3,
           hint: 'Find the minutes first: ' + (m % 5 === 0 ? 'count in 5s' : 'count in 5s then add the ticks') + '. Then check the short hand has just passed ' + h + '.',
-          explain: ex('Finding ' + dig(h, m), [dig(h, m) + ' means ' + m + ' minutes past ' + h + '.', 'The long hand: ' + countStr(m) + (m % 5 ? ', then ' + ticksStr(m) : '') + '.', 'The short hand has just passed ' + h + '. Only one clock matches: <b>' + dig(h, m) + '</b>. ✅']),
+          explain: ex('Finding ' + dig(h, m), [dig(h, m) + ' means ' + plural(m, 'minute') + ' past ' + h + '.', 'The long hand: ' + countStr(m) + (m % 5 ? ', then ' + ticksStr(m) : '') + '.', 'The short hand has just passed ' + h + '. Only one clock matches: <b>' + dig(h, m) + '</b>. ✅']),
           truth: K.time(h, parseInt(dig(h, m).split(':')[1], 10))
         });
         return visualOpts(q);
@@ -16014,12 +16039,12 @@ if(typeof module !== 'undefined') module.exports = V;
         { say: 'When the long hand points straight down to the <b>6</b>, half the clock has gone round. It is <b>half past</b>. This is <b>half past 3</b>, written <b>3:30</b>.', vis: { kind: 'clock', args: [3, 30] } },
         { say: 'Long hand on the <b>3</b> means <b>quarter past</b>. It is <b>quarter past 7</b>, written <b>7:15</b>.', vis: { kind: 'clock', args: [7, 15] } },
         { say: 'Long hand on the <b>9</b> means <b>quarter to</b> the NEXT hour. The short hand is nearly at the 5, so this is <b>quarter to 5</b>, written <b>4:45</b>.', vis: { kind: 'clock', args: [4, 45] },
-          quiz: { prompt: 'The long hand points to the 9 and the short hand is almost at 9. What time is it?', options: [{ label: 'Quarter to 9', ok: false }, { label: 'Quarter to 10', ok: true }, { label: 'Quarter past 9', ok: false }], right: 'Yes! Quarter to the NEXT hour, so quarter to 10 (9:45).', wrong: 'Careful: the short hand is almost at 9, so the next hour is 10. It is quarter to 10 (9:45).' } }
+          quiz: { prompt: 'The long hand points to the 9 and the short hand is just past the 9. What time is it?', options: [{ label: 'Quarter to 9', ok: false }, { label: 'Quarter to 10', ok: true }, { label: 'Quarter past 9', ok: false }], right: 'Yes! The short hand is just past the 9 and heading for the 10, so it is quarter to the NEXT hour: quarter to 10 (9:45).', wrong: 'Careful: the short hand has only just passed the 9, so it is still the 9 o’clock hour and is walking towards 10. It is quarter to 10 (9:45).' } }
       ]
     },
     trick: {
       title: 'The “next number” trick',
-      say: 'For <b>quarter to</b>, always say the <b>NEXT</b> hour. Hour hand almost at 4? Then it is <b>quarter to 5</b>. Say it: “the hour hand is nearly there, so I say the number it is walking to”.',
+      say: 'For <b>quarter to</b>, always say the <b>NEXT</b> hour. Hour hand almost at 5 (just past the 4)? Then it is <b>quarter to 5</b>. Say it: “the hour hand is nearly there, so I say the number it is walking to”.',
       vis: { kind: 'clock', args: [4, 45] },
       example: '4:45 → hour hand is almost on 5 → <b>quarter to 5</b>'
     },
@@ -16131,7 +16156,7 @@ if(typeof module !== 'undefined') module.exports = V;
     if(hard && m > 0 && SW[n]) out.push({ h: h, m: (SW[n] * 5) % 60, why: 'Careful: the long hand is on ' + ROM[n] + ' = ' + n + ', not ' + ROM[SW[n]] + '. ' + ROM[n] + ': ' + BUILD[n] + ' = ' + n + '. Then ' + n + ' × 5 = ' + m + '.' });
     if(m > 0) out.push({ h: h, m: n, why: 'The numeral tells you which NUMBER the hand is on; each number is worth 5 minutes. ' + n + ' × 5 = ' + m + ' minutes.' });
     if(m > 30) out.push({ h: nx(h), m: m, why: 'The short hand has not reached ' + ROM[nx(h)] + ' yet, so the hour is still ' + h + '.' });
-    else out.push({ h: pv(h), m: m, why: 'The short hand has passed ' + ROM[h] + ', so the hour is ' + h + '.' });
+    else out.push({ h: pv(h), m: m, why: m === 0 ? 'The short hand is exactly on ' + ROM[h] + ', so the hour is ' + h + '.' : 'The short hand has passed ' + ROM[h] + ', so the hour is ' + h + '.' });
     out.push({ h: (m / 5) || 12, m: (h % 12) * 5, why: 'It looks like the hands got swapped. The SHORT hand is the hour and the LONG hand is the minutes.' });
     shuffle([0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]).forEach(function(mm){ out.push({ h: h, m: mm, why: 'Look at the LONG hand: it is not on the numeral for ' + mm + ' minutes.' }); });
     shuffle([0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]).forEach(function(mm){ out.push({ h: nx(h), m: mm, why: 'Check the short hand and the long hand again.' }); });
@@ -16182,7 +16207,7 @@ if(typeof module !== 'undefined') module.exports = V;
   }
 
   registerSkill({
-    id: 'time-roman', strand: 'time', name: 'Roman numeral clocks', emoji: '🏛️', year: 3, order: 540, prereq: ['time-quarters'],
+    id: 'time-roman', strand: 'time', name: 'Roman numeral clocks', emoji: '🏛️', year: 3, order: 540, prereq: ['time-quarters', 'time-five-minutes'],
     lesson: {
       title: 'Clocks with Roman numerals',
       steps: [
