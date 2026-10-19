@@ -190,7 +190,7 @@ function finishPlacement(){
   go('placementDone', { known: sum.known.length, learn: sum.learn.length });
 }
 SCREENS.placementDone = function(p){
-  R('<div class="center white"><div class="mascot pop">🎉</div><h1>Quest complete!</h1></div><div class="gap"></div><div class="card center">' +
+  R('<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><h1>Quest complete!</h1></div><div class="gap"></div><div class="card center">' +
     '<p class="qprompt">You already know <b>' + p.known + '</b> skills! 🌟</p><p style="margin-top:8px">And I found <b>' + p.learn + '</b> new adventures to learn together.</p><div class="gap"></div>' +
     '<p class="muted">Your map is ready. Little by little we will fill it with gold medals.</p><div class="gap"></div><button class="btn block" data-act="go" data-to="hub">Open my map 🗺️</button></div>');
   confetti();
@@ -231,7 +231,7 @@ function finishSession(early){
 }
 SCREENS.results = function(p){
   const good = p.acc >= 0.8;
-  let h = '<div class="center white"><div class="mascot pop">' + (p.perfect ? '💯' : (good ? '🌟' : '💪')) + '</div><h1>' + (p.kind === 'testout' ? (p.acc >= 0.99 ? 'You really know it!' : 'Not yet — let’s learn it') : (p.perfect ? 'Perfect round!' : (good ? 'Great round!' : 'Good effort!'))) + '</h1></div><div class="gap"></div>';
+  let h = '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + (p.perfect ? '💯 Purrfect!' : (good ? '🌟 ' + pick(PRAISE) : '💪 Mistakes help your brain grow!')) + '</div><h1 style="margin-top:10px">' + (p.kind === 'testout' ? (p.acc >= 0.99 ? 'You really know it!' : 'Not yet — let’s learn it') : (p.perfect ? 'Perfect round!' : (good ? 'Great round!' : 'Good effort!'))) + '</h1></div><div class="gap"></div>';
   h += '<div class="card center"><p class="qprompt">⭐ +' + p.stars + ' stars</p>' +
     (p.medals.length ? p.medals.map(function(m){ return '<p style="margin-top:8px;font-weight:900">' + ['', '🥉', '🥈', '🥇'][m.medal] + ' New medal: ' + esc(m.name) + '</p>'; }).join('') : '') +
     (p.wobblyCleared ? '<p style="margin-top:8px;font-weight:900">💪 You fixed a wobbly skill!</p>' : '') +
@@ -250,7 +250,7 @@ ACT.mood = function(d){
   save(); const f = document.getElementById('moodfb'); if(f) f.innerHTML = '<p class="muted" style="margin-top:8px">Thanks for telling me! 💜</p>';
 };
 SCREENS.timeup = function(){
-  R('<div class="center white"><div class="mascot">😴</div><h1>That’s enough for today!</h1></div><div class="gap"></div><div class="card center"><p class="qprompt">Your brain has worked hard. Come back tomorrow to keep your streak! 🔥</p><div class="gap"></div><button class="btn block" data-act="go" data-to="hub">Home</button><div class="gap"></div><button class="btn small block" style="background:#e9ebf7;color:var(--ink)" data-act="go" data-to="parentPin">Grown-up: add time</button></div>');
+  R('<div class="center white"><div class="mascot big">' + friendImg() + '</div><h1>That’s enough for today!</h1></div><div class="gap"></div><div class="card center"><p class="qprompt">Your brain has worked hard. Come back tomorrow to keep your streak! 🔥</p><div class="gap"></div><button class="btn block" data-act="go" data-to="hub">Home</button><div class="gap"></div><button class="btn small block" style="background:#e9ebf7;color:var(--ink)" data-act="go" data-to="parentPin">Grown-up: add time</button></div>');
 };
 
 /* ---------------- stickers ---------------- */

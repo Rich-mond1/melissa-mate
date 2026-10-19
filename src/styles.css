@@ -154,3 +154,10 @@ h1,h2,h3,p{margin:0;}
 .toast{position:fixed; left:50%; bottom:calc(24px + var(--safe-b)); transform:translateX(-50%); background:#1B1B2F; color:#fff; padding:12px 18px; border-radius:16px; font-weight:800; z-index:100; animation:rise .3s; max-width:88vw; text-align:center;}
 
 .quest .pill{background:#F2C94C; color:#3a2a00; margin-left:6px; padding:3px 10px; font-size:14px; vertical-align:middle;}
+
+.mascot .pet{width:72px; height:72px; object-fit:contain; display:block; margin:0 auto;}
+.mascot.big .pet{width:120px; height:120px;}
+.mascot[data-act]{cursor:pointer;}
+.sticker .pet{width:88%; height:88%; object-fit:contain; pointer-events:none;}
+.sticker.big .pet{width:92%; height:92%;}
+.bubble{display:inline-block; background:#fff; color:var(--ink); border-radius:18px; padding:8px 16px; font-weight:900; font-size:17px; margin-top:4px; box-shadow:0 4px 12px rgba(0,0,0,.2);}

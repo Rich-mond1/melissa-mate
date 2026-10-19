@@ -14,7 +14,9 @@ function applyTheme(){
   const t = THEMES[S.theme] || THEMES.unicorn; const r = document.documentElement.style;
   r.setProperty('--bg1', t.c1); r.setProperty('--bg2', t.c2);
 }
-function mascot(){ return (THEMES[S.theme] || THEMES.unicorn).mascot; }
+function mascot(){ return friendImg(); }
+function friendImg(){ const k = PETS[S.friend] ? S.friend : 'ginger'; return '<img class="pet" alt="' + esc(PET_NAMES[k]) + '" src="' + PETS[k] + '">'; }
+function friendSays(txt){ return '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + txt + '</div></div>'; }
 function speak(html){
   if(!S.prefs.voice || !window.speechSynthesis) return;
   try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(stripTags(html).replace(/\s+/g, ' ')); u.lang = 'en-GB'; u.rate = 0.92; speechSynthesis.speak(u); } catch(e){}
@@ -46,7 +48,8 @@ const KIND_ES = { guided: 'Guiada', practice: 'Práctica', challenge: 'Reto', re
 /* ---------------- sticker drawing ---------------- */
 function stickerHTML(s, big){
   const bg = STICKER_BGS[s.bg % STICKER_BGS.length] || STICKER_BGS[0];
-  return '<div class="sticker ' + s.rarity + (big ? ' big' : '') + '" style="background:linear-gradient(145deg,' + bg[0] + ',' + bg[1] + ')">' + esc(s.base) + (s.acc ? '<span class="acc">' + esc(s.acc) + '</span>' : '') + (s.n > 1 ? '<span class="cnt">×' + (Number(s.n) | 0) + '</span>' : '') + '</div>';
+  const face = (s.pet && PETS[s.pet]) ? '<img class="pet" alt="' + esc(PET_NAMES[s.pet]) + '" src="' + PETS[s.pet] + '">' : esc(s.base);
+  return '<div class="sticker ' + (RARITIES.indexOf(s.rarity) > -1 ? s.rarity : 'common') + (big ? ' big' : '') + '" style="background:linear-gradient(145deg,' + bg[0] + ',' + bg[1] + ')">' + face + (s.acc ? '<span class="acc">' + esc(s.acc) + '</span>' : '') + (s.n > 1 ? '<span class="cnt">×' + (Number(s.n) | 0) + '</span>' : '') + '</div>';
 }
 
 /* ---------------- render dispatcher ---------------- */
@@ -60,14 +63,17 @@ const ACT = {};
 
 /* ---------------- onboarding ---------------- */
 SCREENS.welcome = function(){
-  R('<div class="center white"><div class="mascot pop">🧙‍♀️</div><h1>Hi ' + esc(S.name) + '!</h1><p class="subtitle">Welcome to <b>Matemagics</b> — your own maths adventure. You choose the world. You collect the magic.</p></div>' +
+  R('<div class="center white"><div class="mascot pop big" data-act="cycleFriend">' + friendImg() + '</div><h1>Hi ' + esc(S.name) + '!</h1><p class="subtitle">Welcome to <b>Matemagics</b> — your own maths adventure. You choose the world. You collect the magic.</p></div>' +
     '<div class="gap2"></div><div class="card"><h3>1. Pick your world</h3><div class="chips">' +
     Object.keys(THEMES).map(function(k){ return '<button class="chip' + (S.theme === k ? ' picked' : '') + '" data-act="theme" data-v="' + k + '">' + THEMES[k].emoji + ' ' + THEMES[k].label + '</button>'; }).join('') + '</div>' +
     '<h3>2. I like…</h3><div class="chips">' + LIKES.map(function(l){ return '<button class="chip' + (S.prefs.likes.indexOf(l.id) > -1 ? ' picked' : '') + '" data-act="pref" data-k="likes" data-v="' + l.id + '">' + l.emoji + ' ' + l.label + '</button>'; }).join('') + '</div>' +
-    '<h3>3. I find these tricky</h3><div class="chips">' + DISLIKES.map(function(l){ return '<button class="chip' + (S.prefs.dislikes.indexOf(l.id) > -1 ? ' picked' : '') + '" data-act="pref" data-k="dislikes" data-v="' + l.id + '">' + l.emoji + ' ' + l.label + '</button>'; }).join('') + '</div>' +
+    '<h3>3. My maths friend</h3><div class="chips">' + PET_IDS.map(function(k){ return '<button class="chip' + (S.friend === k ? ' picked' : '') + '" data-act="friend" data-v="' + k + '">' + PET_NAMES[k] + '</button>'; }).join('') + '</div>' +
+    '<h3>4. I find these tricky</h3><div class="chips">' + DISLIKES.map(function(l){ return '<button class="chip' + (S.prefs.dislikes.indexOf(l.id) > -1 ? ' picked' : '') + '" data-act="pref" data-k="dislikes" data-v="' + l.id + '">' + l.emoji + ' ' + l.label + '</button>'; }).join('') + '</div>' +
     '<p class="muted">Nothing here is a test. It just helps your maths friend plan fun things for you.</p></div>' +
     '<div class="gap"></div><button class="btn block" data-act="startPlacement">Let’s go! 🚀</button>');
 };
+ACT.friend = function(d){ if(PETS[d.v]) S.friend = d.v; save(); render(); };
+ACT.cycleFriend = function(){ const i = PET_IDS.indexOf(S.friend); S.friend = PET_IDS[(i + 1) % PET_IDS.length]; save(); render(); toast('Hi! I am ' + PET_NAMES[S.friend] + ' 💜'); };
 ACT.theme = function(d){ S.theme = d.v; save(); applyTheme(); render(); };
 ACT.pref = function(d){ const a = S.prefs[d.k]; const i = a.indexOf(d.v); if(i > -1) a.splice(i, 1); else a.push(d.v); save(); render(); };
 ACT.startPlacement = function(){ S.onboardingDone = true; save(); go('placementIntro'); };
@@ -91,7 +97,7 @@ SCREENS.hub = function(){
   const rec = recommend(S), due = dueSkills(S);
   const goal = S.goalReward ? S.rewards.filter(function(r){ return r.id === S.goalReward; })[0] : null;
   const d = S.daily;
-  let h = '<div class="hero"><div class="mascot">' + mascot() + '</div><div class="grow"><b style="font-size:20px">' + esc(S.name) + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
+  let h = '<div class="hero"><div class="mascot" data-act="cycleFriend">' + mascot() + '</div><div class="grow"><b style="font-size:20px">' + esc(S.name) + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
     '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + liveStreak() + '</div></div>';
   if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
   else {
