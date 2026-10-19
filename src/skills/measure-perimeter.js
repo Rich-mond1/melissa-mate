@@ -132,7 +132,7 @@
         { v: 3 * s, why: 'You missed one side. A square has FOUR sides.' }
       ],
       nearby: [4, -4, 2, -2, 1],
-      valid: function(v){ return v > 0 && v !== s * s || v === s * s && false; },
+      valid: function(v){ return v > 0; },
       hint: 'A square has four sides. Add them all.',
       explain: ex('Perimeter of a square', ['All four sides are ' + s + ' cm.', add([s, s, s, s]) + ' = ?', 'The perimeter is <b>' + P + ' cm</b>. ✅']),
       truth: s + s + s + s, decode: function(){ return measured(vis); }

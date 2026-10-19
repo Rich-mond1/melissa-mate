@@ -238,7 +238,7 @@
       prompt: 'Put these in order, starting with the ' + word + '.',
       items: sorted.map(function(i){ return { key: 'v' + i.v, label: i.label }; }),
       hint: 'Change every amount into ' + c.small + ' first (' + fact(c) + '). Then the biggest number is the biggest amount.',
-      explain: ex('Ordering mixed units', ['Change all to ' + c.small + ': ' + sorted.map(function(i){ return i.label + ' = ' + i.v + ' ' + c.small; }).join('; ') + '.', 'Now put the numbers in order: ' + sorted.map(function(i){ return i.v; }).join(' < ') + '.', 'The order is <b>' + sorted.map(function(i){ return i.label; }).join(', ') + '</b>. ✅']),
+      explain: ex('Ordering mixed units', ['Change all to ' + c.small + ': ' + sorted.filter(function(i){ return i.label !== i.v + ' ' + c.small; }).map(function(i){ return i.label + ' = ' + i.v + ' ' + c.small; }).join('; ') + '.', 'Now put the numbers in order: ' + sorted.map(function(i){ return i.v; }).join(' &lt; ') + '.', 'The order is <b>' + sorted.map(function(i){ return i.label; }).join(', ') + '</b>. ✅']),
       truth: 'o:' + items.slice().sort(function(a, b){ return a.v - b.v; }).map(function(i){ return 'v' + i.v; }).join('|')
     });
     return q;
