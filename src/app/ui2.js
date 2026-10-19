@@ -68,7 +68,7 @@ function sessionDots(){
 SCREENS.question = function(){
   const q = SESS.q; const sk = skillById(SESS.skillId_); const placing = SESS.kind === 'placement'; const fb = SESS.phase === 'fb';
   let h = '<div class="topbar"><button class="icon-btn" data-act="quit">✕</button><h2 class="white grow center">' +
-    (placing ? '🗺️ ' + esc(strandMeta(sk.strand).name) : esc(sk.emoji + ' ' + (SESS.kind === 'review' ? 'Brain boost' : sk.name))) + '</h2><span class="pill">' + (placing ? 'Quest' : (SESS.idx + 1) + '/' + SESS.items.length) + '</span></div>' + sessionDots();
+    (placing ? '🗺️ ' + esc(strandMeta(sk.strand).name) : esc(sk.emoji + ' ' + (SESS.kind === 'review' ? 'Brain boost' : sk.name))) + '</h2><span class="pill nobtn">' + (placing ? '#' + (S.placement.asked + 1) : (SESS.idx + 1) + '/' + SESS.items.length) + '</span></div>' + sessionDots();
   h += '<div class="card qcard">' + (q.visual ? '<div class="qvis">' + q.visual + '</div>' : '') + '<div class="qprompt">' + q.prompt + '</div><button class="speak" data-act="sayq">🔊</button>';
   const lock = fb;
   if(q.type === 'mcq'){
@@ -108,7 +108,7 @@ SCREENS.question = function(){
 };
 ACT.sayq = function(){ speak(SESS.q.prompt); };
 ACT.quit = function(){
-  if(SESS.kind === 'placement'){ save(); return go('hub'); }
+  if(SESS.kind === 'placement'){ save(); SESS = null; return go('hub'); }
   if(SESS.credits.length >= 1){ const st = sessionStars(SESS.credits); S.starBalance += st; S.totalStars += st; toast('Saved ' + st + ' ⭐ — finish the whole round to win medals!'); }
   save(); SESS = null; go('hub');
 };
@@ -165,10 +165,10 @@ function endQuestion(credit, ok, skipped){
     if(skipped){ ACT.qnext(); return; } render(); return;
   }
   if(ok){
-    const praise = credit >= 1 ? pick(PRAISE) : 'You worked it out!';
+    const praise = (credit >= 1 ? pick(PRAISE).replace(/[.!]$/, '') : 'You worked it out') + ', ' + nick() + '!';
     SESS.fbHTML = '<div class="feedback ok">✅ ' + praise + '</div>';
   } else {
-    SESS.fbHTML = '<div class="feedback">' + pick(ENCOURAGE) + '</div>' + explainHTML(q);
+    SESS.fbHTML = '<div class="feedback">' + pick(ENCOURAGE).replace(/[.!]$/, '') + ', ' + nick() + '!</div>' + explainHTML(q);
   }
   render();
 }
@@ -231,7 +231,7 @@ function finishSession(early){
 }
 SCREENS.results = function(p){
   const good = p.acc >= 0.8;
-  let h = '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + (p.perfect ? '💯 Purrfect!' : (good ? '🌟 ' + pick(PRAISE) : '💪 Mistakes help your brain grow!')) + '</div><h1 style="margin-top:10px">' + (p.kind === 'testout' ? (p.acc >= 0.99 ? 'You really know it!' : 'Not yet — let’s learn it') : (p.perfect ? 'Perfect round!' : (good ? 'Great round!' : 'Good effort!'))) + '</h1></div><div class="gap"></div>';
+  let h = '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + (p.perfect ? '💯 Purrfect!' : (good ? '🌟 ' + pick(PRAISE).replace(/[.!]$/, '') + ', ' + nick() + '!' : '💪 Mistakes help your brain grow!')) + '</div><h1 style="margin-top:10px">' + (p.kind === 'testout' ? (p.acc >= 0.99 ? 'You really know it!' : 'Not yet — let’s learn it') : (p.perfect ? 'Perfect round!' : (good ? 'Great round!' : 'Good effort!'))) + '</h1></div><div class="gap"></div>';
   h += '<div class="card center"><p class="qprompt">⭐ +' + p.stars + ' stars</p>' +
     (p.medals.length ? p.medals.map(function(m){ return '<p style="margin-top:8px;font-weight:900">' + ['', '🥉', '🥈', '🥇'][m.medal] + ' New medal: ' + esc(m.name) + '</p>'; }).join('') : '') +
     (p.wobblyCleared ? '<p style="margin-top:8px;font-weight:900">💪 You fixed a wobbly skill!</p>' : '') +

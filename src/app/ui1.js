@@ -37,7 +37,11 @@ function confetti(n){
 }
 let LAST_GO = 0;
 function go(name, p){ LAST_GO = Date.now(); if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
-function R(html){ const a = $app(); a.innerHTML = '<div class="wrap">' + html + '</div>'; a.scrollTop = 0; }
+let LAST_Q = null;   // re-drawing the SAME question (pick / hint / I-find-this-tricky) must not jump back to the top
+function R(html){ const a = $app(); const keep = scr.name === 'question' && typeof SESS !== 'undefined' && SESS && SESS.q && SESS.q === LAST_Q; const st = a.scrollTop;
+  a.innerHTML = '<div class="wrap">' + html + '</div>'; a.scrollTop = keep ? st : 0; LAST_Q = (scr.name === 'question' && SESS) ? SESS.q : null; }
+const NICKS = ['Meli', 'Bebei', 'Titi', 'Titus']; let NICK_I = 0;
+function nick(){ const n = NICKS[NICK_I % NICKS.length]; NICK_I++; return n; }   // Melissa's nicknames, rotating as she goes
 function topbar(title, back){
   return '<div class="topbar"><button class="icon-btn" data-act="go" data-to="' + (back || 'hub') + '" aria-label="Back">←</button><h2 class="white grow center">' + title + '</h2><span class="pill">⭐ ' + S.starBalance + '</span></div>';
 }
@@ -63,7 +67,7 @@ const ACT = {};
 
 /* ---------------- onboarding ---------------- */
 SCREENS.welcome = function(){
-  R('<div class="center white"><div class="mascot pop big" data-act="cycleFriend">' + friendImg() + '</div><h1>Hi ' + esc(S.name) + '!</h1><p class="subtitle">Welcome to <b>Matemagics</b> — your own maths adventure. You choose the world. You collect the magic.</p></div>' +
+  R('<div class="center white"><div class="mascot pop big" data-act="cycleFriend">' + friendImg() + '</div><h1>Hi ' + nick() + '!</h1><p class="subtitle">Welcome to <b>Matemagics</b> — your own maths adventure. You choose the world. You collect the magic.</p></div>' +
     '<div class="gap2"></div><div class="card"><h3>1. Pick your world</h3><div class="chips">' +
     Object.keys(THEMES).map(function(k){ return '<button class="chip' + (S.theme === k ? ' picked' : '') + '" data-act="theme" data-v="' + k + '">' + THEMES[k].emoji + ' ' + THEMES[k].label + '</button>'; }).join('') + '</div>' +
     '<h3>2. I like…</h3><div class="chips">' + LIKES.map(function(l){ return '<button class="chip' + (S.prefs.likes.indexOf(l.id) > -1 ? ' picked' : '') + '" data-act="pref" data-k="likes" data-v="' + l.id + '">' + l.emoji + ' ' + l.label + '</button>'; }).join('') + '</div>' +
@@ -97,7 +101,7 @@ SCREENS.hub = function(){
   const rec = recommend(S), due = dueSkills(S);
   const goal = S.goalReward ? S.rewards.filter(function(r){ return r.id === S.goalReward; })[0] : null;
   const d = S.daily;
-  let h = '<div class="hero"><div class="mascot" data-act="cycleFriend">' + mascot() + '</div><div class="grow"><b style="font-size:20px">' + esc(S.name) + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
+  let h = '<div class="hero"><div class="mascot" data-act="cycleFriend">' + mascot() + '</div><div class="grow"><b style="font-size:20px">' + nick() + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
     '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + liveStreak() + '</div></div>';
   if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
   else {

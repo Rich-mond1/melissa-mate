@@ -335,7 +335,7 @@ V.pictogram = function(rows, key){
     let syms = '';
     for(let i = 0; i < whole; i++) syms += '<span class="sym" style="font-size:24px">' + r.emoji + '</span>';
     if(half) syms += '<span class="sym half" style="font-size:24px;display:inline-block;width:.55em;overflow:hidden;vertical-align:bottom">' + r.emoji + '</span>';
-    s += '<div class="prow" data-label="' + r.label + '" style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="width:84px;font-weight:800">' + r.label + '</span><span>' + syms + '</span></div>';
+    s += '<div class="pgrow" data-label="' + r.label + '" style="display:flex;align-items:center;gap:8px;margin:4px 0;color:'+INK+';background:none;padding:0"><span style="width:84px;flex:none;font-weight:800;color:'+INK+'">' + r.label + '</span><span style="display:flex;flex-wrap:wrap;align-items:center">' + syms + '</span></div>';
   });
   s += '<div style="margin-top:6px;font-weight:800;border-top:2px dashed #C9CEE0;padding-top:6px">Key: <span style="font-size:20px">' + rows[0].emoji + '</span> = ' + key + '</div></div>';
   return s;
@@ -343,7 +343,7 @@ V.pictogram = function(rows, key){
 V.decodePictogram = function(html){
   const key = parseFloat(/=\s*([\d.]+)\s*</.exec(html)[1]);
   const out = {};
-  html.split('<div class="prow"').slice(1).forEach(function(chunk){
+  html.split('<div class="pgrow"').slice(1).forEach(function(chunk){
     const label = /data-label="([^"]*)"/.exec(chunk)[1];
     const whole = (chunk.match(/<span class="sym" /g) || []).length, half = (chunk.match(/<span class="sym half"/g) || []).length;
     out[label] = (whole + half * 0.5) * key;

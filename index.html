@@ -167,6 +167,8 @@ h1,h2,h3,p{margin:0;}
 .sticker.big .pet{width:92%; height:92%;}
 .bubble{display:inline-block; background:#fff; color:var(--ink); border-radius:18px; padding:8px 16px; font-weight:900; font-size:17px; margin-top:4px; box-shadow:0 4px 12px rgba(0,0,0,.2);}
 
+.pill.nobtn{pointer-events:none; user-select:none; -webkit-user-select:none;}
+
 </style></head><body><div id="app"></div>
 <script>
 /* ===== src/core.js ===== */
@@ -800,7 +802,7 @@ V.pictogram = function(rows, key){
     let syms = '';
     for(let i = 0; i < whole; i++) syms += '<span class="sym" style="font-size:24px">' + r.emoji + '</span>';
     if(half) syms += '<span class="sym half" style="font-size:24px;display:inline-block;width:.55em;overflow:hidden;vertical-align:bottom">' + r.emoji + '</span>';
-    s += '<div class="prow" data-label="' + r.label + '" style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="width:84px;font-weight:800">' + r.label + '</span><span>' + syms + '</span></div>';
+    s += '<div class="pgrow" data-label="' + r.label + '" style="display:flex;align-items:center;gap:8px;margin:4px 0;color:'+INK+';background:none;padding:0"><span style="width:84px;flex:none;font-weight:800;color:'+INK+'">' + r.label + '</span><span style="display:flex;flex-wrap:wrap;align-items:center">' + syms + '</span></div>';
   });
   s += '<div style="margin-top:6px;font-weight:800;border-top:2px dashed #C9CEE0;padding-top:6px">Key: <span style="font-size:20px">' + rows[0].emoji + '</span> = ' + key + '</div></div>';
   return s;
@@ -808,7 +810,7 @@ V.pictogram = function(rows, key){
 V.decodePictogram = function(html){
   const key = parseFloat(/=\s*([\d.]+)\s*</.exec(html)[1]);
   const out = {};
-  html.split('<div class="prow"').slice(1).forEach(function(chunk){
+  html.split('<div class="pgrow"').slice(1).forEach(function(chunk){
     const label = /data-label="([^"]*)"/.exec(chunk)[1];
     const whole = (chunk.match(/<span class="sym" /g) || []).length, half = (chunk.match(/<span class="sym half"/g) || []).length;
     out[label] = (whole + half * 0.5) * key;
@@ -16757,7 +16759,11 @@ function confetti(n){
 }
 let LAST_GO = 0;
 function go(name, p){ LAST_GO = Date.now(); if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
-function R(html){ const a = $app(); a.innerHTML = '<div class="wrap">' + html + '</div>'; a.scrollTop = 0; }
+let LAST_Q = null;   // re-drawing the SAME question (pick / hint / I-find-this-tricky) must not jump back to the top
+function R(html){ const a = $app(); const keep = scr.name === 'question' && typeof SESS !== 'undefined' && SESS && SESS.q && SESS.q === LAST_Q; const st = a.scrollTop;
+  a.innerHTML = '<div class="wrap">' + html + '</div>'; a.scrollTop = keep ? st : 0; LAST_Q = (scr.name === 'question' && SESS) ? SESS.q : null; }
+const NICKS = ['Meli', 'Bebei', 'Titi', 'Titus']; let NICK_I = 0;
+function nick(){ const n = NICKS[NICK_I % NICKS.length]; NICK_I++; return n; }   // Melissa's nicknames, rotating as she goes
 function topbar(title, back){
   return '<div class="topbar"><button class="icon-btn" data-act="go" data-to="' + (back || 'hub') + '" aria-label="Back">←</button><h2 class="white grow center">' + title + '</h2><span class="pill">⭐ ' + S.starBalance + '</span></div>';
 }
@@ -16783,7 +16789,7 @@ const ACT = {};
 
 /* ---------------- onboarding ---------------- */
 SCREENS.welcome = function(){
-  R('<div class="center white"><div class="mascot pop big" data-act="cycleFriend">' + friendImg() + '</div><h1>Hi ' + esc(S.name) + '!</h1><p class="subtitle">Welcome to <b>Matemagics</b> — your own maths adventure. You choose the world. You collect the magic.</p></div>' +
+  R('<div class="center white"><div class="mascot pop big" data-act="cycleFriend">' + friendImg() + '</div><h1>Hi ' + nick() + '!</h1><p class="subtitle">Welcome to <b>Matemagics</b> — your own maths adventure. You choose the world. You collect the magic.</p></div>' +
     '<div class="gap2"></div><div class="card"><h3>1. Pick your world</h3><div class="chips">' +
     Object.keys(THEMES).map(function(k){ return '<button class="chip' + (S.theme === k ? ' picked' : '') + '" data-act="theme" data-v="' + k + '">' + THEMES[k].emoji + ' ' + THEMES[k].label + '</button>'; }).join('') + '</div>' +
     '<h3>2. I like…</h3><div class="chips">' + LIKES.map(function(l){ return '<button class="chip' + (S.prefs.likes.indexOf(l.id) > -1 ? ' picked' : '') + '" data-act="pref" data-k="likes" data-v="' + l.id + '">' + l.emoji + ' ' + l.label + '</button>'; }).join('') + '</div>' +
@@ -16817,7 +16823,7 @@ SCREENS.hub = function(){
   const rec = recommend(S), due = dueSkills(S);
   const goal = S.goalReward ? S.rewards.filter(function(r){ return r.id === S.goalReward; })[0] : null;
   const d = S.daily;
-  let h = '<div class="hero"><div class="mascot" data-act="cycleFriend">' + mascot() + '</div><div class="grow"><b style="font-size:20px">' + esc(S.name) + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
+  let h = '<div class="hero"><div class="mascot" data-act="cycleFriend">' + mascot() + '</div><div class="grow"><b style="font-size:20px">' + nick() + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
     '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + liveStreak() + '</div></div>';
   if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
   else {
@@ -17004,7 +17010,7 @@ function sessionDots(){
 SCREENS.question = function(){
   const q = SESS.q; const sk = skillById(SESS.skillId_); const placing = SESS.kind === 'placement'; const fb = SESS.phase === 'fb';
   let h = '<div class="topbar"><button class="icon-btn" data-act="quit">✕</button><h2 class="white grow center">' +
-    (placing ? '🗺️ ' + esc(strandMeta(sk.strand).name) : esc(sk.emoji + ' ' + (SESS.kind === 'review' ? 'Brain boost' : sk.name))) + '</h2><span class="pill">' + (placing ? 'Quest' : (SESS.idx + 1) + '/' + SESS.items.length) + '</span></div>' + sessionDots();
+    (placing ? '🗺️ ' + esc(strandMeta(sk.strand).name) : esc(sk.emoji + ' ' + (SESS.kind === 'review' ? 'Brain boost' : sk.name))) + '</h2><span class="pill nobtn">' + (placing ? '#' + (S.placement.asked + 1) : (SESS.idx + 1) + '/' + SESS.items.length) + '</span></div>' + sessionDots();
   h += '<div class="card qcard">' + (q.visual ? '<div class="qvis">' + q.visual + '</div>' : '') + '<div class="qprompt">' + q.prompt + '</div><button class="speak" data-act="sayq">🔊</button>';
   const lock = fb;
   if(q.type === 'mcq'){
@@ -17044,7 +17050,7 @@ SCREENS.question = function(){
 };
 ACT.sayq = function(){ speak(SESS.q.prompt); };
 ACT.quit = function(){
-  if(SESS.kind === 'placement'){ save(); return go('hub'); }
+  if(SESS.kind === 'placement'){ save(); SESS = null; return go('hub'); }
   if(SESS.credits.length >= 1){ const st = sessionStars(SESS.credits); S.starBalance += st; S.totalStars += st; toast('Saved ' + st + ' ⭐ — finish the whole round to win medals!'); }
   save(); SESS = null; go('hub');
 };
@@ -17101,10 +17107,10 @@ function endQuestion(credit, ok, skipped){
     if(skipped){ ACT.qnext(); return; } render(); return;
   }
   if(ok){
-    const praise = credit >= 1 ? pick(PRAISE) : 'You worked it out!';
+    const praise = (credit >= 1 ? pick(PRAISE).replace(/[.!]$/, '') : 'You worked it out') + ', ' + nick() + '!';
     SESS.fbHTML = '<div class="feedback ok">✅ ' + praise + '</div>';
   } else {
-    SESS.fbHTML = '<div class="feedback">' + pick(ENCOURAGE) + '</div>' + explainHTML(q);
+    SESS.fbHTML = '<div class="feedback">' + pick(ENCOURAGE).replace(/[.!]$/, '') + ', ' + nick() + '!</div>' + explainHTML(q);
   }
   render();
 }
@@ -17167,7 +17173,7 @@ function finishSession(early){
 }
 SCREENS.results = function(p){
   const good = p.acc >= 0.8;
-  let h = '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + (p.perfect ? '💯 Purrfect!' : (good ? '🌟 ' + pick(PRAISE) : '💪 Mistakes help your brain grow!')) + '</div><h1 style="margin-top:10px">' + (p.kind === 'testout' ? (p.acc >= 0.99 ? 'You really know it!' : 'Not yet — let’s learn it') : (p.perfect ? 'Perfect round!' : (good ? 'Great round!' : 'Good effort!'))) + '</h1></div><div class="gap"></div>';
+  let h = '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + (p.perfect ? '💯 Purrfect!' : (good ? '🌟 ' + pick(PRAISE).replace(/[.!]$/, '') + ', ' + nick() + '!' : '💪 Mistakes help your brain grow!')) + '</div><h1 style="margin-top:10px">' + (p.kind === 'testout' ? (p.acc >= 0.99 ? 'You really know it!' : 'Not yet — let’s learn it') : (p.perfect ? 'Perfect round!' : (good ? 'Great round!' : 'Good effort!'))) + '</h1></div><div class="gap"></div>';
   h += '<div class="card center"><p class="qprompt">⭐ +' + p.stars + ' stars</p>' +
     (p.medals.length ? p.medals.map(function(m){ return '<p style="margin-top:8px;font-weight:900">' + ['', '🥉', '🥈', '🥇'][m.medal] + ' New medal: ' + esc(m.name) + '</p>'; }).join('') : '') +
     (p.wobblyCleared ? '<p style="margin-top:8px;font-weight:900">💪 You fixed a wobbly skill!</p>' : '') +

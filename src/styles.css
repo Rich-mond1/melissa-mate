@@ -161,3 +161,5 @@ h1,h2,h3,p{margin:0;}
 .sticker .pet{width:88%; height:88%; object-fit:contain; pointer-events:none;}
 .sticker.big .pet{width:92%; height:92%;}
 .bubble{display:inline-block; background:#fff; color:var(--ink); border-radius:18px; padding:8px 16px; font-weight:900; font-size:17px; margin-top:4px; box-shadow:0 4px 12px rgba(0,0,0,.2);}
+
+.pill.nobtn{pointer-events:none; user-select:none; -webkit-user-select:none;}
