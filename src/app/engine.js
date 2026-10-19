@@ -57,7 +57,7 @@ const STATE_KEY = 'melissaMathState_v4', V3_KEY = 'melissaMathState_v3', V2_KEY 
 function defaultState(){
   return {
     v: 4, name: 'Melissa', onboardingDone: false, theme: 'unicorn',
-    prefs: { likes: [], dislikes: [], voice: true, sound: true },
+    prefs: { likes: [], dislikes: [], voice: false, sound: true },
     placement: { done: false, started: false, strandIdx: 0, asked: 0, misses: 0, queue: [], results: {} },
     skills: {}, errors: {},
     totalStars: 0, starBalance: 0, xp: 0, level: 1,

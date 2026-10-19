@@ -17,11 +17,11 @@ function applyTheme(){
 function mascot(){ return friendImg(); }
 function friendImg(){ const k = PETS[S.friend] ? S.friend : 'ginger'; return '<img class="pet" alt="' + esc(PET_NAMES[k]) + '" src="' + PETS[k][0] + '">'; }
 function friendSays(txt){ return '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + txt + '</div></div>'; }
-function speak(html){
-  if(!S.prefs.voice || !window.speechSynthesis) return;
-  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(stripTags(html).replace(/\s+/g, ' ')); u.lang = 'en-GB'; u.rate = 0.92; speechSynthesis.speak(u); } catch(e){}
+function speak(html, manual){
+  if(!manual || !window.speechSynthesis) return;   // voice only when the child taps 🔊 (auto-speech can hang iOS Safari)
+  try { if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(stripTags(html).replace(/\s+/g, ' ')); u.lang = 'en-GB'; u.rate = 0.92; speechSynthesis.speak(u); } catch(e){}
 }
-function stopSpeak(){ try { if(window.speechSynthesis) speechSynthesis.cancel(); } catch(e){} }
+function stopSpeak(){ try { if(window.speechSynthesis && (speechSynthesis.speaking || speechSynthesis.pending)) speechSynthesis.cancel(); } catch(e){} }
 function toast(msg){
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
   setTimeout(function(){ t.remove(); }, 2600);
@@ -188,7 +188,7 @@ SCREENS.lesson = function(p){
   }
   R(h); speak(st.say);
 };
-ACT.say = function(){ const sk = skillById(scr.p.id); speak(sk.lesson.steps[scr.p.i].say); };
+ACT.say = function(){ const sk = skillById(scr.p.id); speak(sk.lesson.steps[scr.p.i].say, true); };
 ACT.lquiz = function(d, el){
   const sk = skillById(scr.p.id); const q = sk.lesson.steps[scr.p.i].quiz; const o = q.options[+d.k];
   const fb = document.getElementById('lfb'); if(!fb) return;

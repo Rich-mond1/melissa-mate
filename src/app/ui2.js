@@ -106,7 +106,7 @@ SCREENS.question = function(){
   if(placing && !fb) h += '<div class="gap"></div><button class="btn small block" style="background:#ffffff40;color:#fff" data-act="idk">I don’t know yet</button>';
   R(h);
 };
-ACT.sayq = function(){ speak(SESS.q.prompt); };
+ACT.sayq = function(){ speak(SESS.q.prompt, true); };
 ACT.quit = function(){
   if(SESS.kind === 'placement'){ save(); SESS = null; return go('hub'); }
   if(SESS.credits.length >= 1){ const st = sessionStars(SESS.credits); S.starBalance += st; S.totalStars += st; toast('Saved ' + st + ' ⭐ — finish the whole round to win medals!'); }
@@ -346,7 +346,7 @@ SCREENS.parent = function(){
   h += '<div class="card"><h3>Ajustes</h3>' +
     '<p class="muted">Tiempo diario</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn' + (S.timer.mode === 'free' ? ' on' : '') + '" data-act="tmode" data-v="free" style="background:#e9ebf7;color:var(--ink)">Libre</button><button class="seg-btn' + (S.timer.mode === 'limit' ? ' on' : '') + '" data-act="tmode" data-v="limit" style="background:#e9ebf7;color:var(--ink)">Límite</button>' +
     (S.timer.mode === 'limit' ? '<input class="input" type="number" min="5" max="120" value="' + S.timer.minutes + '" data-chg="tmin" style="width:80px"> min <button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="plus10">+10 min hoy</button>' : '') + '</div>' +
-    '<p class="muted" style="margin-top:10px">Voz (lee en inglés)</p><button class="seg-btn' + (S.prefs.voice ? ' on' : '') + '" style="background:#e9ebf7;color:var(--ink)" data-act="voice">' + (S.prefs.voice ? 'Activada' : 'Desactivada') + '</button>' +
+    '<p class="muted" style="margin-top:10px">Voz: Melissa pulsa 🔊 para que se lea la pregunta (no se lee sola).</p>'+
     '<p class="muted" style="margin-top:10px">Área de enfoque (la app prioriza esta área)</p><div class="chips"><button class="chip' + (!S.focus ? ' picked' : '') + '" data-act="setFocus" data-id="">Automático</button>' + strandsWithSkills().map(function(s){ return '<button class="chip' + (S.focus === s.id ? ' picked' : '') + '" style="font-size:15px" data-act="setFocus" data-id="' + s.id + '">' + s.icon + ' ' + s.es + '</button>'; }).join('') + '</div>' +
     '<p class="muted" style="margin-top:10px">Premios (nombre y coste en ⭐)</p>' + S.rewards.map(function(r, i){ return '<div class="row" style="margin-top:6px"><input class="input" value="' + esc(r.emoji) + '" data-chg="remoji" data-i="' + i + '" style="width:54px"><input class="input grow" value="' + esc(r.title) + '" data-chg="rtitle" data-i="' + i + '"><input class="input" type="number" value="' + r.cost + '" data-chg="rcost" data-i="' + i + '" style="width:74px"><button class="icon-btn" data-act="rdel" data-i="' + i + '">🗑️</button></div>'; }).join('') +
     '<button class="seg-btn" style="background:#e9ebf7;color:var(--ink);margin-top:8px" data-act="radd">+ Añadir premio</button>' +
@@ -382,11 +382,25 @@ function onImport(file){
 /* ---------------- boot ---------------- */
 function boot(){
   load(); applyTheme();
-  document.addEventListener('click', function(e){
-    const el = e.target.closest('[data-act]'); if(!el || el.disabled) return;
-    if(!window.__noGuard && Date.now() - LAST_GO < 350 && el.dataset.act !== 'say') return;   // ignore double-taps that land on the next screen
-    const f = ACT[el.dataset.act]; if(f) f(el.dataset, el);
-  });
+  let lastClick = 0, lastFire = 0, tStart = null;
+  function fire(el){
+    if(!el || el.disabled) return;
+    const dt = Date.now() - LAST_GO;
+    if(!window.__noGuard && dt >= 0 && dt < 350 && el.dataset.act !== 'say') return;   // ignore double-taps that land on the next screen
+    const now = Date.now(); if(now - lastFire < 60 && el === fire.last) return; fire.last = el; lastFire = now;   // never run one tap twice
+    const f = ACT[el.dataset.act];
+    try { if(f) f(el.dataset, el); } catch(err){ try { toast('Oops — let’s go back'); console.error(err); go('hub'); } catch(e2){} }
+  }
+  document.addEventListener('click', function(e){ lastClick = Date.now(); const el = e.target.closest && e.target.closest('[data-act]'); fire(el); });
+  // iOS sometimes swallows the click after a tap: if a short, still touch produced no click, run the tap ourselves
+  document.addEventListener('touchstart', function(e){ const t = e.touches[0]; tStart = t ? { x: t.clientX, y: t.clientY, t: Date.now() } : null; }, { passive: true });
+  document.addEventListener('touchend', function(e){
+    const s = tStart; tStart = null; if(!s || Date.now() - s.t > 600) return;
+    const c = e.changedTouches[0]; if(!c || Math.abs(c.clientX - s.x) > 10 || Math.abs(c.clientY - s.y) > 10) return;
+    const el = e.target.closest && e.target.closest('[data-act]'); if(!el) return; const t0 = Date.now();
+    setTimeout(function(){ if(lastClick < t0) fire(el); }, 150);
+  }, { passive: true });
+  window.addEventListener('error', function(){ try { toast('Oops — let’s go back'); } catch(e){} });
   document.addEventListener('change', function(e){
     if(e.target.dataset && e.target.dataset.chg) onChange(e.target);
     else if(e.target.id === 'imp' && e.target.files[0]) onImport(e.target.files[0]);
