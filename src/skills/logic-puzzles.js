@@ -159,7 +159,7 @@
     verify: function(args, html){ const d = decodeTri(html); return JSON.stringify(d.nodes.map(function(n){ return n.v; })) === JSON.stringify(args[0]) && d.S === args[1] && d.sides.length === 3 ? '' : 'triangle mismatch'; }
   };
   function triQ(o){
-    for(let tries = 0; tries < 200; tries++){
+    for(let tries = 0; tries < 3000; tries++){
       const a = randInt(o.lo, o.hi), b = randInt(o.lo, o.hi), c = randInt(o.lo, o.hi);
       const S = randInt(o.sLo, o.sHi), d = S - a - b, e = S - b - c, f = S - c - a;
       const six = [a, d, b, e, c, f];
@@ -491,7 +491,7 @@
         decode = function(){ const d = decodeClues(vis), ss = solutions(d); return ss.length === 1 ? K.text(d.items[ss[0][d.names.indexOf(who)]]) : 'none'; };
       }
       const steps = ['Make a little table: each person gets exactly <b>one</b> ' + set.word + ', and nobody shares.'];
-      clues.forEach(function(c, i){ steps.push('Clue ' + (i + 1) + ': ' + (c.t === 'pos' ? c.a + ' has the ' + c.b + ', so tick it. Nobody else can have the ' + c.b + ' and ' + c.a + ' has nothing else.' : c.a + ' does NOT have the ' + c.b + ', so cross it out.')); });
+      clues.forEach(function(c, i){ steps.push('Clue ' + (i + 1) + ': ' + (c.t === 'pos' ? c.a + (set.has === 'plays' ? ' plays ' : ' has the ') + c.b + ', so tick it. Nobody else can ' + (set.has === 'plays' ? 'play ' : 'have the ') + c.b + ' and ' + c.a + ' has nothing else.' : c.a + (set.has === 'plays' ? ' does NOT play ' : ' does NOT have the ') + c.b + ', so cross it out.')); });
       steps.push('Only one way fits all the clues: ' + names.map(function(n, i){ return n + ' – ' + items[sol[i]].n; }).join(', ') + '. So the answer is <b>' + (askWho ? names[sol.indexOf(ti)] : items[sol[ti]].e + ' ' + items[sol[ti]].n) + '</b>. ✅');
       return mcq({
         prompt: prompt, visual: vis, correct: correct, distractors: ds, count: 3,
