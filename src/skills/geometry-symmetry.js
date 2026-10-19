@@ -77,7 +77,7 @@
     const c2 = (!sym && mode === 'simple') ? pickCase(false, 'clear') : c;
     const vis = renderSym(c2.name, c2.dx), isSym = isSymHand(c2.name, c2.dx);
     return mcq2({
-      prompt: pick(['This ', 'Look at this ', 'Here is a ']) + '<b>' + SNAME[c2.name] + '</b>' + (c2.dx ? '' : '') + '. Is the dashed line a <b>line of symmetry</b>? (Do the two halves match, like a mirror?)', visual: vis,
+      prompt: pick(['This ', 'Look at this ']) + '<b>' + SNAME[c2.name] + '</b>' + (c2.dx ? '' : '') + '. Is the dashed line a <b>line of symmetry</b>? (Do the two halves match, like a mirror?)', visual: vis,
       correct: opt(K.bool(isSym), isSym ? 'Yes' : 'No'),
       other: opt(K.bool(!isSym), isSym ? 'No' : 'Yes', why(c2.name, c2.dx)),
       hint: 'Imagine folding the paper along the dashed line. Would every corner on one side land exactly on a corner on the other side?',

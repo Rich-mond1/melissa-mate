@@ -148,6 +148,7 @@ function submit(resp){
   if(SESS.kind === 'placement' || SESS.tries >= 2) return endQuestion(0, false);
   SESS.chosen.push(resp);
   if(q.type === 'num') SESS.numStr = '';
+  if(q.type === 'shade') SESS.sel = 0;
   if(q.type === 'order') SESS.picked = [];
   SESS.fb = '🤔 Not quite. ' + (why ? why + ' ' : '') + '<b>Try once more!</b>';
   render();

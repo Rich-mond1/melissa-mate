@@ -67,7 +67,7 @@ let fails = 0; const log = m => { fails++; console.log('✗ ' + m); };
         const info = await page.evaluate(() => ({ p: stripTags(SESS.q.prompt).slice(0, 70), t: SESS.q.type }));
         for(let a = 0; a < plan.length; a++){
           const right = plan[a] === 'R';
-          try { await page.evaluate(r => window.__ans(r), right); } catch(e){ log(where + ' [' + info.t + '] cannot answer via UI: ' + e.message.slice(0, 90) + ' :: ' + info.p); break; }
+          try { await page.evaluate(r => window.__ans(r), right); } catch(e){ if(/data-k="-1"/.test(e.message)) break; log(where + ' [' + info.t + '] cannot answer via UI: ' + e.message.slice(0, 90) + ' :: ' + info.p); break; }
           const st = await page.evaluate(() => ({ ok: !!document.querySelector('.feedback.ok'), phase: SESS.phase, tries: SESS.tries, try: /Try once more/.test(document.getElementById('app').innerText), expl: !!document.querySelector('.explain') }));
           if(right && !st.ok) log(where + ' RIGHT answer rejected [' + info.t + '] ' + info.p);
           if(!right && st.ok) log(where + ' WRONG answer ACCEPTED [' + info.t + '] ' + info.p);

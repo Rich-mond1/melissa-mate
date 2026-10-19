@@ -244,7 +244,7 @@ function placementNextItem(state){
   while(P.strandIdx < order.length){
     const list = skillsOfStrand(order[P.strandIdx]);
     // the next unasked skill of this strand
-    if(P.asked < list.length && P.misses < 2 && P.asked < 5) return { strand: order[P.strandIdx], skill: list[P.asked] };
+    if(P.asked < list.length && P.misses < 2 && P.asked < 4) return { strand: order[P.strandIdx], skill: list[P.asked] };
     P.strandIdx++; P.asked = 0; P.misses = 0;
   }
   return null;
