@@ -82,10 +82,11 @@ function mergeState(loaded){
   m.streak = Object.assign({}, d.streak, L.streak || {});
   m.daily = Object.assign({}, d.daily, L.daily || {});
   m.skills = L.skills || {}; m.errors = L.errors || {};
+  const petV = function(v){ v = Number(v) | 0; return v >= 0 && v < PET_VARIANTS ? v : 0; };
   const num = function(x, dflt){ x = Number(x); return isFinite(x) ? x : (dflt || 0); };
   const objs = function(a){ return Array.isArray(a) ? a.filter(function(x){ return x && typeof x === 'object'; }) : []; };
   m.friend = PET_IDS.indexOf(L.friend) > -1 ? L.friend : 'ginger';
-  m.stickers = objs(L.stickers).filter(function(s){ return typeof s.base === 'string'; }).map(function(s){ return { id: String(s.id), pet: PET_IDS.indexOf(s.pet) > -1 ? s.pet : '', base: String(s.base), acc: String(s.acc || ''), bg: num(s.bg) | 0, rarity: RARITIES.indexOf(s.rarity) > -1 ? s.rarity : 'common', n: Math.max(1, num(s.n, 1) | 0), date: s.date ? String(s.date) : null, legacy: !!s.legacy }; });
+  m.stickers = objs(L.stickers).filter(function(s){ return typeof s.base === 'string'; }).map(function(s){ return { id: (PET_IDS.indexOf(s.pet) > -1 ? 'pet:' + s.pet + ':' + petV(s.v) : String(s.id)), pet: PET_IDS.indexOf(s.pet) > -1 ? s.pet : '', v: petV(s.v), base: String(s.base), acc: String(s.acc || ''), bg: num(s.bg) | 0, rarity: RARITIES.indexOf(s.rarity) > -1 ? s.rarity : 'common', n: Math.max(1, num(s.n, 1) | 0), date: s.date ? String(s.date) : null, legacy: !!s.legacy }; });
   m.tricks = Array.isArray(L.tricks) ? L.tricks.map(String) : []; m.badges = Array.isArray(L.badges) ? L.badges.map(String) : [];
   m.claims = objs(L.claims).map(function(c){ return { id: String(c.id || ''), title: String(c.title || ''), emoji: String(c.emoji || ''), cost: num(c.cost), date: c.date ? String(c.date) : '' }; });
   m.sessionLog = objs(L.sessionLog).filter(function(l){ return typeof l.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(l.date); }).map(function(l){ return { date: l.date, kind: String(l.kind || 'practice'), strand: String(l.strand || ''), skill: l.skill ? String(l.skill) : null, correct: num(l.correct), total: num(l.total), credit: num(l.credit), mood: l.mood ? String(l.mood) : null }; });
@@ -281,11 +282,12 @@ const STICKER_BGS = [['#FFD1DC', '#FFB3C7'], ['#C7E9FF', '#9AD0FF'], ['#D4F5D0',
 const RARITIES = ['common', 'rare', 'epic', 'legendary'];
 function rollRarity(){ const r = rng(); return r < 0.62 ? 'common' : (r < 0.88 ? 'rare' : (r < 0.98 ? 'epic' : 'legendary')); }
 const PET_IDS = ['ginger', 'bimba', 'duck'];
+const PET_VARIANTS = 9;   // images per pet (variant 0 = mascot) -> 27 collectible pet stickers
 function rollSticker(owned){
   let s = null;
-  if(chance(0.05)){   // a pet friend sticker (the family pets, always legendary)
-    const pet = pick(PET_IDS);
-    const ps = { id: 'pet:' + pet, pet: pet, base: '', acc: '', bg: randInt(0, STICKER_BGS.length - 1), rarity: 'legendary', n: 1, date: todayStr() };
+  if(chance(0.08)){   // a pet friend sticker (the family pets, always legendary; 27 different pictures)
+    const pet = pick(PET_IDS), v = randInt(0, PET_VARIANTS - 1);
+    const ps = { id: 'pet:' + pet + ':' + v, pet: pet, v: v, base: '', acc: '', bg: randInt(0, STICKER_BGS.length - 1), rarity: 'legendary', n: 1, date: todayStr() };
     return { sticker: ps, dupe: owned.some(function(o){ return o.id === ps.id; }) };
   }
   for(let t = 0; t < 12; t++){
@@ -339,4 +341,4 @@ function checkBadges(state){
   return fresh;
 }
 
-if(typeof module !== 'undefined') module.exports = { PET_IDS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
+if(typeof module !== 'undefined') module.exports = { PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };

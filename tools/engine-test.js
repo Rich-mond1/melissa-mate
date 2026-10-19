@@ -5,8 +5,13 @@ const fs = require('fs'), path = require('path'), vm = require('vm'); const root
 const files = ['src/core.js', 'src/visuals.js', ...fs.readdirSync(path.join(root, 'src/skills')).filter(f => f.endsWith('.js')).sort().map(f => 'src/skills/' + f), 'src/app/engine.js'];
 const code = files.map(f => fs.readFileSync(path.join(root, f), 'utf8').replace(/^'use strict';/m, '').replace(/if\(typeof module !== 'undefined'\) module\.exports = \{[\s\S]*?\};?\n?/g, '')).join('\n;\n');
 const sb = { console, Math, JSON, Object, Array, String, Number, Set, Map, RegExp, Error, isFinite, parseFloat, parseInt, Date }; vm.createContext(sb);
-vm.runInContext(code + '\n;this.E = { SKILLS, STRANDS, defaultState, skillsOfStrand, isUnlocked, recommend, buildItems, applySkillResult, placementNextItem, placementRecord, placementDone, dueSkills, addDays, todayStr, medalOf, totalMedals, openPack, setSeed, mergeState, migrateV3, rng };', sb);
+vm.runInContext(code + '\n;this.E = { PET_VARIANTS, mergeState, rollSticker, SKILLS, STRANDS, defaultState, skillsOfStrand, isUnlocked, recommend, buildItems, applySkillResult, placementNextItem, placementRecord, placementDone, dueSkills, addDays, todayStr, medalOf, totalMedals, openPack, setSeed, mergeState, migrateV3, rng };', sb);
 const E = sb.E; let fails = 0; const bad = m => { fails++; console.log('✗ ' + m); };
+// pet stickers: 27 distinct, ids well-formed, legacy/garbage sanitised
+{ const seenP = new Set(); let n = 0; for(let i = 0; i < 30000; i++){ const r = E.rollSticker([]); if(r.sticker.pet){ n++; seenP.add(r.sticker.id); if(!/^pet:(ginger|bimba|duck):[0-8]$/.test(r.sticker.id)) bad('bad pet id ' + r.sticker.id); } }
+  if(seenP.size !== 27) bad('pet stickers unique=' + seenP.size + ' (want 27)'); if(n / 30000 < 0.06 || n / 30000 > 0.10) bad('pet rate ' + n / 30000);
+  const ms = E.mergeState({ stickers: [{ id: 'pet:duck', pet: 'duck', base: '' }, { id: 'q', pet: 'bimba', v: 99, base: '' }] });
+  if(ms.stickers[0].id !== 'pet:duck:0' || ms.stickers[1].id !== 'pet:bimba:0') bad('pet migration ' + JSON.stringify(ms.stickers.map(s => s.id))); }
 E.setSeed(7);
 const ids = new Set(E.SKILLS.map(s => s.id));
 E.SKILLS.forEach(s => s.prereq.forEach(p => { if(!ids.has(p)) bad(s.id + ' unknown prereq ' + p); }));

@@ -15,7 +15,7 @@ function applyTheme(){
   r.setProperty('--bg1', t.c1); r.setProperty('--bg2', t.c2);
 }
 function mascot(){ return friendImg(); }
-function friendImg(){ const k = PETS[S.friend] ? S.friend : 'ginger'; return '<img class="pet" alt="' + esc(PET_NAMES[k]) + '" src="' + PETS[k] + '">'; }
+function friendImg(){ const k = PETS[S.friend] ? S.friend : 'ginger'; return '<img class="pet" alt="' + esc(PET_NAMES[k]) + '" src="' + PETS[k][0] + '">'; }
 function friendSays(txt){ return '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + txt + '</div></div>'; }
 function speak(html){
   if(!S.prefs.voice || !window.speechSynthesis) return;
@@ -48,7 +48,7 @@ const KIND_ES = { guided: 'Guiada', practice: 'Práctica', challenge: 'Reto', re
 /* ---------------- sticker drawing ---------------- */
 function stickerHTML(s, big){
   const bg = STICKER_BGS[s.bg % STICKER_BGS.length] || STICKER_BGS[0];
-  const face = (s.pet && PETS[s.pet]) ? '<img class="pet" alt="' + esc(PET_NAMES[s.pet]) + '" src="' + PETS[s.pet] + '">' : esc(s.base);
+  const face = (s.pet && PETS[s.pet]) ? '<img class="pet" alt="' + esc(PET_NAMES[s.pet]) + '" src="' + (PETS[s.pet][s.v] || PETS[s.pet][0]) + '">' : esc(s.base);
   return '<div class="sticker ' + (RARITIES.indexOf(s.rarity) > -1 ? s.rarity : 'common') + (big ? ' big' : '') + '" style="background:linear-gradient(145deg,' + bg[0] + ',' + bg[1] + ')">' + face + (s.acc ? '<span class="acc">' + esc(s.acc) + '</span>' : '') + (s.n > 1 ? '<span class="cnt">×' + (Number(s.n) | 0) + '</span>' : '') + '</div>';
 }
 
