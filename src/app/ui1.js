@@ -7,7 +7,11 @@ let SESS = null;
 const $app = function(){ return document.getElementById('app'); };
 const esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
-function save(){ try { localStorage.setItem(STATE_KEY, JSON.stringify(S)); } catch(e){} }
+let SAVE_FAILED = false;   // warn once per failure streak, not on every tap
+function save(){
+  try { localStorage.setItem(STATE_KEY, JSON.stringify(S)); SAVE_FAILED = false; }
+  catch(e){ if(!SAVE_FAILED){ SAVE_FAILED = true; try { toast('⚠️ Progress can’t be saved on this device. Ask a grown-up!'); } catch(e2){} } }
+}
 function load(){ try { S = loadState(localStorage); } catch(e){ S = defaultState(); } ensureDaily(S); }
 
 function applyTheme(){

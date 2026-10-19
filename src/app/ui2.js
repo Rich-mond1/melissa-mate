@@ -350,7 +350,7 @@ SCREENS.parent = function(){
     '<p class="muted" style="margin-top:10px">Área de enfoque (la app prioriza esta área)</p><div class="chips"><button class="chip' + (!S.focus ? ' picked' : '') + '" data-act="setFocus" data-id="">Automático</button>' + strandsWithSkills().map(function(s){ return '<button class="chip' + (S.focus === s.id ? ' picked' : '') + '" style="font-size:15px" data-act="setFocus" data-id="' + s.id + '">' + s.icon + ' ' + s.es + '</button>'; }).join('') + '</div>' +
     '<p class="muted" style="margin-top:10px">Premios (nombre y coste en ⭐)</p>' + S.rewards.map(function(r, i){ return '<div class="row" style="margin-top:6px"><input class="input" value="' + esc(r.emoji) + '" data-chg="remoji" data-i="' + i + '" style="width:54px"><input class="input grow" value="' + esc(r.title) + '" data-chg="rtitle" data-i="' + i + '"><input class="input" type="number" value="' + r.cost + '" data-chg="rcost" data-i="' + i + '" style="width:74px"><button class="icon-btn" data-act="rdel" data-i="' + i + '">🗑️</button></div>'; }).join('') +
     '<button class="seg-btn" style="background:#e9ebf7;color:var(--ink);margin-top:8px" data-act="radd">+ Añadir premio</button>' +
-    '<p class="muted" style="margin-top:14px">Datos</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="export">⬇ Exportar</button><label class="seg-btn" style="background:#e9ebf7;color:var(--ink)">⬆ Importar<input type="file" accept="application/json" id="imp" style="display:none"></label><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="redoPlacement">Repetir diagnóstico</button><button class="seg-btn" style="background:#FFD1D1;color:#7a0000" data-act="reset">Borrar todo</button></div></div>';
+    '<p class="muted" style="margin-top:14px">Datos</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="export">⬇ Exportar</button><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="share">📤 Compartir copia</button><label class="seg-btn" style="background:#e9ebf7;color:var(--ink)">⬆ Importar<input type="file" accept="application/json" id="imp" style="display:none"></label><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="redoPlacement">Repetir diagnóstico</button><button class="seg-btn" style="background:#FFD1D1;color:#7a0000" data-act="reset">Borrar todo</button></div></div>';
   R(h);
 };
 ACT.tmode = function(d){ S.timer.mode = d.v; save(); render(); };
@@ -365,6 +365,18 @@ ACT.export = function(){
   const blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }); const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = 'matemagics-' + todayStr() + '.json'; document.body.appendChild(a); a.click(); a.remove();
 };
+/* Backup through the iPad share sheet ("Save to Files", AirDrop, email...). Plan B for Exportar, whose download link may not work in a home-screen app. */
+ACT.share = function(){
+  const name = 'matemagics-' + todayStr() + '.json';
+  try {
+    const file = new File([JSON.stringify(S, null, 1)], name, { type: 'application/json' });
+    if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
+      navigator.share({ files: [file], title: 'Matemagics ' + todayStr() }).catch(function(e){ if(!e || e.name !== 'AbortError') toast('No se pudo compartir'); });
+      return;
+    }
+  } catch(e){}
+  toast('Este dispositivo no permite compartir archivos: usa Exportar');
+};
 function onChange(el){
   const k = el.dataset.chg, i = +el.dataset.i;
   if(k === 'tmin') S.timer.minutes = Math.max(5, Math.min(120, parseInt(el.value, 10) || 20));
@@ -375,7 +387,7 @@ function onChange(el){
 }
 function onImport(file){
   const fr = new FileReader();
-  fr.onload = function(){ try { const o = JSON.parse(fr.result); if(!o || typeof o !== 'object') throw 0; S = o.v === 4 ? mergeState(o) : (o.strands ? migrateV3(o) : mergeState(o)); save(); toast('Progreso importado'); go('hub'); } catch(e){ toast('Archivo no válido'); } };
+  fr.onload = function(){ try { const o = JSON.parse(fr.result); if(!o || typeof o !== 'object') throw 0; S = importState(o); save(); toast('Progreso importado'); go('hub'); } catch(e){ toast('Archivo no válido'); } };
   fr.readAsText(file);
 }
 

@@ -1,0 +1,15 @@
+{
+  "strands": {},
+  "theme": "dino",
+  "onboardingDone": true,
+  "totalStars": 77,
+  "starBalance": 40,
+  "stickers": ["🦄", "🐶"],
+  "badges": ["racha3", "estrellas50", "unknown_old_badge"],
+  "claims": [{ "id": "snack", "title": "A healthy snack", "emoji": "🥨", "cost": 30, "date": "2026-09-01" }],
+  "rewards": [{ "id": "snack", "emoji": "🥨", "title": "A healthy snack you choose", "cost": 30 }],
+  "preferences": { "likes": ["contar"], "dislikes": ["fracciones"] },
+  "timer": { "mode": "limit", "minutes": 20 },
+  "streak": { "count": 2, "lastPlayDate": "2026-09-01" },
+  "sessionLog": [{ "date": "2026-09-01", "strand": "number", "correct": 4, "total": 5, "mood": "happy" }]
+}

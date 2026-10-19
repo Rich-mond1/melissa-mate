@@ -1,1 +1,3 @@
 docs/shot-last.png
+node_modules/
+.build-check.js

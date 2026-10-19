@@ -112,6 +112,8 @@ function migrateV3(old){
   m.onboardingDone = !!old.onboardingDone;       // she keeps her theme; placement still runs (new skill map)
   return m;
 }
+/* Which loader an imported file goes through (kept pure so the tests can exercise the real import path). */
+function importState(o){ return o.v === 4 ? mergeState(o) : (o.strands ? migrateV3(o) : mergeState(o)); }
 function loadState(storage){
   try {
     const raw = storage.getItem(STATE_KEY);
@@ -341,4 +343,4 @@ function checkBadges(state){
   return fresh;
 }
 
-if(typeof module !== 'undefined') module.exports = { PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
+if(typeof module !== 'undefined') module.exports = { PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };

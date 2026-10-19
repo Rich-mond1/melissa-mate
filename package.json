@@ -1,0 +1,12 @@
+{
+  "name": "matemagics",
+  "private": true,
+  "description": "Melissa's Maths Academy (Matemagics): single-file offline maths app, built from src/",
+  "scripts": {
+    "build": "node tools/build.js",
+    "test": "node tools/run-all.js",
+    "test:full": "node tools/run-all.js --full",
+    "fixtures": "node tools/make-fixtures.js"
+  },
+  "devDependencies": { "playwright": "^1.56.0" }
+}

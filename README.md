@@ -23,4 +23,11 @@ node tools/engine-test.js    # simula alumnos de principio a fin
 node tools/e2e.js           # Chromium real: clics en preguntas, acepta solo la correcta
 node tools/layout-audit.js --n 20 --widths 360,390,430   # Chromium real: textos montados, cortes, contraste, botón 🔊 tapando, visuales ilegibles (preguntas, lecciones y trucos)
 ```
+Todo junto:
+```
+npm test            # rápido (minutos): build, audit n=300, motor, estado, e2e, layout 360/390/430, toques, seguridad
+npm run test:full   # antes de fusionar con main: audit n=3000, e2e 6/skill, layout n=20
+```
+Seguridad del progreso: `tools/state-test.js` (carga/migración/exportar-importar con `tools/fixtures/`; añade ahí tu export real como `state-v4-real-*.json`) y `tools/safety-test.js` (aviso si falla el guardado, Exportar, Compartir copia, Importar, estado corrupto). `tools/touch-test.js` simula el clic perdido de iOS; sin WebKit instalado solo cubre Chromium y lo dice. Antes de fusionar con `main`: `docs/IPAD-CHECKLIST.md` en el iPad real.
+
 Habilidades nuevas: ver `docs/SPEC.md`.
