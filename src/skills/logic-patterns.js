@@ -114,7 +114,7 @@
 
   /* ---------------------------------------------------------------- matchstick figures */
   function sticksSVG(kind, ns){
-    let x0 = 10, s = '';
+    let x0 = 26, s = '';
     ns.forEach(function(n, fi){
       const w = 30, h = 26, top = 10; let wid;
       function L(x1, y1, x2, y2){ s += '<line class="stick" data-fig="' + fi + '" x1="' + r2(x0 + x1) + '" y1="' + r2(y1) + '" x2="' + r2(x0 + x2) + '" y2="' + r2(y2) + '" stroke="#9B51E0" stroke-width="5" stroke-linecap="round"/>'; }
@@ -131,7 +131,7 @@
       s += '<text x="' + r2(x0 + wid / 2) + '" y="' + (top + (kind === 'squares' ? w : h) + 24) + '" text-anchor="middle" font-size="13" font-weight="800" fill="' + INK + '">Pattern ' + (fi + 1) + '</text>';
       x0 += wid + 30;
     });
-    return wrapSvg(Math.max(x0 - 10, 100), kind === 'squares' ? 80 : 76, s, Math.max(x0 - 10, 100));
+    return wrapSvg(Math.max(x0 + 6, 100), kind === 'squares' ? 80 : 76, s, Math.max(x0 + 6, 100));
   }
   function decodeSticks(html){
     const c = {};

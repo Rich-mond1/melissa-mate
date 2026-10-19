@@ -79,7 +79,7 @@
       explain: ex('Placing ' + n + '/' + d, ['The line from 0 to 1 is cut into <b>' + d + '</b> equal steps.', 'The top number says to walk <b>' + plural(n, 'step') + '</b> from 0.', 'Only one line has its ? at <b>' + n + '/' + d + '</b>. ✅']),
       truth: fK(n * 3, d * 3)
     });
-    q.optionsAreVisual = true;
+    q.optionsAreVisual = true; q.optionsWide = true;
     q.decodeKey = function(){
       for(let i = 0; i < q.options.length; i++){ const r = readFrac(q.options[i].label, 1); if(r.den !== d || fK(r.num, r.den) !== q.options[i].key) return 'option ' + i + ' picture does not match its key'; }
       return q.options[q.correct].key;

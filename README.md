@@ -21,5 +21,6 @@ node tools/build.js          # genera index.html + node --check + auditoría de 
 node tools/audit.js --n 3000 # audita todas las habilidades/niveles (answer, dibujo, opciones, variedad)
 node tools/engine-test.js    # simula alumnos de principio a fin
 node tools/e2e.js           # Chromium real: clics en preguntas, acepta solo la correcta
+node tools/layout-audit.js --n 20 --widths 360,390,430   # Chromium real: textos montados, cortes, contraste, botón 🔊 tapando, visuales ilegibles (preguntas, lecciones y trucos)
 ```
 Habilidades nuevas: ver `docs/SPEC.md`.

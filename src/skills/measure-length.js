@@ -15,7 +15,7 @@
   // a ruler whose object may start away from 0 (same class names as V.ruler, so the same style of decoding works)
   function rulerAt(start, len, o){
     o = o || {};
-    const maxCm = o.maxCm, x0 = 20, pxCm = Math.min(30, Math.floor(300 / maxCm));
+    const maxCm = Math.max(o.maxCm, Math.ceil(start + len - 1e-9)), x0 = 20, pxCm = Math.min(30, Math.floor(300 / maxCm));
     let s = '<rect x="10" y="44" width="' + (maxCm * pxCm + 20) + '" height="42" rx="4" fill="#FFE9A8" stroke="#1B1B2F" stroke-width="2"/>';
     for(let mm = 0; mm <= maxCm * 10; mm++){
       const x = x0 + mm * pxCm / 10, isCm = mm % 10 === 0, isHalf = mm % 5 === 0;

@@ -73,16 +73,16 @@
     const seen = {}; seen[nk(v)] = 1; const ds = [];
     cands.forEach(function(x){
       if(seen[nk(x)]) return; seen[nk(x)] = 1;
-      ds.push(opt(nk(x), line(s, x, 'dot', { width: 300 }), 'That dot is at ' + x + ', not ' + v + '. Work out the step size, then count from a label.'));
+      ds.push(opt(nk(x), line(s, x, 'dot', { width: widthFor(s, 300) }), 'That dot is at ' + x + ', not ' + v + '. Work out the step size, then count from a label.'));
     });
-    ticksOf(s).forEach(function(x){ if(x > s.min && x < s.max && !seen[nk(x)]){ seen[nk(x)] = 1; ds.push(opt(nk(x), line(s, x, 'dot', { width: 300 }), 'That dot is at ' + x + ', not ' + v + '.')); } });
+    ticksOf(s).forEach(function(x){ if(x > s.min && x < s.max && !seen[nk(x)]){ seen[nk(x)] = 1; ds.push(opt(nk(x), line(s, x, 'dot', { width: widthFor(s, 300) }), 'That dot is at ' + x + ', not ' + v + '.')); } });
     const q = mcq({
-      prompt: 'Which number line has the dot at <b>' + v + '</b>?', correct: opt(nk(v), line(s, v, 'dot', { width: 300 })), distractors: ds, keepOrder: true, count: count,
+      prompt: 'Which number line has the dot at <b>' + v + '</b>?', correct: opt(nk(v), line(s, v, 'dot', { width: widthFor(s, 300) })), distractors: ds, keepOrder: true, count: count,
       hint: 'Work out how much each small step is worth. Then find ' + v + ' by counting from a labelled number.',
       explain: ex('Finding ' + v, readExplain(s, v).length > 1 ? readExplain(s, v).slice(0, 2).concat(['So the dot for <b>' + v + '</b> is in this place. ✅']) : ['The labelled number <b>' + v + '</b> has the dot right on it. ✅']),
       truth: nk(v)
     });
-    q.optionsAreVisual = true;
+    q.optionsAreVisual = true; q.optionsWide = true;
     q.decodeKey = function(){ for(let i = 0; i < q.options.length; i++){ if(nk(readValue(q.options[i].label)) !== q.options[i].key) return 'option ' + i + ' picture does not match its key'; } return q.options[q.correct].key; };
     return q;
   }

@@ -88,13 +88,13 @@ h1,h2,h3,p{margin:0;}
 .progress{display:flex; gap:6px; margin:6px 0 12px;}
 .progress i{flex:1; height:10px; border-radius:99px; background:#ffffff40;}
 .progress i.cur{background:#fff;} .progress i.ok{background:#6FCF97;} .progress i.half{background:var(--warm);} .progress i.bad{background:#EB5757;}
-.qcard,.lesson-card{position:relative;}
-.qcard{background:#fff; border-radius:26px; padding:16px; box-shadow:0 10px 28px rgba(0,0,0,.25);}
-.qvis{display:flex; justify-content:center; align-items:center; min-height:20px; margin-bottom:10px; padding:4px; overflow-x:auto;}
+.qcard,.lesson-card{position:relative;} .lesson-card{padding-top:52px;}
+.qcard{background:#fff; border-radius:26px; padding:52px 16px 16px; box-shadow:0 10px 28px rgba(0,0,0,.25);}
+.qvis{display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:20px; margin-bottom:10px; padding:4px; overflow-x:auto;}
 .qvis:empty{display:none;}
 .qprompt{font-size:21px; font-weight:900; line-height:1.3; text-align:center; margin:4px 2px 14px;}
 .opts{display:grid; gap:10px;}
-.opts.vis{grid-template-columns:1fr 1fr;} .opts.vis.three{grid-template-columns:1fr 1fr;}
+.opts.vis.wide{grid-template-columns:minmax(0,1fr);} .opts.vis{grid-template-columns:repeat(2,minmax(0,1fr));} .opts.vis.three{grid-template-columns:repeat(2,minmax(0,1fr));} .opt svg,.opt img{max-width:100%; height:auto;}
 .opt{border:3px solid #d9dcf0; background:#f7f8ff; border-radius:18px; min-height:58px; padding:10px 12px; font-size:21px; font-weight:900; color:var(--ink); font-family:inherit; display:flex; align-items:center; justify-content:center; text-align:center; cursor:pointer;}
 .opt:active{transform:scale(.98);}
 .opt.vis{min-height:104px; padding:6px;}
@@ -126,7 +126,7 @@ h1,h2,h3,p{margin:0;}
 .speak{border:none; background:#EEF1FB; border-radius:12px; font-size:18px; min-width:38px; min-height:38px; position:absolute; top:10px; right:10px; z-index:2;}
 
 /* ---------- lesson ---------- */
-.lesson-card{background:#fff; border-radius:26px; padding:18px; box-shadow:0 10px 28px rgba(0,0,0,.25);}
+.lesson-card{background:#fff; border-radius:26px; padding:52px 18px 18px; box-shadow:0 10px 28px rgba(0,0,0,.25);}
 .lesson-say{font-size:20px; line-height:1.45; font-weight:700;} .lesson-say b{color:var(--accent);}
 .trickcard{background:linear-gradient(135deg,#FFF7D6,#FFE0F3); border:4px solid var(--warm); border-radius:26px; padding:18px; text-align:center;}
 .trickcard h3{font-size:24px; margin:6px 0;}
@@ -502,8 +502,8 @@ V.clock = function(h, m, o){
   }
   if(!o.hideNumbers){
     for(let n = 1; n <= 12; n++){
-      const a = n * 30 * Math.PI / 180, r = o.roman ? 66 : 68;
-      s += '<text x="' + f2(cx + r * Math.sin(a)) + '" y="' + f2(cy - r * Math.cos(a) + (o.roman ? 4 : 6)) + '" text-anchor="middle" font-size="' + (o.roman ? 13 : 17) + '" font-weight="800" fill="' + INK + '">' + (o.roman ? ROMAN[n] : n) + '</text>';
+      const a = n * 30 * Math.PI / 180, r = o.roman ? 64 : 66;
+      s += '<text x="' + f2(cx + r * Math.sin(a)) + '" y="' + f2(cy - r * Math.cos(a) + (o.roman ? 5 : 8)) + '" text-anchor="middle" font-size="' + (o.roman ? 15 : 22) + '" font-weight="800" fill="' + INK + '">' + (o.roman ? ROMAN[n] : n) + '</text>';
     }
   }
   const ha = ((h % 12) * 30 + m * 0.5) * Math.PI / 180, ma = m * 6 * Math.PI / 180;
@@ -710,7 +710,7 @@ V.decodeRuler = function(html){ // length in cm from object width vs label spaci
 V.jug = function(value, max, o){
   o = o || {};
   const minor = o.minor || max / 10, major = o.major || max / 2;
-  const top = 14, bot = 170, H = bot - top, x0 = 60, w = 80;
+  const top = 14, bot = 170, H = bot - top, x0 = 46, w = 80;
   function Y(v){ return bot - v / max * H; }
   let s = '<rect x="' + x0 + '" y="' + top + '" width="' + w + '" height="' + H + '" fill="#fff" stroke="' + INK + '" stroke-width="3" rx="6"/>';
   s += '<rect class="water" x="' + (x0 + 2) + '" y="' + f2(Y(value)) + '" width="' + (w - 4) + '" height="' + f2(bot - Y(value) - 1.5) + '" fill="' + (o.color || '#6EC6FF') + '" opacity=".85"/>';
@@ -718,9 +718,9 @@ V.jug = function(value, max, o){
   for(let i = 0; i <= n; i++){
     const v = i * minor, isMajor = Math.abs(v / major - Math.round(v / major)) < 1e-9;
     s += '<line class="jt" x1="' + (x0 + w - (isMajor ? 26 : 14)) + '" y1="' + f2(Y(v)) + '" x2="' + (x0 + w) + '" y2="' + f2(Y(v)) + '" stroke="' + INK + '" stroke-width="' + (isMajor ? 2.2 : 1.4) + '"/>';
-    if(isMajor) s += '<text class="jl" data-v="' + v + '" x="' + (x0 + w + 8) + '" y="' + f2(Y(v) + 5) + '" font-size="13" font-weight="800" fill="' + INK + '">' + v + (o.unit ? ' ' + o.unit : '') + '</text>';
+    if(isMajor) s += '<text class="jl" data-v="' + v + '" x="' + (x0 + w + 8) + '" y="' + f2(Y(v) + 5) + '" font-size="18" font-weight="800" fill="' + INK + '">' + v + (o.unit ? ' ' + (o.unit === 'l' ? 'L' : o.unit) : '') + '</text>';
   }
-  return svgWrap(240, 184, s, { width: 200 });
+  return svgWrap(250, 184, s, { width: 210 });
 };
 V.decodeJug = function(html){
   const L = tagsOf(html, 'jl').map(function(t){ return { v: parseFloat(attrOf(t, 'data-v')), y: parseFloat(attrOf(t, 'y')) }; });
@@ -763,7 +763,7 @@ V.decodeDial = function(html){
 V.barChart = function(items, o){
   o = o || {};
   const scale = o.scale || 1, axisMax = o.axisMax || (Math.ceil(Math.max.apply(null, items.map(function(i){ return i.value; })) / scale) * scale);
-  const W = 320, H = 200, left = 38, bot = 160, top = 14, pxU = (bot - top) / axisMax;
+  const W = 320, H = 200, left = 38, bot = 160, top = 30, pxU = (bot - top) / axisMax;
   const bw = Math.min(48, (W - left - 10) / items.length - 12);
   let s = '';
   const lblEvery = o.labelEvery || scale;
@@ -948,17 +948,20 @@ V.shape3D = function(name){
 /* Angles. arms from vertex (60,120): one along +x, other at `deg` counter-clockwise */
 V.angle = function(deg, o){
   o = o || {};
-  const vx = 60, vy = 124, L = 120, a = deg * Math.PI / 180;
-  const ex = vx + L, ey = vy, tx = vx + L * Math.cos(a), ty = vy - L * Math.sin(a);
-  let s = '<line class="arm" x1="' + vx + '" y1="' + vy + '" x2="' + f2(ex) + '" y2="' + f2(ey) + '" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>';
-  s += '<line class="arm" x1="' + vx + '" y1="' + vy + '" x2="' + f2(tx) + '" y2="' + f2(ty) + '" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>';
-  if(Math.abs(deg - 90) < 0.01) s += '<polyline points="' + (vx + 18) + ',' + vy + ' ' + (vx + 18) + ',' + (vy - 18) + ' ' + vx + ',' + (vy - 18) + '" fill="none" stroke="' + RED + '" stroke-width="3"/>';
+  const W = 220, H = 170, L = 92, a = deg * Math.PI / 180, c = Math.cos(a), sn = Math.sin(a);
+  // centre the whole angle (both arms) in the picture so obtuse / reflex angles never leave it
+  const xmin = Math.min(0, L * c), xmax = Math.max(L, L * c), ymax = Math.max(0, L * sn), ymin = Math.min(0, L * sn);
+  const vx = (W - (xmax - xmin)) / 2 - xmin, vy = H / 2 + (ymax + ymin) / 2;
+  const ex = vx + L, ey = vy, tx = vx + L * c, ty = vy - L * sn;
+  let s = '<line class="arm" x1="' + f2(vx) + '" y1="' + f2(vy) + '" x2="' + f2(ex) + '" y2="' + f2(ey) + '" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>';
+  s += '<line class="arm" x1="' + f2(vx) + '" y1="' + f2(vy) + '" x2="' + f2(tx) + '" y2="' + f2(ty) + '" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>';
+  if(Math.abs(deg - 90) < 0.01) s += '<polyline points="' + f2(vx + 18) + ',' + f2(vy) + ' ' + f2(vx + 18) + ',' + f2(vy - 18) + ' ' + f2(vx) + ',' + f2(vy - 18) + '" fill="none" stroke="' + RED + '" stroke-width="3"/>';
   else {
-    const r = 28, x2 = vx + r * Math.cos(a), y2 = vy - r * Math.sin(a);
-    s += '<path d="M' + (vx + r) + ' ' + vy + ' A' + r + ' ' + r + ' 0 ' + (deg > 180 ? 1 : 0) + ' 0 ' + f2(x2) + ' ' + f2(y2) + '" fill="none" stroke="' + RED + '" stroke-width="3"/>';
+    const r = 28, x2 = vx + r * c, y2 = vy - r * sn;
+    s += '<path d="M' + f2(vx + r) + ' ' + f2(vy) + ' A' + r + ' ' + r + ' 0 ' + (deg > 180 ? 1 : 0) + ' 0 ' + f2(x2) + ' ' + f2(y2) + '" fill="none" stroke="' + RED + '" stroke-width="3"/>';
   }
-  s += '<circle cx="' + vx + '" cy="' + vy + '" r="4" fill="' + INK + '"/>';
-  return svgWrap(200, 150, s, { width: 200 });
+  s += '<circle cx="' + f2(vx) + '" cy="' + f2(vy) + '" r="4" fill="' + INK + '"/>';
+  return svgWrap(W, H, s, { width: 200 });
 };
 V.decodeAngle = function(html){
   const arms = tagsOf(html, 'arm').map(function(t){ return [parseFloat(attrOf(t, 'x2')) - parseFloat(attrOf(t, 'x1')), -(parseFloat(attrOf(t, 'y2')) - parseFloat(attrOf(t, 'y1')))]; });
@@ -992,11 +995,11 @@ V.grid = function(maxV, pt){
   const S = 28, ox = 34, oy = 34 + maxV * S; let s = '';
   for(let i = 0; i <= maxV; i++){
     s += '<line x1="' + (ox + i * S) + '" y1="' + (oy - maxV * S) + '" x2="' + (ox + i * S) + '" y2="' + oy + '" stroke="#C9CEE0" stroke-width="1"/><line x1="' + ox + '" y1="' + (oy - i * S) + '" x2="' + (ox + maxV * S) + '" y2="' + (oy - i * S) + '" stroke="#C9CEE0" stroke-width="1"/>';
-    s += '<text class="gx" data-v="' + i + '" x="' + (ox + i * S) + '" y="' + (oy + 18) + '" text-anchor="middle" font-size="12" font-weight="800" fill="' + INK + '">' + i + '</text><text class="gy" data-v="' + i + '" x="' + (ox - 10) + '" y="' + (oy - i * S + 4) + '" text-anchor="end" font-size="12" font-weight="800" fill="' + INK + '">' + i + '</text>';
+    s += '<text class="gx" data-v="' + i + '" x="' + (ox + i * S) + '" y="' + (oy + 21) + '" text-anchor="middle" font-size="15" font-weight="800" fill="' + INK + '">' + i + '</text><text class="gy" data-v="' + i + '" x="' + (ox - 13) + '" y="' + (oy - i * S + 4) + '" text-anchor="end" font-size="15" font-weight="800" fill="' + INK + '">' + i + '</text>';
   }
   s += '<line x1="' + ox + '" y1="' + (oy - maxV * S) + '" x2="' + ox + '" y2="' + oy + '" stroke="' + INK + '" stroke-width="3"/><line x1="' + ox + '" y1="' + oy + '" x2="' + (ox + maxV * S) + '" y2="' + oy + '" stroke="' + INK + '" stroke-width="3"/>';
   if(pt) s += '<circle class="pt" cx="' + (ox + pt[0] * S) + '" cy="' + (oy - pt[1] * S) + '" r="8" fill="' + RED + '" stroke="#fff" stroke-width="2"/>';
-  return svgWrap(ox + maxV * S + 16, oy + 28, s, { width: Math.min(ox + maxV * S + 16, 320) });
+  return svgWrap(ox + maxV * S + 16, oy + 32, s, { width: Math.min(ox + maxV * S + 16, 320) });
 };
 V.decodeGrid = function(html){
   const gx = tagsOf(html, 'gx').map(function(t){ return { v: parseFloat(attrOf(t, 'data-v')), p: parseFloat(attrOf(t, 'x')) }; });
@@ -1021,7 +1024,7 @@ V.barModel = function(parts, total){
 };
 
 /* Option renderers: small versions used as picture ANSWER choices */
-V.smallClock = function(h, m, o){ return V.clock(h, m, Object.assign({ width: 92, hideNumbers: false }, o || {})); };
+V.smallClock = function(h, m, o){ return V.clock(h, m, Object.assign({ width: 120, hideNumbers: false }, o || {})); };
 V.smallBar = function(num, den){ return V.fractionBar(num, den); };
 
 
@@ -4087,7 +4090,7 @@ if(typeof module !== 'undefined') module.exports = V;
       explain: ex('Placing ' + n + '/' + d, ['The line from 0 to 1 is cut into <b>' + d + '</b> equal steps.', 'The top number says to walk <b>' + plural(n, 'step') + '</b> from 0.', 'Only one line has its ? at <b>' + n + '/' + d + '</b>. ✅']),
       truth: fK(n * 3, d * 3)
     });
-    q.optionsAreVisual = true;
+    q.optionsAreVisual = true; q.optionsWide = true;
     q.decodeKey = function(){
       for(let i = 0; i < q.options.length; i++){ const r = readFrac(q.options[i].label, 1); if(r.den !== d || fK(r.num, r.den) !== q.options[i].key) return 'option ' + i + ' picture does not match its key'; }
       return q.options[q.correct].key;
@@ -6513,7 +6516,7 @@ if(typeof module !== 'undefined') module.exports = V;
 
   /* ---------------------------------------------------------------- matchstick figures */
   function sticksSVG(kind, ns){
-    let x0 = 10, s = '';
+    let x0 = 26, s = '';
     ns.forEach(function(n, fi){
       const w = 30, h = 26, top = 10; let wid;
       function L(x1, y1, x2, y2){ s += '<line class="stick" data-fig="' + fi + '" x1="' + r2(x0 + x1) + '" y1="' + r2(y1) + '" x2="' + r2(x0 + x2) + '" y2="' + r2(y2) + '" stroke="#9B51E0" stroke-width="5" stroke-linecap="round"/>'; }
@@ -6530,7 +6533,7 @@ if(typeof module !== 'undefined') module.exports = V;
       s += '<text x="' + r2(x0 + wid / 2) + '" y="' + (top + (kind === 'squares' ? w : h) + 24) + '" text-anchor="middle" font-size="13" font-weight="800" fill="' + INK + '">Pattern ' + (fi + 1) + '</text>';
       x0 += wid + 30;
     });
-    return wrapSvg(Math.max(x0 - 10, 100), kind === 'squares' ? 80 : 76, s, Math.max(x0 - 10, 100));
+    return wrapSvg(Math.max(x0 + 6, 100), kind === 'squares' ? 80 : 76, s, Math.max(x0 + 6, 100));
   }
   function decodeSticks(html){
     const c = {};
@@ -7084,7 +7087,7 @@ if(typeof module !== 'undefined') module.exports = V;
       s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="22" fill="' + (blank ? '#FFF3C4' : '#fff') + '" stroke="' + INK + '" stroke-width="3"/>';
       s += '<text class="tv" x="' + r2(p[0]) + '" y="' + r2(p[1] + 8) + '" text-anchor="middle" font-size="22" font-weight="900" fill="' + (blank ? '#EB5757' : INK) + '">' + vals[i] + '</text>';
     });
-    s += '<text class="tsum" x="150" y="128" text-anchor="middle" font-size="15" font-weight="800" fill="' + INK + '">Each side adds up to ' + S + '</text>';
+    s += '<text class="tsum" x="150" y="170" text-anchor="middle" font-size="13" font-weight="800" fill="' + INK + '">Each side adds up to ' + S + '</text>';
     return wrapSvg(300, 236, s, 280);
   }
   function decodeTri(html){
@@ -8657,7 +8660,7 @@ if(typeof module !== 'undefined') module.exports = V;
   // a ruler whose object may start away from 0 (same class names as V.ruler, so the same style of decoding works)
   function rulerAt(start, len, o){
     o = o || {};
-    const maxCm = o.maxCm, x0 = 20, pxCm = Math.min(30, Math.floor(300 / maxCm));
+    const maxCm = Math.max(o.maxCm, Math.ceil(start + len - 1e-9)), x0 = 20, pxCm = Math.min(30, Math.floor(300 / maxCm));
     let s = '<rect x="10" y="44" width="' + (maxCm * pxCm + 20) + '" height="42" rx="4" fill="#FFE9A8" stroke="#1B1B2F" stroke-width="2"/>';
     for(let mm = 0; mm <= maxCm * 10; mm++){
       const x = x0 + mm * pxCm / 10, isCm = mm % 10 === 0, isHalf = mm % 5 === 0;
@@ -9640,7 +9643,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const pts = spec.pts, n = pts.length, unit = spec.unit || 'cm';
     let minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
     pts.forEach(function(p){ minx = Math.min(minx, p[0]); maxx = Math.max(maxx, p[0]); miny = Math.min(miny, p[1]); maxy = Math.max(maxy, p[1]); });
-    const W = 260, H = 200, padX = 50, padY = 34;
+    const W = 280, H = 210, padX = 56, padY = 40;
     const sc = Math.min((W - 2 * padX) / ((maxx - minx) || 1), (H - 2 * padY) / ((maxy - miny) || 1), 40);
     const ox = (W - (maxx - minx) * sc) / 2 - minx * sc, oy = (H - (maxy - miny) * sc) / 2 - miny * sc;
     const P = pts.map(function(p){ return [p[0] * sc + ox, p[1] * sc + oy]; });
@@ -9648,11 +9651,29 @@ if(typeof module !== 'undefined') module.exports = V;
     const sgn = a2 > 0 ? 1 : -1;
     let s = '<polygon class="poly" points="' + P.map(function(p){ return f2(p[0]) + ',' + f2(p[1]); }).join(' ') + '" fill="#CFE1FF" stroke="var(--vis-ink,#1B1B2F)" stroke-width="4" stroke-linejoin="round"/>';
     P.forEach(function(p){ s += '<circle cx="' + f2(p[0]) + '" cy="' + f2(p[1]) + '" r="4" fill="var(--vis-warm,#F2C94C)" stroke="var(--vis-ink,#1B1B2F)" stroke-width="1.5"/>'; });
+    /* label placement with collision avoidance: try offsets on both sides of the edge, keep the first box that touches no edge and no earlier label */
+    const placed = [];
+    function boxHitsSeg(bx, a, b){   // segment a-b vs rect bx {l,t,r,b} (sampled)
+      for(let u = 0; u <= 1.0001; u += 0.05){ const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; if(x > bx.l - 3 && x < bx.r + 3 && y > bx.t - 3 && y < bx.b + 3) return true; }
+      return false;
+    }
     Object.keys(spec.labels || {}).forEach(function(k){
       const i = +k, a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
-      const nx = sgn * dy / len, ny = -sgn * dx / len, off = 11 + Math.abs(nx) * 20;
-      const x = (a[0] + b[0]) / 2 + nx * off, y = (a[1] + b[1]) / 2 + ny * (11 + Math.abs(ny) * 4) + 5;
-      s += '<text class="sl" data-i="' + i + '" data-v="' + spec.labels[k] + '" x="' + f2(x) + '" y="' + f2(y) + '" text-anchor="middle" font-size="15" font-weight="800" fill="var(--vis-ink,#1B1B2F)">' + spec.labels[k] + ' ' + unit + '</text>';
+      const txt = spec.labels[k] + ' ' + unit, tw = txt.length * 8.6 + 4, th = 17;
+      const nx = sgn * dy / len, ny = -sgn * dx / len, mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+      let best = null;
+      [1, -1].forEach(function(side){ [0, 6, 12, 20, 30, 42].forEach(function(extra){ [0, -14, 14, -28, 28].forEach(function(sh){
+        if(best && best.ok) return;
+        const off = 8 + extra, ex = Math.abs(nx) * (tw / 2), ey = Math.abs(ny) * (th / 2 + 1);
+        const cx = mx + side * nx * (off + ex) + sh * dx / len, cy = my + side * ny * (off + ey) + sh * dy / len;
+        const bx = { l: cx - tw / 2, r: cx + tw / 2, t: cy - th / 2, b: cy + th / 2 };
+        let ok = bx.l >= 1 && bx.r <= W - 1 && bx.t >= 1 && bx.b <= H - 1;
+        for(let e = 0; ok && e < n; e++) if(boxHitsSeg(bx, P[e], P[(e + 1) % n])) ok = false;
+        for(let q = 0; ok && q < placed.length; q++){ const o = placed[q]; if(bx.l < o.r + 2 && bx.r > o.l - 2 && bx.t < o.b + 2 && bx.b > o.t - 2) ok = false; }
+        if(ok || !best){ best = { ok: ok, cx: cx, cy: cy, bx: bx }; }
+      }); }); });
+      placed.push(best.bx);
+      s += '<text class="sl" data-i="' + i + '" data-v="' + spec.labels[k] + '" x="' + f2(best.cx) + '" y="' + f2(best.cy + 5) + '" text-anchor="middle" font-size="15" font-weight="800" fill="var(--vis-ink,#1B1B2F)">' + txt + '</text>';
     });
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" role="img" style="max-width:100%;height:auto;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Arial,sans-serif">' + s + '</svg>';
   }
@@ -14448,16 +14469,16 @@ if(typeof module !== 'undefined') module.exports = V;
     const seen = {}; seen[nk(v)] = 1; const ds = [];
     cands.forEach(function(x){
       if(seen[nk(x)]) return; seen[nk(x)] = 1;
-      ds.push(opt(nk(x), line(s, x, 'dot', { width: 300 }), 'That dot is at ' + x + ', not ' + v + '. Work out the step size, then count from a label.'));
+      ds.push(opt(nk(x), line(s, x, 'dot', { width: widthFor(s, 300) }), 'That dot is at ' + x + ', not ' + v + '. Work out the step size, then count from a label.'));
     });
-    ticksOf(s).forEach(function(x){ if(x > s.min && x < s.max && !seen[nk(x)]){ seen[nk(x)] = 1; ds.push(opt(nk(x), line(s, x, 'dot', { width: 300 }), 'That dot is at ' + x + ', not ' + v + '.')); } });
+    ticksOf(s).forEach(function(x){ if(x > s.min && x < s.max && !seen[nk(x)]){ seen[nk(x)] = 1; ds.push(opt(nk(x), line(s, x, 'dot', { width: widthFor(s, 300) }), 'That dot is at ' + x + ', not ' + v + '.')); } });
     const q = mcq({
-      prompt: 'Which number line has the dot at <b>' + v + '</b>?', correct: opt(nk(v), line(s, v, 'dot', { width: 300 })), distractors: ds, keepOrder: true, count: count,
+      prompt: 'Which number line has the dot at <b>' + v + '</b>?', correct: opt(nk(v), line(s, v, 'dot', { width: widthFor(s, 300) })), distractors: ds, keepOrder: true, count: count,
       hint: 'Work out how much each small step is worth. Then find ' + v + ' by counting from a labelled number.',
       explain: ex('Finding ' + v, readExplain(s, v).length > 1 ? readExplain(s, v).slice(0, 2).concat(['So the dot for <b>' + v + '</b> is in this place. ✅']) : ['The labelled number <b>' + v + '</b> has the dot right on it. ✅']),
       truth: nk(v)
     });
-    q.optionsAreVisual = true;
+    q.optionsAreVisual = true; q.optionsWide = true;
     q.decodeKey = function(){ for(let i = 0; i < q.options.length; i++){ if(nk(readValue(q.options[i].label)) !== q.options[i].key) return 'option ' + i + ' picture does not match its key'; } return q.options[q.correct].key; };
     return q;
   }
@@ -17014,7 +17035,7 @@ SCREENS.question = function(){
   h += '<div class="card qcard">' + (q.visual ? '<div class="qvis">' + q.visual + '</div>' : '') + '<div class="qprompt">' + q.prompt + '</div><button class="speak" data-act="sayq">🔊</button>';
   const lock = fb;
   if(q.type === 'mcq'){
-    h += '<div class="opts' + (q.optionsAreVisual ? ' vis' : '') + '">' + q.options.map(function(o, k){
+    h += '<div class="opts' + (q.optionsAreVisual ? ' vis' : '') + (q.optionsWide ? ' wide' : '') + '">' + q.options.map(function(o, k){
       const isChosen = SESS.chosen.indexOf(o.key) > -1; let cls = 'opt' + (q.optionsAreVisual ? ' vis' : '');
       if(fb && o.key === q.correctKey) cls += ' correct'; else if(isChosen) cls += ' wrong';
       return '<button class="' + cls + '" data-act="pick" data-k="' + k + '"' + (lock || isChosen ? ' disabled' : '') + '>' + o.label + '</button>'; }).join('') + '</div>';

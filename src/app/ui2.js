@@ -72,7 +72,7 @@ SCREENS.question = function(){
   h += '<div class="card qcard">' + (q.visual ? '<div class="qvis">' + q.visual + '</div>' : '') + '<div class="qprompt">' + q.prompt + '</div><button class="speak" data-act="sayq">🔊</button>';
   const lock = fb;
   if(q.type === 'mcq'){
-    h += '<div class="opts' + (q.optionsAreVisual ? ' vis' : '') + '">' + q.options.map(function(o, k){
+    h += '<div class="opts' + (q.optionsAreVisual ? ' vis' : '') + (q.optionsWide ? ' wide' : '') + '">' + q.options.map(function(o, k){
       const isChosen = SESS.chosen.indexOf(o.key) > -1; let cls = 'opt' + (q.optionsAreVisual ? ' vis' : '');
       if(fb && o.key === q.correctKey) cls += ' correct'; else if(isChosen) cls += ' wrong';
       return '<button class="' + cls + '" data-act="pick" data-k="' + k + '"' + (lock || isChosen ? ' disabled' : '') + '>' + o.label + '</button>'; }).join('') + '</div>';

@@ -135,7 +135,7 @@
       s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="22" fill="' + (blank ? '#FFF3C4' : '#fff') + '" stroke="' + INK + '" stroke-width="3"/>';
       s += '<text class="tv" x="' + r2(p[0]) + '" y="' + r2(p[1] + 8) + '" text-anchor="middle" font-size="22" font-weight="900" fill="' + (blank ? '#EB5757' : INK) + '">' + vals[i] + '</text>';
     });
-    s += '<text class="tsum" x="150" y="128" text-anchor="middle" font-size="15" font-weight="800" fill="' + INK + '">Each side adds up to ' + S + '</text>';
+    s += '<text class="tsum" x="150" y="170" text-anchor="middle" font-size="13" font-weight="800" fill="' + INK + '">Each side adds up to ' + S + '</text>';
     return wrapSvg(300, 236, s, 280);
   }
   function decodeTri(html){

@@ -35,8 +35,8 @@ V.clock = function(h, m, o){
   }
   if(!o.hideNumbers){
     for(let n = 1; n <= 12; n++){
-      const a = n * 30 * Math.PI / 180, r = o.roman ? 66 : 68;
-      s += '<text x="' + f2(cx + r * Math.sin(a)) + '" y="' + f2(cy - r * Math.cos(a) + (o.roman ? 4 : 6)) + '" text-anchor="middle" font-size="' + (o.roman ? 13 : 17) + '" font-weight="800" fill="' + INK + '">' + (o.roman ? ROMAN[n] : n) + '</text>';
+      const a = n * 30 * Math.PI / 180, r = o.roman ? 64 : 66;
+      s += '<text x="' + f2(cx + r * Math.sin(a)) + '" y="' + f2(cy - r * Math.cos(a) + (o.roman ? 5 : 8)) + '" text-anchor="middle" font-size="' + (o.roman ? 15 : 22) + '" font-weight="800" fill="' + INK + '">' + (o.roman ? ROMAN[n] : n) + '</text>';
     }
   }
   const ha = ((h % 12) * 30 + m * 0.5) * Math.PI / 180, ma = m * 6 * Math.PI / 180;
@@ -243,7 +243,7 @@ V.decodeRuler = function(html){ // length in cm from object width vs label spaci
 V.jug = function(value, max, o){
   o = o || {};
   const minor = o.minor || max / 10, major = o.major || max / 2;
-  const top = 14, bot = 170, H = bot - top, x0 = 60, w = 80;
+  const top = 14, bot = 170, H = bot - top, x0 = 46, w = 80;
   function Y(v){ return bot - v / max * H; }
   let s = '<rect x="' + x0 + '" y="' + top + '" width="' + w + '" height="' + H + '" fill="#fff" stroke="' + INK + '" stroke-width="3" rx="6"/>';
   s += '<rect class="water" x="' + (x0 + 2) + '" y="' + f2(Y(value)) + '" width="' + (w - 4) + '" height="' + f2(bot - Y(value) - 1.5) + '" fill="' + (o.color || '#6EC6FF') + '" opacity=".85"/>';
@@ -251,9 +251,9 @@ V.jug = function(value, max, o){
   for(let i = 0; i <= n; i++){
     const v = i * minor, isMajor = Math.abs(v / major - Math.round(v / major)) < 1e-9;
     s += '<line class="jt" x1="' + (x0 + w - (isMajor ? 26 : 14)) + '" y1="' + f2(Y(v)) + '" x2="' + (x0 + w) + '" y2="' + f2(Y(v)) + '" stroke="' + INK + '" stroke-width="' + (isMajor ? 2.2 : 1.4) + '"/>';
-    if(isMajor) s += '<text class="jl" data-v="' + v + '" x="' + (x0 + w + 8) + '" y="' + f2(Y(v) + 5) + '" font-size="13" font-weight="800" fill="' + INK + '">' + v + (o.unit ? ' ' + o.unit : '') + '</text>';
+    if(isMajor) s += '<text class="jl" data-v="' + v + '" x="' + (x0 + w + 8) + '" y="' + f2(Y(v) + 5) + '" font-size="18" font-weight="800" fill="' + INK + '">' + v + (o.unit ? ' ' + (o.unit === 'l' ? 'L' : o.unit) : '') + '</text>';
   }
-  return svgWrap(240, 184, s, { width: 200 });
+  return svgWrap(250, 184, s, { width: 210 });
 };
 V.decodeJug = function(html){
   const L = tagsOf(html, 'jl').map(function(t){ return { v: parseFloat(attrOf(t, 'data-v')), y: parseFloat(attrOf(t, 'y')) }; });
@@ -296,7 +296,7 @@ V.decodeDial = function(html){
 V.barChart = function(items, o){
   o = o || {};
   const scale = o.scale || 1, axisMax = o.axisMax || (Math.ceil(Math.max.apply(null, items.map(function(i){ return i.value; })) / scale) * scale);
-  const W = 320, H = 200, left = 38, bot = 160, top = 14, pxU = (bot - top) / axisMax;
+  const W = 320, H = 200, left = 38, bot = 160, top = 30, pxU = (bot - top) / axisMax;
   const bw = Math.min(48, (W - left - 10) / items.length - 12);
   let s = '';
   const lblEvery = o.labelEvery || scale;
@@ -481,17 +481,20 @@ V.shape3D = function(name){
 /* Angles. arms from vertex (60,120): one along +x, other at `deg` counter-clockwise */
 V.angle = function(deg, o){
   o = o || {};
-  const vx = 60, vy = 124, L = 120, a = deg * Math.PI / 180;
-  const ex = vx + L, ey = vy, tx = vx + L * Math.cos(a), ty = vy - L * Math.sin(a);
-  let s = '<line class="arm" x1="' + vx + '" y1="' + vy + '" x2="' + f2(ex) + '" y2="' + f2(ey) + '" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>';
-  s += '<line class="arm" x1="' + vx + '" y1="' + vy + '" x2="' + f2(tx) + '" y2="' + f2(ty) + '" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>';
-  if(Math.abs(deg - 90) < 0.01) s += '<polyline points="' + (vx + 18) + ',' + vy + ' ' + (vx + 18) + ',' + (vy - 18) + ' ' + vx + ',' + (vy - 18) + '" fill="none" stroke="' + RED + '" stroke-width="3"/>';
+  const W = 220, H = 170, L = 92, a = deg * Math.PI / 180, c = Math.cos(a), sn = Math.sin(a);
+  // centre the whole angle (both arms) in the picture so obtuse / reflex angles never leave it
+  const xmin = Math.min(0, L * c), xmax = Math.max(L, L * c), ymax = Math.max(0, L * sn), ymin = Math.min(0, L * sn);
+  const vx = (W - (xmax - xmin)) / 2 - xmin, vy = H / 2 + (ymax + ymin) / 2;
+  const ex = vx + L, ey = vy, tx = vx + L * c, ty = vy - L * sn;
+  let s = '<line class="arm" x1="' + f2(vx) + '" y1="' + f2(vy) + '" x2="' + f2(ex) + '" y2="' + f2(ey) + '" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>';
+  s += '<line class="arm" x1="' + f2(vx) + '" y1="' + f2(vy) + '" x2="' + f2(tx) + '" y2="' + f2(ty) + '" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>';
+  if(Math.abs(deg - 90) < 0.01) s += '<polyline points="' + f2(vx + 18) + ',' + f2(vy) + ' ' + f2(vx + 18) + ',' + f2(vy - 18) + ' ' + f2(vx) + ',' + f2(vy - 18) + '" fill="none" stroke="' + RED + '" stroke-width="3"/>';
   else {
-    const r = 28, x2 = vx + r * Math.cos(a), y2 = vy - r * Math.sin(a);
-    s += '<path d="M' + (vx + r) + ' ' + vy + ' A' + r + ' ' + r + ' 0 ' + (deg > 180 ? 1 : 0) + ' 0 ' + f2(x2) + ' ' + f2(y2) + '" fill="none" stroke="' + RED + '" stroke-width="3"/>';
+    const r = 28, x2 = vx + r * c, y2 = vy - r * sn;
+    s += '<path d="M' + f2(vx + r) + ' ' + f2(vy) + ' A' + r + ' ' + r + ' 0 ' + (deg > 180 ? 1 : 0) + ' 0 ' + f2(x2) + ' ' + f2(y2) + '" fill="none" stroke="' + RED + '" stroke-width="3"/>';
   }
-  s += '<circle cx="' + vx + '" cy="' + vy + '" r="4" fill="' + INK + '"/>';
-  return svgWrap(200, 150, s, { width: 200 });
+  s += '<circle cx="' + f2(vx) + '" cy="' + f2(vy) + '" r="4" fill="' + INK + '"/>';
+  return svgWrap(W, H, s, { width: 200 });
 };
 V.decodeAngle = function(html){
   const arms = tagsOf(html, 'arm').map(function(t){ return [parseFloat(attrOf(t, 'x2')) - parseFloat(attrOf(t, 'x1')), -(parseFloat(attrOf(t, 'y2')) - parseFloat(attrOf(t, 'y1')))]; });
@@ -525,11 +528,11 @@ V.grid = function(maxV, pt){
   const S = 28, ox = 34, oy = 34 + maxV * S; let s = '';
   for(let i = 0; i <= maxV; i++){
     s += '<line x1="' + (ox + i * S) + '" y1="' + (oy - maxV * S) + '" x2="' + (ox + i * S) + '" y2="' + oy + '" stroke="#C9CEE0" stroke-width="1"/><line x1="' + ox + '" y1="' + (oy - i * S) + '" x2="' + (ox + maxV * S) + '" y2="' + (oy - i * S) + '" stroke="#C9CEE0" stroke-width="1"/>';
-    s += '<text class="gx" data-v="' + i + '" x="' + (ox + i * S) + '" y="' + (oy + 18) + '" text-anchor="middle" font-size="12" font-weight="800" fill="' + INK + '">' + i + '</text><text class="gy" data-v="' + i + '" x="' + (ox - 10) + '" y="' + (oy - i * S + 4) + '" text-anchor="end" font-size="12" font-weight="800" fill="' + INK + '">' + i + '</text>';
+    s += '<text class="gx" data-v="' + i + '" x="' + (ox + i * S) + '" y="' + (oy + 21) + '" text-anchor="middle" font-size="15" font-weight="800" fill="' + INK + '">' + i + '</text><text class="gy" data-v="' + i + '" x="' + (ox - 13) + '" y="' + (oy - i * S + 4) + '" text-anchor="end" font-size="15" font-weight="800" fill="' + INK + '">' + i + '</text>';
   }
   s += '<line x1="' + ox + '" y1="' + (oy - maxV * S) + '" x2="' + ox + '" y2="' + oy + '" stroke="' + INK + '" stroke-width="3"/><line x1="' + ox + '" y1="' + oy + '" x2="' + (ox + maxV * S) + '" y2="' + oy + '" stroke="' + INK + '" stroke-width="3"/>';
   if(pt) s += '<circle class="pt" cx="' + (ox + pt[0] * S) + '" cy="' + (oy - pt[1] * S) + '" r="8" fill="' + RED + '" stroke="#fff" stroke-width="2"/>';
-  return svgWrap(ox + maxV * S + 16, oy + 28, s, { width: Math.min(ox + maxV * S + 16, 320) });
+  return svgWrap(ox + maxV * S + 16, oy + 32, s, { width: Math.min(ox + maxV * S + 16, 320) });
 };
 V.decodeGrid = function(html){
   const gx = tagsOf(html, 'gx').map(function(t){ return { v: parseFloat(attrOf(t, 'data-v')), p: parseFloat(attrOf(t, 'x')) }; });
@@ -554,7 +557,7 @@ V.barModel = function(parts, total){
 };
 
 /* Option renderers: small versions used as picture ANSWER choices */
-V.smallClock = function(h, m, o){ return V.clock(h, m, Object.assign({ width: 92, hideNumbers: false }, o || {})); };
+V.smallClock = function(h, m, o){ return V.clock(h, m, Object.assign({ width: 120, hideNumbers: false }, o || {})); };
 V.smallBar = function(num, den){ return V.fractionBar(num, den); };
 
 

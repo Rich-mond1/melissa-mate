@@ -12,7 +12,7 @@
     const pts = spec.pts, n = pts.length, unit = spec.unit || 'cm';
     let minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
     pts.forEach(function(p){ minx = Math.min(minx, p[0]); maxx = Math.max(maxx, p[0]); miny = Math.min(miny, p[1]); maxy = Math.max(maxy, p[1]); });
-    const W = 260, H = 200, padX = 50, padY = 34;
+    const W = 280, H = 210, padX = 56, padY = 40;
     const sc = Math.min((W - 2 * padX) / ((maxx - minx) || 1), (H - 2 * padY) / ((maxy - miny) || 1), 40);
     const ox = (W - (maxx - minx) * sc) / 2 - minx * sc, oy = (H - (maxy - miny) * sc) / 2 - miny * sc;
     const P = pts.map(function(p){ return [p[0] * sc + ox, p[1] * sc + oy]; });
@@ -20,11 +20,29 @@
     const sgn = a2 > 0 ? 1 : -1;
     let s = '<polygon class="poly" points="' + P.map(function(p){ return f2(p[0]) + ',' + f2(p[1]); }).join(' ') + '" fill="#CFE1FF" stroke="var(--vis-ink,#1B1B2F)" stroke-width="4" stroke-linejoin="round"/>';
     P.forEach(function(p){ s += '<circle cx="' + f2(p[0]) + '" cy="' + f2(p[1]) + '" r="4" fill="var(--vis-warm,#F2C94C)" stroke="var(--vis-ink,#1B1B2F)" stroke-width="1.5"/>'; });
+    /* label placement with collision avoidance: try offsets on both sides of the edge, keep the first box that touches no edge and no earlier label */
+    const placed = [];
+    function boxHitsSeg(bx, a, b){   // segment a-b vs rect bx {l,t,r,b} (sampled)
+      for(let u = 0; u <= 1.0001; u += 0.05){ const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u; if(x > bx.l - 3 && x < bx.r + 3 && y > bx.t - 3 && y < bx.b + 3) return true; }
+      return false;
+    }
     Object.keys(spec.labels || {}).forEach(function(k){
       const i = +k, a = P[i], b = P[(i + 1) % n], dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
-      const nx = sgn * dy / len, ny = -sgn * dx / len, off = 11 + Math.abs(nx) * 20;
-      const x = (a[0] + b[0]) / 2 + nx * off, y = (a[1] + b[1]) / 2 + ny * (11 + Math.abs(ny) * 4) + 5;
-      s += '<text class="sl" data-i="' + i + '" data-v="' + spec.labels[k] + '" x="' + f2(x) + '" y="' + f2(y) + '" text-anchor="middle" font-size="15" font-weight="800" fill="var(--vis-ink,#1B1B2F)">' + spec.labels[k] + ' ' + unit + '</text>';
+      const txt = spec.labels[k] + ' ' + unit, tw = txt.length * 8.6 + 4, th = 17;
+      const nx = sgn * dy / len, ny = -sgn * dx / len, mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+      let best = null;
+      [1, -1].forEach(function(side){ [0, 6, 12, 20, 30, 42].forEach(function(extra){ [0, -14, 14, -28, 28].forEach(function(sh){
+        if(best && best.ok) return;
+        const off = 8 + extra, ex = Math.abs(nx) * (tw / 2), ey = Math.abs(ny) * (th / 2 + 1);
+        const cx = mx + side * nx * (off + ex) + sh * dx / len, cy = my + side * ny * (off + ey) + sh * dy / len;
+        const bx = { l: cx - tw / 2, r: cx + tw / 2, t: cy - th / 2, b: cy + th / 2 };
+        let ok = bx.l >= 1 && bx.r <= W - 1 && bx.t >= 1 && bx.b <= H - 1;
+        for(let e = 0; ok && e < n; e++) if(boxHitsSeg(bx, P[e], P[(e + 1) % n])) ok = false;
+        for(let q = 0; ok && q < placed.length; q++){ const o = placed[q]; if(bx.l < o.r + 2 && bx.r > o.l - 2 && bx.t < o.b + 2 && bx.b > o.t - 2) ok = false; }
+        if(ok || !best){ best = { ok: ok, cx: cx, cy: cy, bx: bx }; }
+      }); }); });
+      placed.push(best.bx);
+      s += '<text class="sl" data-i="' + i + '" data-v="' + spec.labels[k] + '" x="' + f2(best.cx) + '" y="' + f2(best.cy + 5) + '" text-anchor="middle" font-size="15" font-weight="800" fill="var(--vis-ink,#1B1B2F)">' + txt + '</text>';
     });
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" role="img" style="max-width:100%;height:auto;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Arial,sans-serif">' + s + '</svg>';
   }
