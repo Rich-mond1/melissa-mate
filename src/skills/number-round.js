@@ -136,7 +136,7 @@
     const n = to === 10 ? randInt(1, 98) * 10 + 5 : randInt(1, 9) * 100 + 50 + randInt(0, 9);
     const ans = rnd(n, to), lo = down(n, to), hi = lo + to;
     const names = sample(NAMES, 3);
-    const claims = [{ nm: names[0], v: ans, why: '' }, { nm: names[1], v: ans === hi ? lo : hi, why: ans === hi ? 'Halfway rounds UP, not down.' : 'That is the wrong way.' }, { nm: names[2], v: rnd(n, to === 10 ? 100 : 10), why: 'That is the wrong place. We round to the nearest ' + to + '.' }];
+    const claims = [{ nm: names[0], v: ans, why: '' }, { nm: names[1], v: ans === hi ? lo : hi, why: ans === hi ? 'The digit is 5 or more, so it rounds UP, not down.' : 'That is the wrong way.' }, { nm: names[2], v: rnd(n, to === 10 ? 100 : 10), why: 'That is the wrong place. We round to the nearest ' + to + '.' }];
     if(new Set(claims.map(function(c){ return c.v; })).size < 3) return qWhoIsRight();
     const text = shuffle(claims).map(function(c){ return c.nm + ' says ' + c.v + '.'; }).join(' ');
     const ds = claims.slice(1).map(function(c){ return opt(K.text(c.nm), c.nm, c.nm + ' said ' + c.v + '. ' + c.why); });

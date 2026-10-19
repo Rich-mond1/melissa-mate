@@ -173,7 +173,7 @@
     const q2 = mcq({
       prompt: 'The blue arrow turns <b>' + cwWord(cw) + '</b> until it points the same way as the orange arrow. What turn is it?', visual: both,
       correct: opt(K.text(TSHORT[q]), TNAME[q]), distractors: [1, 2, 3].filter(function(n){ return n !== q; }).map(function(n){ return opt(K.text(TSHORT[n]), TNAME[n], 'Count the steps ' + cwWord(cw) + ' from the blue arrow to the orange arrow: it takes ' + q + ', not ' + n + '.' + (n === 4 - q ? ' ' + cap(TNAME[n]) + ' is how far it is the OTHER way round.' : '')); }), keepOrder: true, count: 3,
-      hint: 'Start at the blue arrow and step round ' + cwWord(cw) + ' one quarter at a time (N, E, S, W) until you reach the orange arrow.',
+      hint: 'Start at the blue arrow and step round ' + cwWord(cw) + ' one quarter at a time until you reach the orange arrow. Count the steps.',
       explain: ex('From blue to orange', ['The blue arrow points <b>' + DNAME[start] + '</b>. The orange arrow points <b>' + DNAME[endDir(start, q, cw)] + '</b>.', 'Going ' + cwWord(cw) + ' we pass ' + q + ' quarter' + (q === 1 ? '' : 's') + '.', 'So it is <b>' + TNAME[q] + '</b>. ✅']),
       truth: K.text(TSHORT[q]),
       decode: function(){ const d = decodeTurn(both); const si = DIRS.indexOf(d.start), ei = DIRS.indexOf(d.end); const n = cw ? (ei - si + 4) % 4 : (si - ei + 4) % 4; return K.text(TSHORT[n]); }
@@ -250,7 +250,7 @@
       title: 'Use the clock',
       say: 'Think of a <b>clock</b>! North is the <b>12</b>, East is the <b>3</b>, South is the <b>6</b> and West is the <b>9</b>. <b>Clockwise</b> goes 12 → 3 → 6 → 9, so N → E → S → W. Anticlockwise goes the other way.',
       vis: { kind: 'turnCompass', args: ['N', 1, true, true] },
-      example: 'Facing East (3), half turn clockwise → 3 → 6 → 9?? No: a half turn is 2 steps: 3 → 6 → 9 = <b>West</b>'
+      example: 'Facing East (the 3), a half turn clockwise is 2 steps: 3 → 6 → 9, so you face <b>West</b>'
     },
     gen: {
       1: function(){

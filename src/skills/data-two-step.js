@@ -44,7 +44,7 @@
   }
   function tell(o){ return o.kind === 'pict' ? 'pictogram' : (o.kind === 'bar' ? 'bar chart' : 'table'); }
   function scaleWrong(o, v, what){
-    if(o.sc <= 1) return null;
+    if(o.sc <= 1 || v % o.sc !== 0) return null;
     return { v: v / o.sc, why: o.kind === 'pict' ? 'You used the number of SYMBOLS. Multiply by the key (' + o.sc + ') first.' : 'You used gridline numbers. Each gridline is worth ' + o.sc + '.' };
   }
   function ds(o){ return o.dec(); }

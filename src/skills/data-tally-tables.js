@@ -93,9 +93,6 @@
     if(f === 'which') return numOptsPicture(randInt(3, 12), 3);
     var th = theme(), labs = sample(th.labels, 3), cs = distinct(3, 2, 12), hide = randInt(0, 2);
     var rows = labs.map(function(l, i){ return { label: l, n: cs[i], mode: i === hide ? 'hide' : 'both' }; });
-    var vis2 = table(rows.map(function(r, i){ return i === hide ? { label: r.label, n: r.n, mode: 'hide' } : r; }));
-    // hidden row shows its tally, number missing: draw tally too
-    vis2 = vis2.replace('<td class="fc"', '<td class="fc"');
     var rows2 = rows.map(function(r, i){ return { label: r.label, n: r.n, mode: i === hide ? 'tally' : 'both' }; });
     var vis3 = table(rows2).replace(/(data-label="[^"]*">)/g, '$1');
     // show '?' in the number column of the row to complete

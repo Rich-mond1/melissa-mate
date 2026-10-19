@@ -492,7 +492,7 @@
       }
       const steps = ['Make a little table: each person gets exactly <b>one</b> ' + set.word + ', and nobody shares.'];
       clues.forEach(function(c, i){ steps.push('Clue ' + (i + 1) + ': ' + (c.t === 'pos' ? c.a + ' has the ' + c.b + ', so tick it. Nobody else can have the ' + c.b + ' and ' + c.a + ' has nothing else.' : c.a + ' does NOT have the ' + c.b + ', so cross it out.')); });
-      steps.push('Only one way fits all the clues: ' + names.map(function(n, i){ return n + ' – ' + items[sol[i]].n; }).join(', ') + '. So the answer is <b>' + (askWho ? names[sol.indexOf(ti)] : items[sol[ti]].n) + '</b>. ✅');
+      steps.push('Only one way fits all the clues: ' + names.map(function(n, i){ return n + ' – ' + items[sol[i]].n; }).join(', ') + '. So the answer is <b>' + (askWho ? names[sol.indexOf(ti)] : items[sol[ti]].e + ' ' + items[sol[ti]].n) + '</b>. ✅');
       return mcq({
         prompt: prompt, visual: vis, correct: correct, distractors: ds, count: 3,
         hint: 'Make a table with the names down the side and the ' + set.word + 's along the top. Tick what the clues say and cross out what they rule out.',
@@ -577,7 +577,7 @@
         if(f === 2) return balanceQ({ kinds: ['d', 'e'], xLo: 3, xHi: 18, typed: true });
         if(f === 3) return sumQ({ boxes: 2, mode: 'columns', ops: ['+'], lo: 100, hi: 480, typed: true });
         if(f === 4) return whoQ({ k: 3, kinds: ['neg'] });
-        if(f === 5) return rankQ({ k: 3 });
+        if(f === 5) return rankQ({ k: 2 });
         return sumQ({ boxes: 2, mode: 'same', ops: ['+', '−'], lo: 101, hi: 700, typed: true });
       }
     }
