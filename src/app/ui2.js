@@ -51,7 +51,7 @@ function nextQuestion(){
 function startQ(skillId, tier){
   const q = SESS.q;
   SESS.skillId_ = skillId; SESS.tries = 0; SESS.hint = false; SESS.phase = 'ask'; SESS.chosen = []; SESS.fb = null;
-  SESS.numStr = ''; SESS.sel = 0; SESS.t0 = Date.now();
+  SESS.numStr = ''; SESS.sel = 0; SESS.t0 = Date.now(); SESS.why = '';
   if(q.type === 'setclock'){ SESS.clk = { h: 12, m: 0 }; }
   if(q.type === 'order'){ SESS.pool = shuffle(q.model.items.slice()); if(SESS.pool.map(function(i){ return i.key; }).join() === q.model.items.map(function(i){ return i.key; }).join()) SESS.pool.reverse(); SESS.picked = []; }
   go('question');
@@ -144,6 +144,7 @@ function submit(resp){
   if(ok) return endQuestion(questionCredit(true, SESS.tries, SESS.hint), true);
   const why = (q.wrongWhy && q.wrongWhy(resp)) || '';
   recordError(S, SESS.skillId_, why || 'Mixed up the answer');
+  if(!SESS.why) SESS.why = stripTags(why || 'Mixed up the answer');
   SESS.tries++;
   if(SESS.kind === 'placement' || SESS.tries >= 2) return endQuestion(0, false);
   SESS.chosen.push(resp);
@@ -157,6 +158,7 @@ function endQuestion(credit, ok, skipped){
   const q = SESS.q; const sk = skillById(SESS.skillId_);
   addUsed(Math.min(90, Math.round((Date.now() - SESS.t0) / 1000)));
   SESS.credits.push(credit);
+  recordEvidence(S, { d: todayStr(), s: sk.id, k: SESS.kind, t: (SESS.items && SESS.items[SESS.idx]) ? SESS.items[SESS.idx].tier : 2, c: credit >= 1 ? 'f' : (credit > 0 ? 'a' : 'x'), h: SESS.hint, r: SESS.tries, ms: Date.now() - SESS.t0, w: SESS.why });
   (SESS.by[sk.id] = SESS.by[sk.id] || []).push(credit);
   SESS.phase = 'fb';
   if(SESS.kind === 'placement'){
@@ -203,11 +205,12 @@ function finishSession(early){
   if(S.streak.lastPlayDate && daysBetween(S.streak.lastPlayDate, today) >= 3) S.comeback = true;
   updateStreak(S, today);
   const credits = SESS.credits; const acc = Math.round(credits.reduce(function(a, b){ return a + b; }, 0) / credits.length * 1e6) / 1e6;
-  const info = { kind: kind, stars: 0, medals: [], wobblyCleared: 0, packs: 0, newBadges: [], levelUp: 0, acc: acc, n: credits.length, perfect: false, next: null };
+  const info = { kind: kind, stars: 0, medals: [], wobblyCleared: 0, packs: 0, newBadges: [], levelUp: 0, acc: acc, n: credits.length, perfect: false, next: null, goldWaiting: [] };
   Object.keys(SESS.by).forEach(function(id){
     const sk = skillById(id); const cr = SESS.by[id];
     const r = applySkillResult(S, id, kind, cr, today);
     if(r.medalUp) info.medals.push({ name: sk.name, medal: r.after.medal });
+    if(r.goldPending) info.goldWaiting.push(sk.name);
     if(r.wobblyCleared) info.wobblyCleared++;
     S.sessionLog.push({ date: today, kind: kind, strand: sk.strand, skill: id, correct: cr.filter(function(c){ return c > 0; }).length, total: cr.length, credit: cr.reduce(function(a, b){ return a + b; }, 0) / cr.length, mood: null });
   });
@@ -234,6 +237,7 @@ SCREENS.results = function(p){
   let h = '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + (p.perfect ? '💯 Purrfect!' : (good ? '🌟 ' + pick(PRAISE).replace(/[.!]$/, '') + ', ' + nick() + '!' : '💪 Mistakes help your brain grow!')) + '</div><h1 style="margin-top:10px">' + (p.kind === 'testout' ? (p.acc >= 0.99 ? 'You really know it!' : 'Not yet — let’s learn it') : (p.perfect ? 'Perfect round!' : (good ? 'Great round!' : 'Good effort!'))) + '</h1></div><div class="gap"></div>';
   h += '<div class="card center"><p class="qprompt">⭐ +' + p.stars + ' stars</p>' +
     (p.medals.length ? p.medals.map(function(m){ return '<p style="margin-top:8px;font-weight:900">' + ['', '🥉', '🥈', '🥇'][m.medal] + ' New medal: ' + esc(m.name) + '</p>'; }).join('') : '') +
+    (p.goldWaiting && p.goldWaiting.length ? '<p style="margin-top:8px;font-weight:900">🥇 Gold is almost yours! Win a Brain boost tomorrow to get it: ' + p.goldWaiting.map(esc).join(', ') + '</p>' : '') +
     (p.wobblyCleared ? '<p style="margin-top:8px;font-weight:900">💪 You fixed a wobbly skill!</p>' : '') +
     (p.packs ? '<p style="margin-top:8px;font-weight:900">✨ ' + p.packs + ' sticker pack' + (p.packs > 1 ? 's' : '') + ' earned!</p>' : '') +
     (p.levelUp ? '<p style="margin-top:8px;font-weight:900">🚀 Level up! You are now Level ' + p.levelUp + ' — ' + levelTitle(p.levelUp) + '</p>' : '') +
@@ -338,6 +342,9 @@ SCREENS.parent = function(){
     '<p class="muted" style="margin-top:8px">Un repaso superado días después de aprender algo es la mejor señal de que se ha fijado, no solo memorizado.</p></div><div class="gap"></div>';
   h += '<div class="card"><h3>Resumen</h3><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Nivel</span><b>' + S.level + ' · ' + levelTitle(S.level) + '</b></div><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Racha</span><b>🔥 ' + S.streak.count + '</b></div><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Estrellas (total / disponibles)</span><b>' + S.totalStars + ' / ' + S.starBalance + '</b></div><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Medallas · trucos · stickers</span><b>' + totalMedals(S) + ' · ' + S.tricks.length + ' · ' + S.stickers.length + '</b></div><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Tiempo hoy</span><b>' + Math.round(usedToday() / 60) + ' min</b></div></div><div class="gap"></div>';
   h += '<div class="card"><h3>Por área</h3>' + strandsWithSkills().map(function(s){ const p = strandProgress(S, s.id); return '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>' + s.icon + ' ' + s.es + '</span><span class="pbar"><i style="width:' + p + '%"></i></span><b>' + p + '%</b></div>'; }).join('') + '</div><div class="gap"></div>';
+  const rep3 = repeatedErrors(S), gw = goldWaiting(S);
+  if(rep3.length) h += '<div class="card"><h3>⚠️ Mismo error repetido</h3>' + rep3.slice(0, 5).map(function(e){ const sk = skillById(e.skill); return '<div class="prow" style="background:#FDE8E8;color:var(--ink);align-items:flex-start"><span><b>' + esc(sk ? sk.name : e.skill) + '</b><br><small>' + esc(e.why) + '</small></span><b>×' + e.n + '</b></div>'; }).join('') + '<p class="muted" style="margin-top:8px">Mismo error 3 o más veces en 14 días: conviene explicárselo con material (dedos, dibujo, cubos) en lugar de repetir preguntas.</p></div><div class="gap"></div>';
+  if(gw.length) h += '<div class="card"><h3>🥇 Oro pendiente de repaso</h3>' + gw.map(function(sk){ return '<div class="prow" style="background:#FFF9DB;color:var(--ink)"><span>' + esc(sk.name) + '</span><b>espera repaso</b></div>'; }).join('') + '<p class="muted" style="margin-top:8px">El oro se concede al superar un repaso (Brain boost) en un día posterior al reto.</p></div><div class="gap"></div>';
   const errs = topErrors(S, 8);
   h += '<div class="card"><h3>Dónde se atasca</h3>' + (errs.length ? errs.map(function(e){ const sk = skillById(e.skill); return '<div class="prow" style="background:#FFF4E5;color:var(--ink);align-items:flex-start"><span><b>' + esc(sk ? sk.name : e.skill) + '</b><br><small>' + esc(stripTags(e.why)) + '</small></span><b>×' + e.n + '</b></div>'; }).join('') : '<p class="muted">Aún sin errores registrados.</p>') + '<p class="muted" style="margin-top:6px">Son los errores típicos que más repite, con la explicación que ella ve.</p></div><div class="gap"></div>';
   const recent = S.sessionLog.filter(function(l){ return l.kind !== 'legacy'; }).slice(-10).reverse();

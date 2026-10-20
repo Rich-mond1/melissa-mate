@@ -130,7 +130,7 @@ SCREENS.hub = function(){
 ACT.go = function(d){ go(d.to); };
 ACT.strand = function(d){ go('strand', { id: d.id }); };
 ACT.playRec = function(){
-  const r = recommend(S); if(!r) return toast('You finished everything! 🎉');
+  const r = recommend(S); if(!r) return toast(goldWaiting(S).length ? 'Gold is waiting — come back tomorrow for a Brain boost! 🥇' : 'You finished everything! 🎉');
   openSkillStep(r.skill, r.step);
 };
 function openSkillStep(sk, step){
