@@ -21,6 +21,7 @@ const steps = [
   ['diagui', 'node tools/diag-ui-test.js'],
   ['missionui', 'node tools/mission-ui-test.js'],
   ['parent', 'node tools/parent-test.js'],
+  ['avatar', 'node tools/avatar-test.js'],
   ['safety', 'node tools/safety-test.js']
 ];
 const rows = []; let failed = 0;

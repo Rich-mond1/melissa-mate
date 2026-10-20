@@ -11,3 +11,6 @@ Automated tests cannot prove the iPad works (WebKit/iPad is not covered unless `
 7. Airplane mode: the app still opens and works (today this is NOT VERIFIED).
 8. Rotate the iPad both ways: no picture breaks.
 9. Make a backup now (step 5 or 6) and keep it: it is the safety net for every later change.
+10. **Today's mission** (hub): play it through; the stage screens, the lesson inside it and the end screen all respond to taps.
+11. **Me**: change hair, top and hat; try on something you cannot afford (it only previews, nothing is charged); buy something with ⭐ and see the balance drop. Close and reopen: the outfit is still worn.
+12. **Friends**: open a sticker pack; a new friend appears the first time. The Friends screen shows the pictures sharply (not blurry) and the hidden ones as ???.

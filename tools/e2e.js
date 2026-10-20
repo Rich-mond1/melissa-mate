@@ -102,7 +102,7 @@ let fails = 0; const log = m => { fails++; console.log('✗ ' + m); };
   await p2.goto('file://' + path.join(__dirname, '..', 'index.html'));
   const mig = await p2.evaluate(() => ({ stars: S.starBalance, tot: S.totalStars, st: S.stickers.length, th: S.theme, scr: scr.name }));
   if(mig.stars !== 40 || mig.tot !== 77 || mig.st !== 2 || mig.th !== 'dino') log('migration lost data ' + JSON.stringify(mig)); else console.log('migration ok ' + JSON.stringify(mig));
-  await page.screenshot({ path: path.join(__dirname, '..', 'docs', 'shot-last.png') });
+  await page.screenshot({ path: path.join(require('os').tmpdir(), 'matemagics-e2e-last.png') });
   await b.close();
   console.log(fails ? '❌ E2E FAILED — ' + fails + ' problem(s)' : '✅ E2E PASSED');
   process.exit(fails ? 1 : 0);

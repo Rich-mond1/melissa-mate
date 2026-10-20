@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), cp = require('child_process');
 const root = path.join(__dirname, '..'); const rd = f => fs.readFileSync(path.join(root, f), 'utf8');
 const skillFiles = fs.readdirSync(path.join(root, 'src/skills')).filter(f => f.endsWith('.js')).sort();
-const parts = ['src/core.js', 'src/visuals.js', ...skillFiles.map(f => 'src/skills/' + f), 'src/app/engine.js', 'src/app/pets.js', 'src/app/ui1.js', 'src/app/ui2.js'];
+const parts = ['src/core.js', 'src/visuals.js', ...skillFiles.map(f => 'src/skills/' + f), 'src/app/avatar.js', 'src/app/engine.js', 'src/app/pets.js', 'src/app/friends-art.js', 'src/app/ui1.js', 'src/app/ui2.js', 'src/app/ui3.js'];
 const js = parts.map(f => '/* ===== ' + f + ' ===== */\n' + rd(f).replace(/^'use strict';\s*/m, '').replace(/if\(typeof module !== 'undefined'\) module\.exports = \{[\s\S]*?\};?\n?/g, '')).join('\n');
 const icon = `(function(){try{var c=document.createElement('canvas');c.width=c.height=180;var x=c.getContext('2d');var g=x.createLinearGradient(0,0,180,180);g.addColorStop(0,'#9B51E0');g.addColorStop(1,'#F2A6D8');x.fillStyle=g;x.fillRect(0,0,180,180);x.font='100px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('🧙‍♀️',90,98);var l=document.createElement('link');l.rel='apple-touch-icon';l.href=c.toDataURL('image/png');document.head.appendChild(l);var l2=document.createElement('link');l2.rel='icon';l2.href=l.href;document.head.appendChild(l2);}catch(e){}})();`;
 const html = `<!DOCTYPE html>
@@ -24,7 +24,7 @@ const m = /<script>\n([\s\S]*)<\/script>/.exec(html); const tmp = path.join(root
 try { cp.execSync('node --check ' + tmp, { stdio: 'pipe' }); console.log('✓ node --check OK'); } catch(e){ console.log('✗ SYNTAX ERROR\n' + e.stderr.toString()); fs.unlinkSync(tmp); process.exit(1); }
 fs.unlinkSync(tmp);
 // 2) every data-act used in the UI has a handler, every handler is used
-const ui = rd('src/app/ui1.js') + rd('src/app/ui2.js');
+const ui = rd('src/app/ui1.js') + rd('src/app/ui2.js') + rd('src/app/ui3.js');
 const used = new Set([...ui.matchAll(/data-act="([A-Za-z]+)"/g)].map(x => x[1]));
 const defined = new Set([...ui.matchAll(/^ACT\.([A-Za-z]+) *=/gm)].map(x => x[1]));
 let bad = 0;

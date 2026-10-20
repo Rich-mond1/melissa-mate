@@ -28,7 +28,7 @@ function validate(db, E){
   const mm = db.masteryModel.current, eng = fs.readFileSync(path.join(root, 'src/app/engine.js'), 'utf8'); const rd = /const REVIEW_DAYS = (\[[^\]]*\])/.exec(eng);
   if(!rd || !eq(JSON.parse(rd[1]), mm.reviewDays)) errs.push('masteryModel.reviewDays differs from engine.js');
   if(!/kind === 'guided'\)\{ if\(acc >= 0\.7/.test(eng) || !/kind === 'practice'\)\{ if\(acc >= 0\.8/.test(eng) || !/kind === 'challenge'\)\{ if\(acc >= 0\.8/.test(eng)) errs.push('mastery thresholds in engine.js no longer match masteryModel');
-  const src = ['src/core.js','src/app/engine.js','src/app/ui1.js','src/app/ui2.js','src/app/pets.js'].map(f => fs.readFileSync(path.join(root, f), 'utf8')).join(''); if(/curriculum\.json|CURRICULUM/.test(src.replace(/\/\* SCHOOL-ORDER:BEGIN[\s\S]*?SCHOOL-ORDER:END \*\//, ''))) errs.push('the app must not read the curriculum DB at run time (it only carries the generated SCHOOL_SEQ block)');
+  const src = ['src/core.js','src/app/engine.js','src/app/ui1.js','src/app/ui2.js','src/app/pets.js','src/app/ui3.js','src/app/avatar.js'].map(f => fs.readFileSync(path.join(root, f), 'utf8')).join(''); if(/curriculum\.json|CURRICULUM/.test(src.replace(/\/\* SCHOOL-ORDER:BEGIN[\s\S]*?SCHOOL-ORDER:END \*\//, ''))) errs.push('the app must not read the curriculum DB at run time (it only carries the generated SCHOOL_SEQ block)');
   const ex = require('../curriculum-export'); const i = eng.indexOf(ex.BEGIN), j = eng.indexOf(ex.END); if(i < 0 || j < 0 || eng.slice(i, j + ex.END.length) !== ex.block(db)) errs.push('SCHOOL_SEQ block in engine.js is out of date: run node tools/curriculum-export.js');
   return { errs, conflicts, count: db.objectives.length, mapped: bySkill.size };
 }

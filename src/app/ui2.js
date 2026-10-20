@@ -267,9 +267,10 @@ function missionStageDone(kind, skillId, info, credits){
 ACT.missionEnd = function(){
   const m = MISSION; MISSION = null; if(!m || !m.done.length) return go('hub');
   const a = m.agg; if(a.n && a.sum / a.n >= 0.6){ S.packs++; a.packs++; }
+  const friend = meetFriend(S, 0.6);
   const stages = m.done.filter(function(d){ return d.kind !== 'learn'; }).length;
   save();
-  go('results', { kind: 'mission', stars: a.stars, medals: a.medals, wobblyCleared: a.wobblyCleared, packs: a.packs, newBadges: a.newBadges, levelUp: a.levelUp, acc: a.n ? a.sum / a.n : 0, n: a.n, perfect: a.perfect && a.n >= 4, next: recommend(S), goldWaiting: a.goldWaiting, minutes: Math.max(1, Math.round((Date.now() - m.t0) / 60000)), stages: stages });
+  go('results', { kind: 'mission', stars: a.stars, medals: a.medals, wobblyCleared: a.wobblyCleared, packs: a.packs, newBadges: a.newBadges, levelUp: a.levelUp, acc: a.n ? a.sum / a.n : 0, n: a.n, perfect: a.perfect && a.n >= 4, next: recommend(S), goldWaiting: a.goldWaiting, minutes: Math.max(1, Math.round((Date.now() - m.t0) / 60000)), stages: stages, friend: friend });
 };
 ACT.missionPause = function(){ go('hub'); };
 SCREENS.missionIntro = function(p){
@@ -300,6 +301,7 @@ SCREENS.results = function(p){
     (p.levelUp ? '<p style="margin-top:8px;font-weight:900">🚀 Level up! You are now Level ' + p.levelUp + ' — ' + levelTitle(p.levelUp) + '</p>' : '') +
     (p.newBadges.length ? '<div class="badgeline">' + p.newBadges.map(function(b){ return '<span class="badge">' + b.emoji + ' ' + b.label + '</span>'; }).join('') + '</div>' : '') +
     '<div class="gap"></div><p class="muted">How did that feel?</p><div class="row" style="justify-content:center;gap:16px"><button class="icon-btn" style="font-size:30px" data-act="mood" data-v="happy">😀</button><button class="icon-btn" style="font-size:30px" data-act="mood" data-v="ok">😐</button><button class="icon-btn" style="font-size:30px" data-act="mood" data-v="hard">😟</button></div><div id="moodfb"></div></div><div class="gap"></div>';
+  if(p.friend) h += friendCardHTML(p.friend);
   if(S.packs) h += '<button class="btn block good" data-act="go" data-to="stickers">✨ Open a sticker pack</button><div class="gap"></div>';
   if(p.next) h += '<button class="btn block" data-act="playRec">▶ Next: ' + esc(p.next.skill.name) + '</button><div class="gap"></div>';
   h += '<button class="btn block small" style="background:#ffffffcc;color:var(--ink)" data-act="go" data-to="hub">Home</button>';
@@ -328,10 +330,11 @@ SCREENS.stickers = function(){
 ACT.buyPack = function(){ if(S.starBalance < PACK_COST) return; S.starBalance -= PACK_COST; S.packs++; save(); ACT.openPack(); };
 ACT.openPack = function(){
   const r = openPack(S); if(!r) return;
-  checkBadges(S); save(); go('reveal', { s: r.sticker, dupe: r.dupe, bonus: r.bonusStars });
+  const friend = meetFriend(S, 0.15);
+  checkBadges(S); save(); go('reveal', { s: r.sticker, dupe: r.dupe, bonus: r.bonusStars, friend: friend });
 };
 SCREENS.reveal = function(p){
-  R('<div class="center white" style="padding-top:20px"><h2>' + (p.dupe ? 'You found another one!' : 'NEW sticker!') + '</h2><div class="gap2"></div>' + stickerHTML(p.s, true) +
+  R((p.friend ? friendCardHTML(p.friend) : '') + '<div class="center white" style="padding-top:20px"><h2>' + (p.dupe ? 'You found another one!' : 'NEW sticker!') + '</h2><div class="gap2"></div>' + stickerHTML(p.s, true) +
     '<div class="gap"></div><span class="rarity">' + p.s.rarity + '</span>' + (p.dupe ? '<p style="margin-top:10px;font-weight:900">+' + p.bonus + ' ⭐ bonus (you now have ×' + p.s.n + ')</p>' : '') + '</div><div class="gap2"></div>' +
     (S.packs ? '<button class="btn block good" data-act="openPack">✨ Open another (' + S.packs + ' left)</button><div class="gap"></div>' : '') +
     '<button class="btn block small" style="background:#ffffffcc;color:var(--ink)" data-act="go" data-to="stickers">My album</button>');
@@ -437,7 +440,6 @@ SCREENS.parent = function(){
 };
 ACT.tmode = function(d){ S.timer.mode = d.v; save(); render(); };
 ACT.plus10 = function(){ addUsed(-600); if(S.timer.used.sec < 0) S.timer.used.sec = 0; save(); toast('+10 min'); render(); };
-ACT.voice = function(){ S.prefs.voice = !S.prefs.voice; save(); render(); };
 ACT.setFocus = function(d){ S.focus = d.id || null; save(); render(); };
 ACT.radd = function(){ S.rewards.push({ id: 'r' + Date.now(), emoji: '🎁', title: 'Nuevo premio', cost: 50 }); save(); render(); };
 ACT.rdel = function(d){ S.rewards.splice(+d.i, 1); save(); render(); };

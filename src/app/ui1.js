@@ -21,7 +21,6 @@ function applyTheme(){
 }
 function mascot(){ return friendImg(); }
 function friendImg(){ const k = PETS[S.friend] ? S.friend : 'ginger'; return '<img class="pet" alt="' + esc(PET_NAMES[k]) + '" src="' + PETS[k][0] + '">'; }
-function friendSays(txt){ return '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + txt + '</div></div>'; }
 function speak(html, manual){
   if(!manual || !window.speechSynthesis) return;   // voice only when the child taps 🔊 (auto-speech can hang iOS Safari)
   try { if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(stripTags(html).replace(/\s+/g, ' ')); u.lang = 'en-GB'; u.rate = 0.92; speechSynthesis.speak(u); } catch(e){}
@@ -41,7 +40,7 @@ function confetti(n){
   }
 }
 let LAST_GO = 0;
-function go(name, p){ LAST_GO = Date.now(); if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
+function go(name, p){ LAST_GO = Date.now(); if(typeof ME !== 'undefined' && name !== 'me') ME.prev = null; if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
 let LAST_Q = null;   // re-drawing the SAME question (pick / hint / I-find-this-tricky) must not jump back to the top
 function R(html){ const a = $app(); const keep = scr.name === 'question' && typeof SESS !== 'undefined' && SESS && SESS.q && SESS.q === LAST_Q; const st = a.scrollTop;
   a.innerHTML = '<div class="wrap">' + html + '</div>'; a.scrollTop = keep ? st : 0; LAST_Q = (scr.name === 'question' && SESS) ? SESS.q : null; }
@@ -127,7 +126,7 @@ SCREENS.hub = function(){
     const p = strandProgress(S, str.id), n = skillsOfStrand(str.id).length;
     h += '<div class="region" data-act="strand" data-id="' + str.id + '"><div class="em" style="background:' + str.color + '22">' + str.icon + '</div><div class="grow"><b>' + str.name + '</b><div class="sub">' + n + ' skills</div></div><div class="ring" style="--p:' + p + '"><span>' + p + '%</span></div></div>';
   });
-  h += '<div class="menu-grid"><button data-act="go" data-to="stickers"><span class="em">🌈</span>Stickers' + (S.packs ? ' ✨' + S.packs : '') + '</button><button data-act="go" data-to="rewards"><span class="em">🎁</span>Prizes</button><button data-act="go" data-to="trophies"><span class="em">🏆</span>Trophies</button><button data-act="go" data-to="parentPin"><span class="em">👪</span>Grown-ups' + (parentMetrics(S, todayStr()).backup.overdue ? ' <span title="backup" style="color:#E8A33D">●</span>' : '') + '</button></div>';
+  h += '<div class="menu-grid"><button data-act="go" data-to="stickers"><span class="em">🌈</span>Stickers' + (S.packs ? ' ✨' + S.packs : '') + '</button><button data-act="go" data-to="me"><span class="em">🧑‍🎤</span>Me</button><button data-act="go" data-to="friends"><span class="em">🤝</span>Friends' + (S.met.length ? ' ' + S.met.length + '/' + FRIENDS.length : '') + '</button><button data-act="go" data-to="rewards"><span class="em">🎁</span>Prizes</button><button data-act="go" data-to="trophies"><span class="em">🏆</span>Trophies</button><button data-act="go" data-to="parentPin"><span class="em">👪</span>Grown-ups' + (parentMetrics(S, todayStr()).backup.overdue ? ' <span title="backup" style="color:#E8A33D">●</span>' : '') + '</button></div>';
   R(h);
 };
 ACT.go = function(d){ go(d.to); };
