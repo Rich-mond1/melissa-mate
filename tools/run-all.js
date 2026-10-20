@@ -20,6 +20,7 @@ const steps = [
   ['gold', 'node tools/gold-ui-test.js'],
   ['diagui', 'node tools/diag-ui-test.js'],
   ['missionui', 'node tools/mission-ui-test.js'],
+  ['parent', 'node tools/parent-test.js'],
   ['safety', 'node tools/safety-test.js']
 ];
 const rows = []; let failed = 0;

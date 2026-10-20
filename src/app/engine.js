@@ -66,7 +66,7 @@ function defaultState(){
     timer: { mode: 'free', minutes: 20, debtSeconds: 0 },
     streak: { count: 0, lastPlayDate: null },
     sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 },
-    focus: null, legacy: null, friend: 'ginger'
+    focus: null, legacy: null, friend: 'ginger', lastBackup: null
   };
 }
 /* ---------- evidence (one dated record per answered question; capped so localStorage stays small) ---------- */
@@ -102,6 +102,58 @@ function repeatedErrors(state, today, minN){
   return Object.keys(g).map(function(k){ return g[k]; }).filter(function(x){ return x.n >= minN; }).sort(function(a, b){ return b.n - a.n; });
 }
 function goldWaiting(state){ return SKILLS.filter(function(s){ const st = state.skills[s.id]; return st && st.goldFrom && st.medal === 2; }); }
+/* ---------- parent metrics: coverage, accuracy, fluency and mastery are four DIFFERENT things ---------- */
+const BACKUP_DAYS = 7;          // a reminder appears when the last backup is older than this and there is progress to lose
+function medianOf(a){ if(!a.length) return null; const b = a.slice().sort(function(x, y){ return x - y; }); const m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; }
+function evWindow(state, today, from, to){ return (state.evidence || []).filter(function(e){ const d = daysBetween(e.d, today); return e.k !== 'placement' && d >= from && d < to; }); }
+function accOf(list){
+  const n = list.length, f = list.filter(function(e){ return e.c === 'f'; }).length, a = list.filter(function(e){ return e.c === 'a'; }).length;
+  return { n: n, indep: n ? f / n : null, helped: n ? a / n : null, correct: n ? (f + a) / n : null };
+}
+function parentMetrics(state, today){
+  today = today || todayStr();
+  const lv = {}; [0, 1, 2, 3, 4].forEach(function(k){ lv[k] = 0; });
+  const byYear = {}, byStrand = [];
+  SKILLS.forEach(function(sk){ const L = masteryLevel(state, sk.id); lv[L]++; const y = byYear[sk.year] = byYear[sk.year] || { total: 0, tried: 0, bronze: 0, secure: 0 }; y.total++; if(L >= 1) y.tried++; if(medalOf(state, sk.id) >= 1) y.bronze++; if(L >= 3) y.secure++; });
+  strandsWithSkills().forEach(function(str){ const list = skillsOfStrand(str.id); byStrand.push({ id: str.id, total: list.length, bronze: list.filter(function(s){ return medalOf(state, s.id) >= 1; }).length, secure: list.filter(function(s){ return masteryLevel(state, s.id) >= 3; }).length }); });
+  const w1 = evWindow(state, today, 0, 7), w0 = evWindow(state, today, 7, 14), w14 = evWindow(state, today, 0, 14);
+  const okMs = w14.filter(function(e){ return e.c === 'f' && e.ms > 0; }).map(function(e){ return e.ms; });
+  const fluency = { n: okMs.length, medianSec: okMs.length ? Math.round(medianOf(okMs) / 100) / 10 : null, fastShare: okMs.length ? okMs.filter(function(x){ return x <= 15000; }).length / okMs.length : null };
+  const days = {}; w1.forEach(function(e){ days[e.d] = 1; });
+  const per = {}; w1.forEach(function(e){ (per[e.s] = per[e.s] || []).push(e); });
+  const skillsWeek = Object.keys(per).map(function(id){ const a = accOf(per[id]); return { id: id, n: a.n, indep: a.indep, correct: a.correct }; }).filter(function(x){ return x.n >= 4; });
+  const strong = skillsWeek.slice().sort(function(a, b){ return (b.indep - a.indep) || (b.n - a.n); }).slice(0, 3), weak = skillsWeek.slice().sort(function(a, b){ return (a.indep - b.indep) || (b.n - a.n); }).filter(function(x){ return x.indep < 0.7; }).slice(0, 3);
+  const minutes = Math.round(w1.reduce(function(a, e){ return a + Math.min(90000, e.ms || 0); }, 0) / 60000);
+  const wobbly = SKILLS.filter(function(s){ return state.skills[s.id] && state.skills[s.id].wobbly; }).map(function(s){ return s.id; });
+  const stuck = SKILLS.filter(function(s){ return struggling(state, s.id); }).map(function(s){ return s.id; });
+  const hasProgress = (state.evidence || []).length >= 30 || state.sessionLog.filter(function(l){ return l.kind !== 'legacy'; }).length >= 3;
+  const since = state.lastBackup ? daysBetween(state.lastBackup, today) : null;
+  return {
+    coverage: { total: SKILLS.length, tried: SKILLS.length - lv[0], bronze: SKILLS.filter(function(s){ return medalOf(state, s.id) >= 1; }).length, byYear: byYear, byStrand: byStrand },
+    levels: lv,
+    accuracy: { week: accOf(w1), prev: accOf(w0) },
+    fluency: fluency,
+    week: { days: Object.keys(days).length, questions: w1.length, minutes: minutes, strong: strong, weak: weak },
+    attention: { wobbly: wobbly, stuck: stuck, repeated: repeatedErrors(state, today), gold: goldWaiting(state).map(function(s){ return s.id; }) },
+    backup: { last: state.lastBackup || null, daysAgo: since, overdue: hasProgress && (since === null || since >= BACKUP_DAYS), hasProgress: hasProgress }
+  };
+}
+function pct0(x){ return x === null || x === undefined ? '—' : Math.round(x * 100) + '%'; }
+/* the weekly summary as plain Spanish text (copied or shared from the parent panel) */
+function summaryText(state, today){
+  today = today || todayStr(); const m = parentMetrics(state, today), nm = function(id){ const s = skillById(id); return s ? s.name : id; };
+  const L = ['Resumen semanal de Matemagics · ' + today, ''];
+  L.push('Actividad: ' + m.week.days + ' día(s), ' + m.week.questions + ' preguntas, unos ' + m.week.minutes + ' min.');
+  L.push('Acierto sin ayuda (a la primera y sin pista): ' + pct0(m.accuracy.week.indep) + (m.accuracy.prev.n ? ' (semana anterior ' + pct0(m.accuracy.prev.indep) + ')' : '') + '. Correctas contando las que necesitaron pista o segundo intento: ' + pct0(m.accuracy.week.correct) + '.');
+  if(m.fluency.n) L.push('Rapidez: mitad de las respuestas correctas en ' + m.fluency.medianSec + ' s o menos; ' + pct0(m.fluency.fastShare) + ' en 15 s o menos (incluye el tiempo de leer).');
+  L.push('Cobertura: ' + m.coverage.bronze + ' de ' + m.coverage.total + ' habilidades con al menos bronce. Dominio: ' + m.levels[3] + ' asentadas, ' + m.levels[4] + ' dominadas.');
+  if(m.week.strong.length) L.push('Mejor esta semana: ' + m.week.strong.map(function(x){ return nm(x.id) + ' (' + pct0(x.indep) + ')'; }).join(', ') + '.');
+  if(m.week.weak.length) L.push('A reforzar: ' + m.week.weak.map(function(x){ return nm(x.id) + ' (' + pct0(x.indep) + ')'; }).join(', ') + '.');
+  if(m.attention.repeated.length) L.push('Mismo error repetido: ' + m.attention.repeated.slice(0, 3).map(function(e){ return nm(e.skill) + ' — ' + e.why + ' (' + e.n + ' veces)'; }).join('; ') + '.');
+  if(m.attention.stuck.length) L.push('Atascada (dos sesiones seguidas bajas): ' + m.attention.stuck.map(nm).join(', ') + '. La app propone repasar el paso anterior.');
+  if(m.attention.gold.length) L.push('Oro pendiente de repaso: ' + m.attention.gold.map(nm).join(', ') + '.');
+  return L.join('\n');
+}
 function skillState(state, id){
   if(!state.skills[id]) state.skills[id] = { medal: 0, box: 0, seen: 0, correct: 0, credit: 0, lessonDone: false, last: null, due: null, wobbly: false, placed: false };
   return state.skills[id];
@@ -116,6 +168,7 @@ function mergeState(loaded){
   m.daily = Object.assign({}, d.daily, L.daily || {});
   m.skills = L.skills || {}; m.errors = L.errors || {};
   m.evidence = cleanEvidence(L.evidence);
+  m.lastBackup = (typeof L.lastBackup === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(L.lastBackup)) ? L.lastBackup : null;
   m.diag = (L.diag && typeof L.diag === 'object' && !Array.isArray(L.diag) && L.diag.strands && L.diag.results) ? L.diag : null;
   const petV = function(v){ v = Number(v) | 0; return v >= 0 && v < PET_VARIANTS ? v : 0; };
   const num = function(x, dflt){ x = Number(x); return isFinite(x) ? x : (dflt || 0); };
@@ -505,4 +558,4 @@ function checkBadges(state){
   return fresh;
 }
 
-if(typeof module !== 'undefined') module.exports = { struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
+if(typeof module !== 'undefined') module.exports = { parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };

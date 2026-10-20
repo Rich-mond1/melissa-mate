@@ -127,7 +127,7 @@ SCREENS.hub = function(){
     const p = strandProgress(S, str.id), n = skillsOfStrand(str.id).length;
     h += '<div class="region" data-act="strand" data-id="' + str.id + '"><div class="em" style="background:' + str.color + '22">' + str.icon + '</div><div class="grow"><b>' + str.name + '</b><div class="sub">' + n + ' skills</div></div><div class="ring" style="--p:' + p + '"><span>' + p + '%</span></div></div>';
   });
-  h += '<div class="menu-grid"><button data-act="go" data-to="stickers"><span class="em">🌈</span>Stickers' + (S.packs ? ' ✨' + S.packs : '') + '</button><button data-act="go" data-to="rewards"><span class="em">🎁</span>Prizes</button><button data-act="go" data-to="trophies"><span class="em">🏆</span>Trophies</button><button data-act="go" data-to="parentPin"><span class="em">👪</span>Grown-ups</button></div>';
+  h += '<div class="menu-grid"><button data-act="go" data-to="stickers"><span class="em">🌈</span>Stickers' + (S.packs ? ' ✨' + S.packs : '') + '</button><button data-act="go" data-to="rewards"><span class="em">🎁</span>Prizes</button><button data-act="go" data-to="trophies"><span class="em">🏆</span>Trophies</button><button data-act="go" data-to="parentPin"><span class="em">👪</span>Grown-ups' + (parentMetrics(S, todayStr()).backup.overdue ? ' <span title="backup" style="color:#E8A33D">●</span>' : '') + '</button></div>';
   R(h);
 };
 ACT.go = function(d){ go(d.to); };

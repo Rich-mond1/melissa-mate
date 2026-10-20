@@ -24,7 +24,7 @@ const toasts = p => p.evaluate(() => [...document.querySelectorAll('.toast')].ma
   ok(!!dl, 'Export produced no download'); let exported = null;
   if(dl){ ok(/^matemagics-\d{4}-\d{2}-\d{2}\.json$/.test(dl.suggestedFilename()), 'odd file name ' + dl.suggestedFilename()); exported = fs.readFileSync(await dl.path(), 'utf8'); const o = JSON.parse(exported); const live = await p.evaluate(() => JSON.stringify(S)); ok(JSON.stringify(o) === live, 'exported file differs from live state'); }
   await open(); await p.evaluate(() => go('parent')); await p.waitForTimeout(300);
-  if(exported){ const tmp = path.join(require('os').tmpdir(), 'matemagics-import-test.json'); fs.writeFileSync(tmp, exported); await p.setInputFiles('#imp', tmp); await p.waitForTimeout(600);
+  if(exported){ const tmp = path.join(require('os').tmpdir(), 'matemagics-import-test.json'); fs.writeFileSync(tmp, exported); let asked = ''; p.once('dialog', d => { asked = d.message(); d.accept(); }); await p.setInputFiles('#imp', tmp); await p.waitForTimeout(600); ok(/SUSTITUIR/.test(asked), 'import must ask for confirmation first: ' + asked.slice(0, 60));
     const after = await p.evaluate(() => ({ stars: S.totalStars, medals: totalMedals(S), saved: JSON.parse(localStorage.getItem('melissaMathState_v4')).totalStars })); const src = JSON.parse(exported);
     ok(after.stars === src.totalStars && after.saved === src.totalStars, 'import did not restore/save the stars'); ok(after.medals > 0, 'import restored no medals'); }
 

@@ -372,31 +372,49 @@ let SESS_PIN = 0;
 ACT.pinOk = function(){ const v = parseInt(document.getElementById('pin').value, 10); if(v === SESS_PIN) go('parent'); else { toast('Respuesta incorrecta'); go('parentPin'); } };
 
 function pct(x){ return Math.round(x * 100) + '%'; }
-function windowStats(from, to){
-  const t = todayStr(); let c = 0, n = 0;
-  S.sessionLog.forEach(function(l){ if(l.kind === 'legacy' || l.kind === 'review' || l.kind === 'testout' || l.kind === 'placement') return; const d = daysBetween(l.date, t); if(d >= from && d < to){ c += l.credit * l.total; n += l.total; } });
-  return { n: n, acc: n ? c / n : 0 };
-}
 SCREENS.parent = function(){
-  const t = todayStr();
-  const w1 = windowStats(0, 7), w0 = windowStats(7, 14);
+  const t = todayStr(), m = parentMetrics(S, t), A = m.accuracy;
   const rev = S.sessionLog.filter(function(l){ return l.kind === 'review'; }); const revN = rev.reduce(function(a, l){ return a + l.total; }, 0), revC = rev.reduce(function(a, l){ return a + l.credit * l.total; }, 0);
   const wob = SKILLS.filter(function(s){ return S.skills[s.id] && S.skills[s.id].wobbly; });
   const gold = SKILLS.filter(function(s){ return medalOf(S, s.id) >= 3; }).length;
   const days = {}; S.sessionLog.forEach(function(l){ if(l.kind !== 'legacy' && daysBetween(l.date, t) < 14) days[l.date] = 1; });
   let verdict;
-  if(w1.n < 15) verdict = 'Aún hay pocos datos esta semana (' + w1.n + ' preguntas). Con 3–4 sesiones se verá la tendencia.';
-  else if(w0.n >= 15 && w1.acc > w0.acc + 0.05) verdict = '📈 Mejora: aciertos a la primera ' + pct(w0.acc) + ' → ' + pct(w1.acc) + ' respecto a la semana anterior.';
-  else if(w0.n >= 15 && w1.acc < w0.acc - 0.08) verdict = '⚠️ Baja de ' + pct(w0.acc) + ' a ' + pct(w1.acc) + ': probablemente está avanzando a temas más difíciles; revisa “Dónde se atasca”.';
-  else verdict = '✅ Estable: ' + pct(w1.acc) + ' de aciertos a la primera en ' + w1.n + ' preguntas.';
+  if(A.week.n < 15) verdict = 'Aún hay pocos datos esta semana (' + A.week.n + ' preguntas). Con 3–4 sesiones se verá la tendencia.';
+  else if(A.prev.n >= 15 && A.week.indep > A.prev.indep + 0.05) verdict = '📈 Mejora: acierto sin ayuda ' + pct(A.prev.indep) + ' → ' + pct(A.week.indep) + ' respecto a la semana anterior.';
+  else if(A.prev.n >= 15 && A.week.indep < A.prev.indep - 0.08) verdict = '⚠️ Baja de ' + pct(A.prev.indep) + ' a ' + pct(A.week.indep) + ': probablemente está avanzando a temas más difíciles; revisa “Dónde se atasca”.';
+  else verdict = '✅ Estable: ' + pct(A.week.indep) + ' de acierto sin ayuda en ' + A.week.n + ' preguntas.';
   const mood = { happy: 0, ok: 0, hard: 0 }; S.sessionLog.slice(-20).forEach(function(l){ if(l.mood) mood[l.mood]++; });
+  const row = function(a, b){ return '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>' + a + '</span><b>' + b + '</b></div>'; };
+  const nm = function(id){ const sk = skillById(id); return esc(sk ? sk.name : id); };
   let h = topbar('👪 Panel de padres');
-  h += '<div class="card"><h3>¿Está aprendiendo de verdad?</h3><p style="margin:6px 0">' + verdict + '</p>' +
-    '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Repasos superados (días después)</span><b>' + (revN ? pct(revC / revN) + ' de ' + revN : 'sin datos aún') + '</b></div>' +
-    '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Habilidades en oro / tambaleantes</span><b>' + gold + ' / ' + wob.length + '</b></div>' +
-    '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Días jugados (últimos 14)</span><b>' + Object.keys(days).length + '</b></div>' +
-    '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Ánimo (últimas sesiones) 😀/😐/😟</span><b>' + mood.happy + ' / ' + mood.ok + ' / ' + mood.hard + '</b></div>' +
+  /* backup first: it is the only thing that can really be lost */
+  const bk = m.backup;
+  h += '<div class="card" style="' + (bk.overdue ? 'border:3px solid #E8A33D' : '') + '"><h3>💾 Copia de seguridad</h3>' +
+    '<p style="margin:6px 0">' + (bk.last ? 'Última copia: <b>' + esc(bk.last) + '</b> (hace ' + bk.daysAgo + ' día' + (bk.daysAgo === 1 ? '' : 's') + ')' : 'Todavía <b>no hay ninguna copia</b>.') + '</p>' +
+    (bk.overdue ? '<p style="color:#8a4b00;font-weight:800">' + (bk.last ? 'Hace más de ' + BACKUP_DAYS + ' días de la última copia.' : 'Hay progreso que solo existe en este iPad.') + ' Pulsa “Compartir copia” y guárdala en Archivos o envíatela por correo.</p>' : '<p class="muted">El progreso solo vive en este iPad. Si se borran los datos de Safari o se cambia de iPad, sin copia se pierde.</p>') +
+    '<div class="row" style="flex-wrap:wrap;margin-top:6px"><button class="seg-btn on" data-act="share">📤 Compartir copia</button><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="export">⬇ Exportar</button></div>' +
+    '<p class="muted" style="margin-top:6px">La fecha es la de la última vez que pulsaste uno de estos botones; la app no puede comprobar que el archivo se haya guardado.</p></div><div class="gap"></div>';
+  h += '<div class="card"><h3>📅 Esta semana</h3><p style="margin:6px 0">' + verdict + '</p>' +
+    row('Días / preguntas / minutos', m.week.days + ' / ' + m.week.questions + ' / ' + m.week.minutes) +
+    (m.week.strong.length ? row('Mejor', m.week.strong.map(function(x){ return nm(x.id) + ' ' + pct(x.indep); }).join(', ')) : '') +
+    (m.week.weak.length ? row('A reforzar', m.week.weak.map(function(x){ return nm(x.id) + ' ' + pct(x.indep); }).join(', ')) : '') +
+    '<div class="row" style="flex-wrap:wrap;margin-top:8px"><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="copySummary">📋 Copiar resumen</button></div></div><div class="gap"></div>';
+  h += '<div class="card"><h3>🧭 Cobertura</h3><p class="muted" style="margin-bottom:6px">Cuánto temario ha visto. No dice si lo domina.</p>' +
+    row('Habilidades con al menos bronce', m.coverage.bronze + ' de ' + m.coverage.total) +
+    Object.keys(m.coverage.byYear).sort().map(function(y){ const v = m.coverage.byYear[y]; return row('Year ' + y, v.bronze + ' de ' + v.total); }).join('') + '</div><div class="gap"></div>';
+  h += '<div class="card"><h3>🎯 Precisión y rapidez</h3><p class="muted" style="margin-bottom:6px">Últimos 7 días. “Sin ayuda” = a la primera y sin pista.</p>' +
+    row('Acierto sin ayuda', A.week.n ? pct(A.week.indep) : 'sin datos') + row('Acierto con pista o 2.º intento', A.week.n ? pct(A.week.helped) : 'sin datos') + row('Total de aciertos', A.week.n ? pct(A.week.correct) : 'sin datos') +
+    row('Rapidez (14 días)', m.fluency.n ? 'mitad en ' + m.fluency.medianSec + ' s o menos · ' + pct(m.fluency.fastShare) + ' en ≤ 15 s' : 'sin datos') +
+    '<p class="muted" style="margin-top:6px">El tiempo incluye leer la pregunta. Mira la tendencia, no un número suelto.</p></div><div class="gap"></div>';
+  const LV = ['Sin empezar', 'Aprendiendo', 'Practicando', 'Asentada', 'Dominada'];
+  h += '<div class="card"><h3>🏅 Dominio</h3><p class="muted" style="margin-bottom:6px">Asentada = plata con buen acierto sin ayuda. Dominada = oro tras un repaso otro día.</p>' + [4, 3, 2, 1, 0].map(function(k){ return row(LV[k], m.levels[k] + ' habilidades'); }).join('') + '</div><div class="gap"></div>';
+  h += '<div class="card"><h3>¿Está aprendiendo de verdad?</h3>' +
+    row('Repasos superados (días después)', revN ? pct(revC / revN) + ' de ' + revN : 'sin datos aún') +
+    row('Habilidades en oro / tambaleantes', gold + ' / ' + wob.length) +
+    row('Días jugados (últimos 14)', Object.keys(days).length) +
+    row('Ánimo (últimas sesiones) 😀/😐/😟', mood.happy + ' / ' + mood.ok + ' / ' + mood.hard) +
     '<p class="muted" style="margin-top:8px">Un repaso superado días después de aprender algo es la mejor señal de que se ha fijado, no solo memorizado.</p></div><div class="gap"></div>';
+  if(m.attention.stuck.length) h += '<div class="card"><h3>↩️ Atascada</h3>' + m.attention.stuck.map(function(id){ return '<div class="prow" style="background:#FDE8E8;color:var(--ink)"><span>' + nm(id) + '</span><b>repasa el paso anterior</b></div>'; }).join('') + '<p class="muted" style="margin-top:6px">Dos sesiones seguidas por debajo del 50 %: la app propone antes la habilidad previa.</p></div><div class="gap"></div>';
   h += '<div class="card"><h3>Resumen</h3><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Nivel</span><b>' + S.level + ' · ' + levelTitle(S.level) + '</b></div><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Racha</span><b>🔥 ' + S.streak.count + '</b></div><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Estrellas (total / disponibles)</span><b>' + S.totalStars + ' / ' + S.starBalance + '</b></div><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Medallas · trucos · stickers</span><b>' + totalMedals(S) + ' · ' + S.tricks.length + ' · ' + S.stickers.length + '</b></div><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Tiempo hoy</span><b>' + Math.round(usedToday() / 60) + ' min</b></div></div><div class="gap"></div>';
   h += '<div class="card"><h3>Por área</h3>' + strandsWithSkills().map(function(s){ const p = strandProgress(S, s.id); return '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>' + s.icon + ' ' + s.es + '</span><span class="pbar"><i style="width:' + p + '%"></i></span><b>' + p + '%</b></div>'; }).join('') + '</div><div class="gap"></div>';
   const rep3 = repeatedErrors(S), gw = goldWaiting(S);
@@ -414,7 +432,7 @@ SCREENS.parent = function(){
     '<p class="muted" style="margin-top:10px">Área de enfoque (la app prioriza esta área)</p><div class="chips"><button class="chip' + (!S.focus ? ' picked' : '') + '" data-act="setFocus" data-id="">Automático</button>' + strandsWithSkills().map(function(s){ return '<button class="chip' + (S.focus === s.id ? ' picked' : '') + '" style="font-size:15px" data-act="setFocus" data-id="' + s.id + '">' + s.icon + ' ' + s.es + '</button>'; }).join('') + '</div>' +
     '<p class="muted" style="margin-top:10px">Premios (nombre y coste en ⭐)</p>' + S.rewards.map(function(r, i){ return '<div class="row" style="margin-top:6px"><input class="input" value="' + esc(r.emoji) + '" data-chg="remoji" data-i="' + i + '" style="width:54px"><input class="input grow" value="' + esc(r.title) + '" data-chg="rtitle" data-i="' + i + '"><input class="input" type="number" value="' + r.cost + '" data-chg="rcost" data-i="' + i + '" style="width:74px"><button class="icon-btn" data-act="rdel" data-i="' + i + '">🗑️</button></div>'; }).join('') +
     '<button class="seg-btn" style="background:#e9ebf7;color:var(--ink);margin-top:8px" data-act="radd">+ Añadir premio</button>' +
-    '<p class="muted" style="margin-top:14px">Datos</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="export">⬇ Exportar</button><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="share">📤 Compartir copia</button><label class="seg-btn" style="background:#e9ebf7;color:var(--ink)">⬆ Importar<input type="file" accept="application/json" id="imp" style="display:none"></label><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="redoPlacement">Repetir diagnóstico</button><button class="seg-btn" style="background:#FFD1D1;color:#7a0000" data-act="reset">Borrar todo</button></div></div>';
+    '<p class="muted" style="margin-top:14px">Datos</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="export">⬇ Exportar</button><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="share">📤 Compartir copia</button><label class="seg-btn" style="background:#e9ebf7;color:var(--ink)">⬆ Importar<input type="file" accept="application/json" id="imp" style="display:none"></label><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="redoPlacement">Repetir diagnóstico</button><button class="seg-btn" style="background:#FFD1D1;color:#7a0000" data-act="reset">Borrar todo</button>' + (hasPrevious() ? '<button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="undoImport">↩ Deshacer importación o borrado</button>' : '') + '</div></div>';
   R(h);
 };
 ACT.tmode = function(d){ S.timer.mode = d.v; save(); render(); };
@@ -424,22 +442,35 @@ ACT.setFocus = function(d){ S.focus = d.id || null; save(); render(); };
 ACT.radd = function(){ S.rewards.push({ id: 'r' + Date.now(), emoji: '🎁', title: 'Nuevo premio', cost: 50 }); save(); render(); };
 ACT.rdel = function(d){ S.rewards.splice(+d.i, 1); save(); render(); };
 ACT.redoPlacement = function(){ if(!confirm('¿Repetir el diagnóstico? Se conservan medallas, estrellas y stickers.')) return; S.placement = defaultState().placement; diagStart(S); S.placement.started = false; save(); go('placementIntro'); };
-ACT.reset = function(){ if(!confirm('¿Borrar TODO el progreso? No se puede deshacer.')) return; if(!confirm('Seguro: se perderán estrellas, stickers y medallas.')) return; try { localStorage.removeItem(STATE_KEY); } catch(e){} S = defaultState(); save(); go('welcome'); };
+ACT.reset = function(){ const bk = parentMetrics(S, todayStr()).backup; if(!confirm('¿Borrar TODO el progreso (' + describeState(S) + ')? ' + (bk.last ? 'Última copia: ' + bk.last + '.' : 'No hay ninguna copia de seguridad.') + ' Se guarda una copia interna para poder deshacerlo.')) return; if(!confirm('Seguro: se perderán estrellas, stickers y medallas.')) return; keepPrevious(); try { localStorage.removeItem(STATE_KEY); } catch(e){} S = defaultState(); save(); go('welcome'); };
+ACT.copySummary = function(){
+  const txt = summaryText(S, todayStr());
+  try { if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){ toast('Resumen copiado'); }, function(){ fallbackCopy(txt); }); return; } } catch(e){}
+  fallbackCopy(txt);
+};
+function fallbackCopy(txt){
+  try { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); if(ok) return toast('Resumen copiado'); } catch(e){}
+  window.prompt('Copia el resumen:', txt);
+}
 ACT.export = function(){
+  S.lastBackup = todayStr(); save();
   const blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }); const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = 'matemagics-' + todayStr() + '.json'; document.body.appendChild(a); a.click(); a.remove();
 };
 /* Backup through the iPad share sheet ("Save to Files", AirDrop, email...). Plan B for Exportar, whose download link may not work in a home-screen app. */
+let PREV_BACKUP = null;
 ACT.share = function(){
+  PREV_BACKUP = S.lastBackup;
   const name = 'matemagics-' + todayStr() + '.json';
   try {
     const file = new File([JSON.stringify(S, null, 1)], name, { type: 'application/json' });
-    if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
-      navigator.share({ files: [file], title: 'Matemagics ' + todayStr() }).catch(function(e){ if(!e || e.name !== 'AbortError') toast('No se pudo compartir'); });
+    S.lastBackup = todayStr(); const file2 = new File([JSON.stringify(S, null, 1)], name, { type: 'application/json' });
+    if(navigator.share && navigator.canShare && navigator.canShare({ files: [file2] })){
+      navigator.share({ files: [file2], title: 'Matemagics ' + todayStr() }).then(function(){ save(); if(scr.name === 'parent') render(); }).catch(function(e){ if(e && e.name === 'AbortError'){ S.lastBackup = PREV_BACKUP; } else toast('No se pudo compartir'); });
       return;
     }
   } catch(e){}
-  toast('Este dispositivo no permite compartir archivos: usa Exportar');
+  S.lastBackup = PREV_BACKUP; toast('Este dispositivo no permite compartir archivos: usa Exportar');
 };
 function onChange(el){
   const k = el.dataset.chg, i = +el.dataset.i;
@@ -449,11 +480,26 @@ function onChange(el){
   else if(k === 'rcost') S.rewards[i].cost = Math.max(1, parseInt(el.value, 10) || 10);
   save();
 }
+const PREV_KEY = STATE_KEY + '_prev';
+function describeState(o){ try { const m = mergeState(o); const lastDay = m.sessionLog.filter(function(l){ return l.kind !== 'legacy'; }).map(function(l){ return l.date; }).sort().pop(); return 'nivel ' + m.level + ', ' + m.sessionLog.filter(function(l){ return l.kind !== 'legacy'; }).length + ' sesiones, ' + totalMedals(m) + ' medallas' + (lastDay ? ', última sesión ' + lastDay : ''); } catch(e){ return 'datos'; } }
+function keepPrevious(){ try { localStorage.setItem(PREV_KEY, JSON.stringify(S)); } catch(e){} }
+function hasPrevious(){ try { return !!localStorage.getItem(PREV_KEY); } catch(e){ return false; } }
 function onImport(file){
   const fr = new FileReader();
-  fr.onload = function(){ try { const o = JSON.parse(fr.result); if(!o || typeof o !== 'object') throw 0; S = importState(o); save(); toast('Progreso importado'); go('hub'); } catch(e){ toast('Archivo no válido'); } };
+  fr.onload = function(){
+    let o; try { o = JSON.parse(fr.result); if(!o || typeof o !== 'object' || Array.isArray(o)) throw 0; } catch(e){ return toast('Archivo no válido'); }
+    const msg = 'Vas a SUSTITUIR el progreso de este iPad (' + describeState(S) + ') por el del archivo (' + describeState(o) + '). Se guarda una copia del estado actual para poder deshacerlo. ¿Continuar?';
+    if(!confirm(msg)) return;
+    keepPrevious(); S = importState(o); save(); toast('Progreso importado'); go('hub');
+  };
   fr.readAsText(file);
 }
+ACT.undoImport = function(){
+  let raw = null; try { raw = localStorage.getItem(PREV_KEY); } catch(e){}
+  if(!raw) return toast('No hay nada que deshacer');
+  if(!confirm('Volver al progreso anterior a la última importación o borrado?')) return;
+  try { const cur = JSON.stringify(S); S = mergeState(JSON.parse(raw)); save(); localStorage.setItem(PREV_KEY, cur); toast('Progreso anterior recuperado'); go('parent'); } catch(e){ toast('No se pudo recuperar'); }
+};
 
 /* ---------------- boot ---------------- */
 function boot(){
