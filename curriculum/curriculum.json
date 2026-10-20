@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "dbVersion": "2026.10-draft.2",
+ "dbVersion": "2026.10-draft.3",
  "status": "draft: every item pendiente de verificar against the official school documents (not available)",
  "generatedFrom": "tools/curriculum-test.js keeps this file in step with src/skills (ids, year, strand, prerequisites, visuals, question types)",
  "sources": {
@@ -1242,6 +1242,38 @@
    "placementSource": "inferred"
   },
   {
+   "id": "obj:multdiv-formal-mult",
+   "skillId": "multdiv-formal-mult",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u08b-mult-div-methods",
+   "objective": "Multiply a 2-digit number by a 1-digit number using formal short multiplication (column), after the grid/area model",
+   "prereq": [
+    "multdiv-2digit-partition"
+   ],
+   "methods": [
+    "column",
+    "area-model"
+   ],
+   "visuals": [
+    "baseTen",
+    "html"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1",
+   "note": "Column pictures are HTML tables (kind html): the audit decodes their digits, not their geometry"
+  },
+  {
    "id": "obj:multdiv-2digit-partition",
    "skillId": "multdiv-2digit-partition",
    "status": "exists",
@@ -1919,12 +1951,11 @@
    "placementSource": "S1"
   },
   {
-   "id": "obj:y2-bonds-make-ten",
-   "skillId": null,
-   "plannedSkillId": "y2-bonds-make-ten",
-   "status": "missing",
+   "id": "obj:addsub-bonds",
+   "skillId": "addsub-bonds",
+   "status": "exists",
    "year": 2,
-   "strand": null,
+   "strand": "addsub",
    "unit": "u00-y2-base",
    "objective": "Number bonds to 20 and 100; make ten",
    "prereq": [],
@@ -1936,15 +1967,24 @@
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "barModel",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   },
   {
-   "id": "obj:y2-doubles-halves",
-   "skillId": null,
-   "plannedSkillId": "y2-doubles-halves",
-   "status": "missing",
+   "id": "obj:multdiv-doubles-halves",
+   "skillId": "multdiv-doubles-halves",
+   "status": "exists",
    "year": 2,
-   "strand": null,
+   "strand": "multdiv",
    "unit": "u00-y2-base",
    "objective": "Doubles and halves",
    "prereq": [],
@@ -1955,29 +1995,17 @@
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
-  },
-  {
-   "id": "obj:mult-formal-2x1",
-   "skillId": null,
-   "plannedSkillId": "mult-formal-2x1",
-   "status": "missing",
-   "year": 3,
-   "strand": null,
-   "unit": "u08b-mult-div-methods",
-   "objective": "Formal (short) multiplication, 2-digit by 1-digit, after the grid/area model",
-   "prereq": [
-    "multdiv-2digit-partition"
-   ],
-   "methods": [
-    "column",
-    "area-model"
-   ],
-   "source": [
-    "S1"
-   ],
    "sourceStatus": "pendiente de verificar",
-   "note": "Grid/area model already exists in multdiv-2digit-partition"
+   "visuals": [
+    "baseTen",
+    "groups"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   },
   {
    "id": "obj:place-value-counters",
@@ -2153,7 +2181,7 @@
    "unit": "u20-y4-bridge",
    "objective": "Multiply 3-digit by 1-digit",
    "prereq": [
-    "mult-formal-2x1"
+    "multdiv-formal-mult"
    ],
    "methods": [],
    "source": [

@@ -34,7 +34,10 @@ S = E.mergeState({}); ['number-place-value', 'addsub-mental-3d', 'multdiv-2-5-10
 { const it = E.buildItems(S, 'review'); ok(it.length === 6 && new Set(it.map(i => i.skillId)).size === 3, 'review = 3 skills x 2 questions, got ' + it.length); }
 // 6c. school order drives the recommendation
 { const SS = () => { const x = E.mergeState({ onboardingDone: true }); x.placement.done = true; return x; }; const gold = (x, ids) => ids.forEach(id => { x.skills[id] = { medal: 3, box: 3, seen: 30, correct: 30, credit: 30, lessonDone: true, last: null, due: '2099-01-01', wobbly: false, placed: false }; });
-  let x = SS(); ok(E.recommend(x).skill.id === 'number-place-value', 'fresh player starts at place value, got ' + E.recommend(x).skill.id);
+  let x = SS(); { const r = E.recommend(x); ok(r.skill.id === 'addsub-bonds' && E.nextStepFor(x, r.skill) === 'testout', 'fresh player starts with the Year 2 base as a quick check, got ' + r.skill.id + '/' + E.nextStepFor(x, r.skill)); }
+  { const y = SS(); y.skills['addsub-bonds'] = { medal: 0, box: 0, seen: 3, correct: 1, credit: 1, lessonDone: false, last: null, due: null, wobbly: false, placed: false, triedOut: true }; ok(E.nextStepFor(y, E.SKILLS.find(k => k.id === 'addsub-bonds')) === 'learn', 'a failed quick check leads to the lesson, not a second quick check'); }
+  gold(x, ['addsub-bonds', 'multdiv-doubles-halves']);
+  ok(E.recommend(x).skill.id === 'number-place-value', 'after the Year 2 base the school starts at place value, got ' + E.recommend(x).skill.id);
   gold(x, ['number-place-value', 'number-compare-order', 'number-10-100-more-less', 'number-count-steps', 'number-line-3digit', 'addsub-mental-3d', 'multdiv-2-5-10', 'multdiv-4', 'multdiv-8', 'multdiv-3']);
   ok(E.recommend(x).skill.id === 'addsub-add-column', 'after units 1-4 the school goes to column addition, got ' + E.recommend(x).skill.id);
   x.focus = 'time'; ok(E.recommend(x).skill.strand === 'time', 'her chosen focus area is respected'); x.focus = null;
