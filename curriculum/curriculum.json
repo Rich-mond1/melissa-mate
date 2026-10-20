@@ -2028,30 +2028,38 @@
    "sourceStatus": "pendiente de verificar"
   },
   {
-   "id": "obj:y4-mult-div-10-100",
-   "skillId": null,
-   "plannedSkillId": "y4-mult-div-10-100",
-   "status": "missing",
+   "id": "obj:multdiv-10-100",
+   "skillId": "multdiv-10-100",
+   "status": "exists",
    "year": 4,
-   "strand": null,
+   "strand": "multdiv",
    "unit": "u20-y4-bridge",
    "objective": "Multiply and divide by 10 and 100",
    "prereq": [
+    "multdiv-2-5-10",
     "number-place-value"
    ],
    "methods": [],
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "baseTen"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   },
   {
-   "id": "obj:y4-round-1000",
-   "skillId": null,
-   "plannedSkillId": "y4-round-1000",
-   "status": "missing",
+   "id": "obj:number-round-1000",
+   "skillId": "number-round-1000",
+   "status": "exists",
    "year": 4,
-   "strand": null,
+   "strand": "number",
    "unit": "u20-y4-bridge",
    "objective": "Round to the nearest 1000",
    "prereq": [
@@ -2061,25 +2069,44 @@
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   },
   {
-   "id": "obj:y4-four-digit-numbers",
-   "skillId": null,
-   "plannedSkillId": "y4-four-digit-numbers",
-   "status": "missing",
+   "id": "obj:number-4-digit",
+   "skillId": "number-4-digit",
+   "status": "exists",
    "year": 4,
-   "strand": null,
+   "strand": "number",
    "unit": "u20-y4-bridge",
    "objective": "Read, write, compare and order 4-digit numbers",
    "prereq": [
-    "number-place-value"
+    "number-place-value",
+    "number-compare-order"
    ],
    "methods": [],
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "baseTen"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   },
   {
    "id": "obj:y4-negative-numbers",
@@ -2118,22 +2145,31 @@
    "sourceStatus": "pendiente de verificar"
   },
   {
-   "id": "obj:y4-area",
-   "skillId": null,
-   "plannedSkillId": "y4-area",
-   "status": "missing",
+   "id": "obj:measure-area",
+   "skillId": "measure-area",
+   "status": "exists",
    "year": 4,
-   "strand": null,
+   "strand": "measure",
    "unit": "u20-y4-bridge",
    "objective": "Find area by counting squares",
    "prereq": [
-    "measure-perimeter"
+    "measure-perimeter",
+    "multdiv-arrays-groups"
    ],
    "methods": [],
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "sqgrid"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   },
   {
    "id": "obj:y4-roman-to-100",
@@ -2172,12 +2208,11 @@
    "sourceStatus": "pendiente de verificar"
   },
   {
-   "id": "obj:y4-mult-3d-1d",
-   "skillId": null,
-   "plannedSkillId": "y4-mult-3d-1d",
-   "status": "missing",
+   "id": "obj:multdiv-mult-3d",
+   "skillId": "multdiv-mult-3d",
+   "status": "exists",
    "year": 4,
-   "strand": null,
+   "strand": "multdiv",
    "unit": "u20-y4-bridge",
    "objective": "Multiply 3-digit by 1-digit",
    "prereq": [
@@ -2187,7 +2222,16 @@
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "html"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   }
  ],
  "knownOrderConflicts": [

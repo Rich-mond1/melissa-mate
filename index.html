@@ -8454,6 +8454,141 @@ if(typeof module !== 'undefined') module.exports = V;
   });
 })();
 
+/* ===== src/skills/measure-area.js ===== */
+/* measure-area — Year 4: area by counting squares, rectangle area = length × width, missing sides, area vs perimeter, L-shapes. */
+(function(){
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  const CELL = 26;
+  /* a verified square-grid picture: every unit square is a <rect class="sq">; decoded by counting them and reading their positions */
+  function sqRender(rows, cols, cells){
+    const keep = cells || null; let s = '';
+    for(let r = 0; r < rows; r++) for(let c = 0; c < cols; c++){
+      if(keep && !keep.some(function(k){ return k[0] === r && k[1] === c; })) continue;
+      s += '<rect class="sq" x="' + (8 + c * CELL) + '" y="' + (8 + r * CELL) + '" width="' + CELL + '" height="' + CELL + '" fill="#8EC5FF" stroke="#1B1B2F" stroke-width="1.5"/>';
+    }
+    return svgWrapLocal(cols * CELL + 16, rows * CELL + 16, s);
+  }
+  function svgWrapLocal(w, h, inner){ return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="' + Math.min(w, 340) + '" role="img" style="max-width:100%;height:auto;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>'; }
+  function sqDecode(html){
+    const re = /<rect class="sq" x="(\d+)" y="(\d+)"/g, xs = {}, ys = {}; let m, n = 0;
+    while((m = re.exec(html))){ xs[m[1]] = 1; ys[m[2]] = 1; n++; }
+    return { count: n, cols: Object.keys(xs).length, rows: Object.keys(ys).length };
+  }
+  V.extra.sqgrid = { render: sqRender, verify: function(a, html){ const d = sqDecode(html); const want = a[2] ? a[2].length : a[0] * a[1]; return d.count === want ? '' : 'sqgrid draws ' + d.count + ' not ' + want; } };
+  function sq(rows, cols, cells){ return sqRender(rows, cols, cells); }
+  /* labelled rectangle as plain SVG with side labels (area picture is the grid; the labelled one is just a shape) */
+  function rectLabelled(w, h, unit, hideW, hideH){
+    const sc = Math.min(18, Math.floor(260 / w), Math.floor(130 / h)), pw = w * sc, ph = h * sc;
+    const lw = hideW ? '?' : w + ' ' + unit, lh = hideH ? '?' : h + ' ' + unit;
+    return '<svg viewBox="0 0 ' + (pw + 120) + ' ' + (ph + 50) + '" width="' + Math.min(pw + 120, 340) + '" role="img" style="max-width:100%;height:auto;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Arial,sans-serif"><rect x="70" y="10" width="' + pw + '" height="' + ph + '" fill="#8EC5FF" stroke="#1B1B2F" stroke-width="2"/><text class="lw" x="' + (70 + pw / 2) + '" y="' + (ph + 36) + '" text-anchor="middle" font-size="16" font-weight="800" fill="#1B1B2F">' + lw + '</text><text class="lh" x="' + (64) + '" y="' + (10 + ph / 2 + 5) + '" text-anchor="end" font-size="16" font-weight="800" fill="#1B1B2F">' + lh + '</text></svg>';
+  }
+  function labelOf(html, cls){ const m = new RegExp('class="' + cls + '"[^>]*>([^<]*)<').exec(html); return m ? m[1] : ''; }
+  function readNum(s){ const m = /^(\d+)/.exec(s); return m ? Number(m[1]) : NaN; }
+  function times(a, b){ let s = 0; for(let i = 0; i < b; i++) s += a; return s; }
+  function rect(){ return { w: randInt(3, 9), h: randInt(2, 7) }; }
+  function lShape(){
+    /* an L made of a big rectangle with a rectangular corner removed; returns the cells and the area by counting */
+    const R = randInt(4, 6), C = randInt(4, 7), cr = randInt(1, R - 2), cc = randInt(1, C - 2), cells = [];
+    for(let r = 0; r < R; r++) for(let c = 0; c < C; c++) if(!(r < cr && c >= C - cc)) cells.push([r, c]);
+    return { R: R, C: C, cr: cr, cc: cc, cells: cells };
+  }
+
+  /* ---- tier 1 ---- */
+  function qCountGrid(){
+    const r = randInt(2, 5), c = randInt(2, 7), vis = sq(r, c);
+    return mcqNum({
+      prompt: 'Each square is <b>1 square unit</b>. What is the <b>area</b> of this rectangle?', visual: vis, answer: r * c,
+      wrong: [{ v: 2 * (r + c), why: 'That is the perimeter (distance round the edge). Area is the number of squares inside.' }, { v: r + c, why: 'You added the sides. Area counts all the squares inside: ' + r + ' rows of ' + c + '.' }, { v: r * c + c, why: 'Count the rows carefully: there are ' + r + ' rows of ' + c + '.' }, { v: r * c - 1, why: 'Count again: ' + r + ' rows of ' + c + ' squares.' }],
+      nearby: [1, -1, 2, -2, 4], valid: function(v){ return v > 0; }, count: 4, hint: 'Count the squares in one row, then use equal rows.',
+      explain: ex('Area by counting squares', ['There are <b>' + r + ' rows</b> with <b>' + c + ' squares</b> in each row.', r + ' × ' + c + ' = <b>' + r * c + '</b> square units. ✅']),
+      truth: times(c, r), decode: function(){ const d = sqDecode(vis); return d.count; }
+    });
+  }
+  function qRowsCols(){
+    const r = randInt(2, 5), c = randInt(2, 7), vis = sq(r, c);
+    return mcqNum({
+      prompt: 'How many squares are in <b>one row</b>?', visual: vis, answer: c,
+      wrong: [{ v: r, why: r + ' is the number of rows. We want the squares in ONE row.' }, { v: r * c, why: r * c + ' is all the squares. We want just one row.' }, { v: c + 1, why: 'Count along one row again.' }],
+      nearby: [1, -1, 2], valid: function(v){ return v > 0; }, count: 3, hint: 'Count the squares along the top.',
+      explain: ex('Rows and columns', ['Count along the top row: <b>' + c + '</b> squares.', 'There are ' + r + ' rows, so the area is ' + r + ' × ' + c + ' = ' + r * c + '. ✅']),
+      truth: sqDecode(vis).cols, decode: function(){ return sqDecode(vis).cols; }
+    });
+  }
+  /* ---- tier 2 ---- */
+  function qFormula(){
+    const g = rect(), vis = rectLabelled(g.w, g.h, 'cm', false, false);
+    return mcqNum({
+      prompt: 'What is the <b>area</b> of this rectangle?', visual: vis, answer: g.w * g.h, fmt: function(v){ return v + ' cm²'; },
+      wrong: [{ v: 2 * (g.w + g.h), why: 'That is the perimeter. Area = length × width.' }, { v: g.w + g.h, why: 'You added the sides. Area = length × width.' }, { v: g.w * g.h + g.w, why: 'Area is exactly ' + g.w + ' × ' + g.h + '.' }],
+      nearby: [1, -1, 2, -2, 4, -4], valid: function(v){ return v > 0; }, count: 4, hint: 'Multiply the length by the width.',
+      explain: ex('Area of a rectangle', ['Area = length × width.', g.w + ' × ' + g.h + ' = <b>' + g.w * g.h + ' cm²</b>. ✅']),
+      truth: times(g.w, g.h), decode: function(){ return times(readNum(labelOf(vis, 'lw')), readNum(labelOf(vis, 'lh'))); }
+    });
+  }
+  function qPerimOrArea(){
+    let g; do { g = rect(); } while(g.w * g.h === 2 * (g.w + g.h));
+    const askArea = chance(0.5), area = g.w * g.h, per = 2 * (g.w + g.h), vis = rectLabelled(g.w, g.h, 'cm', false, false);
+    return mcq2({
+      prompt: 'Here is a rectangle. Which number is its <b>' + (askArea ? 'area' : 'perimeter') + '</b>?', visual: vis,
+      correct: opt(K.num(askArea ? area : per), (askArea ? area : per) + (askArea ? ' cm²' : ' cm'), askArea ? 'Area is length × width.' : 'Perimeter is the distance round the edge.'),
+      other: opt(K.num(askArea ? per : area), (askArea ? per : area) + (askArea ? ' cm' : ' cm²'), askArea ? 'That is the perimeter, the distance round the edge.' : 'That is the area, the space inside.'),
+      hint: askArea ? 'Area = the space inside: length × width.' : 'Perimeter = all the way round: add the four sides.',
+      explain: ex('Area or perimeter?', ['Area = ' + g.w + ' × ' + g.h + ' = <b>' + area + ' cm²</b> (the space inside).', 'Perimeter = ' + g.w + ' + ' + g.h + ' + ' + g.w + ' + ' + g.h + ' = <b>' + per + ' cm</b> (round the edge).', 'The ' + (askArea ? 'area' : 'perimeter') + ' is <b>' + (askArea ? area : per) + '</b>. ✅']),
+      truth: K.num(askArea ? times(g.w, g.h) : g.w + g.h + g.w + g.h), decode: function(){ const w = readNum(labelOf(vis, 'lw')), h = readNum(labelOf(vis, 'lh')); return K.num(askArea ? times(w, h) : w + h + w + h); }
+    });
+  }
+  function qLShapeCount(){
+    const L = lShape(), vis = sq(L.R, L.C, L.cells);
+    return mcqNum({
+      prompt: 'Each square is 1 square unit. What is the area of this shape?', visual: vis, answer: L.cells.length,
+      wrong: [{ v: L.R * L.C, why: 'That counts the missing corner too. Only count the squares that are drawn.' }, { v: L.cells.length + L.cr * L.cc, why: 'You counted the missing corner as well.' }, { v: 2 * (L.R + L.C), why: 'That is not the area: count the squares inside the shape.' }],
+      nearby: [1, -1, 2, -2], valid: function(v){ return v > 0; }, count: 4, hint: 'Count the squares row by row, or work out the big rectangle and take away the missing corner.',
+      explain: ex('Area of an L-shape', ['The big rectangle would be ' + L.R + ' × ' + L.C + ' = ' + L.R * L.C + ' squares.', 'The missing corner is ' + L.cr + ' × ' + L.cc + ' = ' + L.cr * L.cc + ' squares.', L.R * L.C + ' − ' + L.cr * L.cc + ' = <b>' + L.cells.length + '</b>. ✅']),
+      truth: L.R * L.C - L.cr * L.cc, decode: function(){ return sqDecode(vis).count; }
+    });
+  }
+  /* ---- tier 3 ---- */
+  function qTyped(){
+    const g = rect(), vis = rectLabelled(g.w, g.h, 'cm', false, false);
+    return numeric({ prompt: 'Type the area of this rectangle in square centimetres (cm²).', visual: vis, answer: g.w * g.h, hint: 'Area = length × width.',
+      explain: ex('Area of a rectangle', [g.w + ' × ' + g.h + ' = <b>' + g.w * g.h + ' cm²</b>. ✅']), truth: times(g.w, g.h), decode: function(){ return times(readNum(labelOf(vis, 'lw')), readNum(labelOf(vis, 'lh'))); },
+      wrong: function(v){ return v === 2 * (g.w + g.h) ? 'That is the perimeter. Multiply instead.' : v === g.w + g.h ? 'You added. Multiply the length by the width.' : ''; } });
+  }
+  function qMissingSide(){
+    const g = rect(), area = g.w * g.h, vis = rectLabelled(g.w, g.h, 'cm', false, true), who = pick(NAMES);
+    return numeric({ prompt: 'This rectangle has an area of <b>' + area + ' cm²</b>. One side is ' + g.w + ' cm. How long is the other side in cm?', visual: vis, answer: g.h,
+      hint: 'What number times ' + g.w + ' makes ' + area + '? Divide ' + area + ' by ' + g.w + '.', explain: ex('Missing side', ['Area = length × width, so ' + g.w + ' × ▢ = ' + area + '.', area + ' ÷ ' + g.w + ' = <b>' + g.h + ' cm</b>. ✅', 'Check: ' + g.w + ' × ' + g.h + ' = ' + area + '.']), truth: (function(){ let q = 0; while(q * g.w < area) q++; return q; })(),
+      wrong: function(v){ return v === area - g.w ? 'You subtracted. Divide the area by the known side.' : ''; } });
+  }
+  function qLShapeTyped(){
+    const L = lShape(), vis = sq(L.R, L.C, L.cells);
+    return numeric({ prompt: 'Each square is 1 square unit. Type the area of this shape.', visual: vis, answer: L.cells.length, hint: 'Big rectangle minus the missing corner, or count row by row.',
+      explain: ex('Area of an L-shape', [L.R + ' × ' + L.C + ' = ' + L.R * L.C + ', minus the corner ' + L.cr + ' × ' + L.cc + ' = ' + L.cr * L.cc + '.', L.R * L.C + ' − ' + L.cr * L.cc + ' = <b>' + L.cells.length + '</b>. ✅']), truth: L.R * L.C - L.cr * L.cc, decode: function(){ return sqDecode(vis).count; } });
+  }
+  function qWord(){
+    const g = { w: randInt(4, 12), h: randInt(3, 9) }, who = pick(NAMES), what = pick(['a rug', 'a garden bed', 'a poster', 'a pool cover']);
+    return numeric({ prompt: who + ' has ' + what + ' that is ' + g.w + ' m long and ' + g.h + ' m wide. What is its area in square metres (m²)?', answer: g.w * g.h, hint: 'Area = length × width.',
+      explain: ex('Area in a story', [g.w + ' × ' + g.h + ' = <b>' + g.w * g.h + ' m²</b>. ✅']), truth: times(g.w, g.h),
+      wrong: function(v){ return v === 2 * (g.w + g.h) ? 'That is the perimeter. Area is length × width.' : ''; } });
+  }
+  registerSkill({
+    id: 'measure-area', strand: 'measure', name: 'Area', emoji: '🟦', year: 4, order: 660, prereq: ['measure-perimeter', 'multdiv-arrays-groups'],
+    lesson: { title: 'Area: the space inside', steps: [
+      { say: '<b>Area</b> is how much space is <b>inside</b> a shape. We count unit squares. This rectangle has 3 rows of 4 squares, so the area is 3 × 4 = <b>12 square units</b>.', vis: { kind: 'sqgrid', args: [3, 4] } },
+      { say: 'For any rectangle: <b>area = length × width</b>. A rectangle 6 cm by 4 cm has area 6 × 4 = <b>24 cm²</b>. (cm² means square centimetres.)', vis: { kind: 'sqgrid', args: [4, 6] },
+        quiz: { prompt: 'A rectangle is 5 cm long and 3 cm wide. What is its area?', options: [{ label: '15 cm²', ok: true }, { label: '8 cm²', ok: false }, { label: '16 cm²', ok: false }], right: 'Yes! 5 × 3 = 15.', wrong: 'Area = length × width = 5 × 3 = 15 cm².' } },
+      { say: '<b>Perimeter</b> goes round the edge (add the sides). <b>Area</b> fills the inside (multiply). For an L-shape, count all the squares, or take the missing corner away from the big rectangle.', vis: { kind: 'sqgrid', args: [3, 4, [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [2, 1], [2, 2], [2, 3]]] },
+        quiz: { prompt: 'Which one do you MULTIPLY to find: perimeter or area?', options: [{ label: 'Area', ok: true }, { label: 'Perimeter', ok: false }], right: 'Yes! Area = length × width.', wrong: 'Perimeter is adding round the edge. Area is length × width.' } }
+    ] },
+    trick: { title: 'Inside = multiply', say: '<b>Area</b> is the space <b>inside</b>: <b>length × width</b>, measured in square units. <b>Perimeter</b> is the distance <b>round</b> the edge: add the sides.', vis: { kind: 'sqgrid', args: [3, 5] }, example: '5 cm by 3 cm → area 5 × 3 = <b>15 cm²</b>, perimeter 5+3+5+3 = <b>16 cm</b>' },
+    gen: {
+      1: function(){ return pick([qCountGrid, qCountGrid, qRowsCols, qFormula])(); },
+      2: function(){ return pick([qFormula, qFormula, qPerimOrArea, qPerimOrArea, qLShapeCount])(); },
+      3: function(){ return pick([qTyped, qMissingSide, qMissingSide, qLShapeTyped, qWord, qPerimOrArea])(); }
+    }
+  });
+})();
+
 /* ===== src/skills/measure-capacity.js ===== */
 /* MEASURE — capacity / volume: read measuring jugs in ml and litres, compare, "how much more to fill?"
    Every jug question decodes the WATER LEVEL from the drawing. */
@@ -10435,6 +10570,129 @@ if(typeof module !== 'undefined') module.exports = V;
   function t3Compare(){ return compareQ(3); }
 })();
 
+/* ===== src/skills/multdiv-10-100.js ===== */
+/* multdiv-10-100 — multiply and divide whole numbers by 10 and 100 (Year 4 bridge): digits move, they do not "get a zero stuck on". */
+(function(){
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  /* independent truths: repeated addition and counting groups */
+  function times(n, k){ let s = 0; for(let i = 0; i < k; i++) s += n; return s; }
+  function share(n, k){ let q = 0; while(q * k < n) q++; return q * k === n ? q : -1; }
+  function dig(n){ return String(n).length; }
+  function pl(k){ return k === 10 ? 'tens' : 'hundreds'; }
+
+  function mulWrongs(n, k){
+    const ans = n * k, w = [];
+    w.push({ v: n + k, why: 'Multiplying by ' + k + ' makes it ' + k + ' times BIGGER, not ' + k + ' more. Each digit moves ' + (k === 10 ? 'one place' : 'two places') + ' left.' });
+    w.push({ v: k === 10 ? n * 100 : n * 10, why: k === 10 ? 'That moves the digits TWO places (×100). For ×10 they move ONE place.' : 'That moves the digits only ONE place (×10). For ×100 they move TWO places.' });
+    w.push({ v: n * 1000, why: 'Too many zeros. Count the places the digits move.' });
+    w.push({ v: n * k + k, why: 'Just ' + n + ' × ' + k + ' = ' + ans + '. Nothing is added afterwards.' });
+    w.push({ v: n, why: 'Multiplying by ' + k + ' changes the number: it becomes ' + k + ' times bigger.' });
+    return w;
+  }
+  function divWrongs(n, k){
+    const ans = n / k, w = [];
+    w.push({ v: n - k, why: 'Dividing by ' + k + ' makes it ' + k + ' times SMALLER, not ' + k + ' less. Each digit moves ' + (k === 10 ? 'one place' : 'two places') + ' right.' });
+    w.push({ v: k === 10 ? n / 100 : n / 10, why: k === 10 ? 'That is ÷100. For ÷10 the digits move ONE place.' : 'That is ÷10. For ÷100 the digits move TWO places.' });
+    w.push({ v: n * k, why: 'That multiplies. Dividing makes the number smaller.' });
+    w.push({ v: ans * 10, why: 'Check: ' + ans * 10 + ' × ' + k + ' is not ' + n + '.' });
+    w.push({ v: ans + 1, why: 'Check: ' + (ans + 1) + ' × ' + k + ' = ' + (ans + 1) * k + ', not ' + n + '.' });
+    return w;
+  }
+  function pickMul(k){ return k === 10 ? randInt(2, 99) : randInt(2, 99); }
+  function pickDiv(k){ return randInt(2, k === 10 ? 99 : 99) * k; }
+
+  /* ---- tier 1: pictures ---- */
+  function qTensFlats(){
+    const t = randInt(2, 9), vis = V.baseTen(0, t, 0), n = t * 10;
+    return mcqNum({
+      prompt: 'This picture shows <b>' + n + '</b>. Swap every ten-rod for a hundred-flat. That makes the number <b>10 times bigger</b>. What number is it now?', visual: vis, answer: n * 10,
+      wrong: [{ v: n + 10, why: '10 times bigger is not 10 more. Each rod (10) becomes a flat (100).' }, { v: t * 100 / 10, why: 'That is the same number. Each ten (10) becomes a hundred (100).' }, { v: t * 1000, why: 'Too big. ' + t + ' flats make ' + t * 100 + '.' }, { v: n * 100, why: 'Too big. Each rod becomes ONE flat (100).' }],
+      nearby: [100, -100, 10], valid: function(v){ return v > 0; }, count: 3, hint: 'One flat is 100. How many flats do you get?',
+      explain: ex('×10 moves digits one place left', [n + ' is <b>' + t + ' tens</b>.', 'Swap each ten (10) for a hundred (100): <b>' + t + ' hundreds</b>.', n + ' × 10 = <b>' + n * 10 + '</b>. ✅']),
+      truth: times(t * 10, 10), decode: function(){ return times(V.decodeBaseTen(vis), 10); }
+    });
+  }
+  function qFlatsTens(){
+    const h = randInt(2, 9), vis = V.baseTen(h, 0, 0), n = h * 100;
+    return mcqNum({
+      prompt: 'This picture shows <b>' + n + '</b>. Swap every hundred-flat for ten-rods. That makes the number <b>10 times smaller</b>. What number is it now?', visual: vis, answer: n / 10,
+      wrong: [{ v: n - 10, why: '10 times smaller is not 10 less. Each flat (100) becomes a rod (10).' }, { v: n / 100, why: 'Too small. Each flat becomes ONE rod (10).' }, { v: h, why: h + ' is the number of flats. Each flat becomes a rod worth 10.' }, { v: n * 10, why: 'That is bigger. Dividing makes the number smaller.' }],
+      nearby: [10, -10, 100], valid: function(v){ return v > 0; }, count: 3, hint: 'One rod is 10. How many rods do you get?',
+      explain: ex('÷10 moves digits one place right', [n + ' is <b>' + h + ' hundreds</b>.', 'Swap each hundred (100) for a ten (10): <b>' + h + ' tens</b>.', n + ' ÷ 10 = <b>' + n / 10 + '</b>. ✅']),
+      truth: share(n, 10), decode: function(){ return share(V.decodeBaseTen(vis), 10); }
+    });
+  }
+  /* ---- tier 1/2: choose ---- */
+  function qMul(){
+    const k = pick([10, 10, 100]), n = pickMul(k);
+    return mcqNum({
+      prompt: 'What is <b>' + n + ' × ' + k + '</b>?', answer: n * k, wrong: mulWrongs(n, k), nearby: [10, -10, 100], valid: function(v){ return v > 0; }, count: 4,
+      hint: 'Every digit moves ' + (k === 10 ? 'ONE place' : 'TWO places') + ' to the left.',
+      explain: ex('Multiplying by ' + k, ['Each digit moves <b>' + (k === 10 ? 'one place' : 'two places') + ' left</b>.', 'Zeros fill the empty places.', n + ' × ' + k + ' = <b>' + n * k + '</b>. ✅']), truth: times(n, k)
+    });
+  }
+  function qDiv(){
+    const k = pick([10, 10, 100]), n = pickDiv(k);
+    return mcqNum({
+      prompt: 'What is <b>' + n + ' ÷ ' + k + '</b>?', answer: n / k, wrong: divWrongs(n, k), nearby: [1, -1, 10], valid: function(v){ return v > 0; }, count: 4,
+      hint: 'Every digit moves ' + (k === 10 ? 'ONE place' : 'TWO places') + ' to the right.',
+      explain: ex('Dividing by ' + k, ['Each digit moves <b>' + (k === 10 ? 'one place' : 'two places') + ' right</b>.', n + ' ÷ ' + k + ' = <b>' + n / k + '</b>. ✅', 'Check: ' + n / k + ' × ' + k + ' = ' + n + '.']), truth: share(n, k)
+    });
+  }
+  function qWhichPlaces(){
+    const k = pick([10, 100]), mul = chance(0.5), n = mul ? pickMul(k) : pickDiv(k) , places = k === 10 ? 1 : 2;
+    return mcqNum({
+      prompt: 'When you ' + (mul ? 'multiply' : 'divide') + ' by <b>' + k + '</b>, how many places do the digits move ' + (mul ? 'left' : 'right') + '?', answer: places,
+      wrong: [{ v: k, why: k + ' is the number you multiply by. We count the PLACES the digits move.' }, { v: places === 1 ? 2 : 1, why: 'Count the zeros in ' + k + ': ' + (k === 10 ? 'one zero = one place' : 'two zeros = two places') + '.' }, { v: 3, why: 'Count the zeros in ' + k + '.' }],
+      nearby: [1, -1], valid: function(v){ return v > 0; }, count: 3, hint: 'Count the zeros in ' + k + '.',
+      explain: ex('Zeros tell the places', [k + ' has <b>' + places + ' zero' + (places > 1 ? 's' : '') + '</b>.', 'So digits move <b>' + places + ' place' + (places > 1 ? 's' : '') + '</b> ' + (mul ? 'left' : 'right') + '. ✅']), truth: String(k).length - 1
+    });
+  }
+  /* ---- tier 3: typed ---- */
+  function qTypedMul(){
+    const k = pick([10, 100]), n = randInt(3, 99) + (chance(0.3) ? 100 * randInt(1, 9) : 0);
+    return numeric({ prompt: 'Type the answer:  <b>' + n + ' × ' + k + '</b>', answer: n * k, hint: 'Move every digit ' + (k === 10 ? 'ONE place' : 'TWO places') + ' left. Fill the gaps with zeros.',
+      explain: ex('Multiplying by ' + k, [n + ' × ' + k + ': each digit moves ' + (k === 10 ? 'one' : 'two') + ' place' + (k === 10 ? '' : 's') + ' left.', 'Answer: <b>' + n * k + '</b>. ✅']), truth: times(n, k),
+      wrong: function(v){ return v === n + k ? 'That adds ' + k + '. Multiplying by ' + k + ' makes it ' + k + ' times bigger.' : v === n * (k === 10 ? 100 : 10) ? 'You moved the digits the wrong number of places.' : ''; } });
+  }
+  function qTypedDiv(){
+    const k = pick([10, 100]), q = randInt(3, 99) + (chance(0.3) ? 100 * randInt(1, 9) : 0), n = q * k;
+    return numeric({ prompt: 'Type the answer:  <b>' + n + ' ÷ ' + k + '</b>', answer: q, hint: 'Move every digit ' + (k === 10 ? 'ONE place' : 'TWO places') + ' right.',
+      explain: ex('Dividing by ' + k, [n + ' ÷ ' + k + ': each digit moves ' + (k === 10 ? 'one' : 'two') + ' place' + (k === 10 ? '' : 's') + ' right.', 'Answer: <b>' + q + '</b>. ✅', 'Check: ' + q + ' × ' + k + ' = ' + n + '.']), truth: share(n, k),
+      wrong: function(v){ return v === n - k ? 'That takes away ' + k + '. Dividing by ' + k + ' makes it ' + k + ' times smaller.' : v === n / (k === 10 ? 100 : 10) && v > 0 ? 'You moved the digits the wrong number of places.' : ''; } });
+  }
+  function qMissing(){
+    const k = pick([10, 100]), q = randInt(3, 60), n = q * k, left = chance(0.5);
+    if(left) return numeric({ prompt: 'Type the missing number:  <b>▢ × ' + k + ' = ' + n + '</b>', answer: q, hint: 'Which number is ' + k + ' times smaller than ' + n + '?',
+      explain: ex('Use the opposite', ['Multiplying by ' + k + ' and dividing by ' + k + ' undo each other.', n + ' ÷ ' + k + ' = <b>' + q + '</b>. ✅', 'Check: ' + q + ' × ' + k + ' = ' + n + '.']), truth: share(n, k) });
+    return numeric({ prompt: 'Type the missing number:  <b>▢ ÷ ' + k + ' = ' + q + '</b>', answer: n, hint: 'Which number is ' + k + ' times bigger than ' + q + '?',
+      explain: ex('Use the opposite', ['Dividing by ' + k + ' and multiplying by ' + k + ' undo each other.', q + ' × ' + k + ' = <b>' + n + '</b>. ✅', 'Check: ' + n + ' ÷ ' + k + ' = ' + q + '.']), truth: times(q, k) });
+  }
+  function qWord(){
+    const who = pick(NAMES), n = randInt(3, 40), k = pick([10, 100]);
+    const items = k === 10 ? 'a box holds 10 pencils' : 'a crate holds 100 books';
+    const thing = k === 10 ? 'pencils' : 'books';
+    return numeric({ prompt: who + ' has ' + n + ' full ' + (k === 10 ? 'boxes' : 'crates') + '. Each ' + items + '. How many ' + thing + ' is that altogether?', answer: n * k, hint: 'Multiply the number of ' + (k === 10 ? 'boxes' : 'crates') + ' by ' + k + '.',
+      explain: ex('Groups of ' + k, [n + ' groups of ' + k + ' = ' + n + ' × ' + k + '.', 'Digits move ' + (k === 10 ? 'one' : 'two') + ' place' + (k === 10 ? '' : 's') + ' left: <b>' + n * k + '</b>. ✅']), truth: times(n, k) });
+  }
+  registerSkill({
+    id: 'multdiv-10-100', strand: 'multdiv', name: 'Times and divide by 10 and 100', emoji: '🔟', year: 4, order: 395, prereq: ['multdiv-2-5-10', 'number-place-value'],
+    lesson: { title: 'Multiplying and dividing by 10 and 100', steps: [
+      { say: '<b>40</b> is <b>4 tens</b>. If you swap every ten-rod for a hundred-flat you get <b>4 hundreds = 400</b>. So 40 × 10 = 400. The number is 10 times bigger.', vis: { kind: 'baseTen', args: [0, 4, 0] } },
+      { say: 'The digits do not “get a zero stuck on”. They <b>move one place to the left</b> when you × 10, and <b>two places</b> when you × 100. Empty places are filled with 0.', vis: { kind: 'baseTen', args: [4, 0, 0] },
+        quiz: { prompt: 'What is 35 × 10?', options: [{ label: '350', ok: true }, { label: '45', ok: false }, { label: '3,500', ok: false }], right: 'Yes! Digits move one place left.', wrong: '35 × 10: the 3 and 5 each move one place left: 350.' } },
+      { say: 'Dividing is the opposite. ÷ 10 moves digits <b>one place right</b>; ÷ 100 moves them <b>two places right</b>. 600 ÷ 100 = <b>6</b>, because 6 hundreds is 6.', vis: { kind: 'baseTen', args: [6, 0, 0] },
+        quiz: { prompt: 'What is 520 ÷ 10?', options: [{ label: '52', ok: true }, { label: '510', ok: false }, { label: '5,200', ok: false }], right: 'Yes! 52 tens = 520.', wrong: 'Digits move one place right: 520 becomes 52.' } }
+    ] },
+    trick: { title: 'Count the zeros', say: '× or ÷ by <b>10</b> moves digits <b>1</b> place. × or ÷ by <b>100</b> moves digits <b>2</b> places. Multiply goes <b>left</b> (bigger), divide goes <b>right</b> (smaller).', vis: { kind: 'baseTen', args: [0, 3, 0] }, example: '47 × 100 = <b>4,700</b> &nbsp;·&nbsp; 4,700 ÷ 100 = <b>47</b>' },
+    gen: {
+      1: function(){ return pick([qTensFlats, qFlatsTens, qWhichPlaces, qMul])(); },
+      2: function(){ return pick([qMul, qMul, qDiv, qDiv, qWhichPlaces])(); },
+      3: function(){ return pick([qTypedMul, qTypedDiv, qTypedMul, qTypedDiv, qMissing, qMissing, qWord])(); }
+    }
+  });
+})();
+
 /* ===== src/skills/multdiv-doubles-halves.js ===== */
 /* multdiv-doubles-halves — Year 2 foundation: doubling and halving, near doubles. Offered as a quick check first (Year 2 skills are verified, not re-taught). */
 (function(){
@@ -11959,6 +12217,195 @@ if(typeof module !== 'undefined') module.exports = V;
             wrong: function(v){ const w = P.wrongs.filter(function(x){ return x.v === v; })[0]; return w ? w.why : ''; } });
         });
       }
+    }
+  });
+})();
+
+/* ===== src/skills/multdiv-mult-3d.js ===== */
+/* multdiv-mult-3d — Year 4: 3-digit × 1-digit with formal short multiplication (carrying through ones, tens and hundreds). */
+(function(){
+  const COLH = ['O', 'T', 'H', 'Th'];
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  const THINGS = [['boxes', 'pencils'], ['bags', 'apples'], ['packs', 'stickers'], ['trays', 'cupcakes'], ['jars', 'marbles'], ['shelves', 'books'], ['baskets', 'strawberries'], ['tanks', 'fish']];
+  function pos(v){ return v > 0; }
+  function cellsOf(x, cols){ const s = String(x); const out = []; for(let i = 0; i < cols; i++){ const j = s.length - cols + i; out.push(j >= 0 ? s.charAt(j) : ''); } return out; }
+  function mulTable(o){
+    const cols = 4, A = cellsOf(o.a, cols), B = cellsOf(o.b, cols), td = 'width:40px;height:40px;padding:0;text-align:center;';
+    const R = o.res === undefined || o.res === null ? null : cellsOf(o.res, cols);
+    let s = '<table class="colmul" style="border-collapse:collapse;margin:0 auto;font:800 28px ui-monospace,Menlo,monospace;color:var(--vis-ink,#1B1B2F)"><tr><td style="width:28px"></td>';
+    for(let i = 0; i < cols; i++) s += '<td style="' + td + 'height:20px;font-size:13px;color:var(--vis-b,#9B51E0)">' + COLH[cols - 1 - i] + '</td>';
+    s += '</tr><tr><td class="op"></td>'; for(let i = 0; i < cols; i++) s += '<td class="da" style="' + td + '">' + A[i] + '</td>';
+    s += '</tr><tr><td class="op" style="font-size:26px">×</td>'; for(let i = 0; i < cols; i++) s += '<td class="db" style="' + td + '">' + B[i] + '</td>';
+    s += '</tr><tr><td style="border-top:3px solid var(--vis-ink,#1B1B2F)"></td>';
+    for(let i = 0; i < cols; i++) s += '<td class="dr" style="' + td + 'border-top:3px solid var(--vis-ink,#1B1B2F);color:var(--vis-a,#4F8FE8)">' + (R ? R[i] : '') + '</td>';
+    s += '</tr>';
+    if(o.carries){ s += '<tr><td></td>'; for(let i = 0; i < cols; i++) s += '<td class="dc" style="' + td + 'height:28px;font-size:17px;color:var(--vis-bad,#EB5757)">' + (o.carries[i] || '') + '</td>'; s += '</tr>'; }
+    return s + '</table>';
+  }
+  function readRow(html, cls){ const re = new RegExp('<td class="' + cls + '"[^>]*>([^<]*)</td>', 'g'); let m, out = ''; while((m = re.exec(html))) out += m[1]; return out; }
+  function readA(html){ return parseInt(readRow(html, 'da'), 10); }
+  function readB(html){ return parseInt(readRow(html, 'db'), 10); }
+  function times(a, b){ let s = 0; for(let i = 0; i < b; i++) s += a; return s; }
+
+  /* column method digit by digit: builds the workings (truth is always times(a,b)) */
+  function colMul(a, b){
+    const o = a % 10, t = Math.floor(a / 10) % 10, h = Math.floor(a / 100);
+    const po = o * b, ro = po % 10, c1 = Math.floor(po / 10);
+    const pt = t * b + c1, rt = pt % 10, c2 = Math.floor(pt / 10);
+    const ph = h * b + c2, rh = ph % 10, rth = Math.floor(ph / 10);
+    return { o: o, t: t, h: h, po: po, ro: ro, c1: c1, pt: pt, rt: rt, c2: c2, ph: ph, rh: rh, rth: rth };
+  }
+  /* mode: 'none' (no carry anywhere), 'one' (carry into tens only), 'two' (carries in tens and hundreds) */
+  function pick3(mode, maxB){
+    for(let k = 0; k < 800; k++){
+      const h = randInt(1, mode === 'none' ? 3 : 9), t = randInt(1, 9), o = randInt(2, 9), b = randInt(2, maxB), a = 100 * h + 10 * t + o, m = colMul(a, b);
+      const ok = mode === 'none' ? (m.po < 10 && m.pt < 10 && m.ph < 10) : mode === 'one' ? (m.c1 > 0 && m.c2 === 0 && m.ph < 10) : (m.c1 > 0 && m.c2 > 0);
+      if(ok) return { a: a, b: b, m: m };
+    }
+    return { a: 213, b: 3, m: colMul(213, 3) };
+  }
+  function pickAny(maxB){ return pick3(pick(['one', 'two', 'two']), maxB); }
+  function resultOf(c){ return String(c.a * c.b); }
+  function workings(c){
+    const m = c.m, st = [];
+    st.push('<b>Ones:</b> ' + m.o + ' × ' + c.b + ' = ' + m.po + (m.c1 ? '. Write <b>' + m.ro + '</b>, carry <b>' + m.c1 + '</b> to the tens.' : '. Write <b>' + m.ro + '</b>.'));
+    st.push('<b>Tens:</b> ' + m.t + ' × ' + c.b + ' = ' + m.t * c.b + (m.c1 ? ', plus the carried ' + m.c1 + ' = ' + m.pt : '') + '. Write <b>' + m.rt + '</b>' + (m.c2 ? ', carry <b>' + m.c2 + '</b> to the hundreds.' : '.'));
+    st.push('<b>Hundreds:</b> ' + m.h + ' × ' + c.b + ' = ' + m.h * c.b + (m.c2 ? ', plus the carried ' + m.c2 + ' = ' + m.ph : '') + '. Write <b>' + m.ph + '</b>.');
+    st.push(c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>. ✅'); return st;
+  }
+  function wrongs(c){
+    const m = c.m, w = [], correct = c.a * c.b;
+    if(m.c1) w.push({ v: 100 * (m.h * c.b + m.c2) + 10 * ((m.t * c.b) % 10) + m.ro, why: 'The carry from the ones (' + m.c1 + ') was forgotten. Add it to the tens.' });
+    if(m.c2) w.push({ v: 100 * (m.h * c.b) + 10 * m.rt + m.ro, why: 'The carry from the tens (' + m.c2 + ') was forgotten. Add it to the hundreds.' });
+    w.push({ v: 100 * (m.h * c.b) + 10 * (m.t * c.b) + m.po, why: 'Each answer must be written in its own column. Carry the tens digit across instead of writing it in full.' });
+    w.push({ v: m.t * c.b * 10 + m.po, why: 'The hundreds digit also has to be multiplied: ' + m.h + ' × ' + c.b + '.' });
+    w.push({ v: c.a + c.b, why: 'You added. Multiplying means ' + c.b + ' groups of ' + c.a + '.' });
+    return w.filter(function(x){ return x.v !== correct && x.v > 0; });
+  }
+  const NEAR = [1, -1, 10, -10, 100, -100, 20, -20, 2, -2];
+
+  /* ---- tier 1: no carrying, one step at a time ---- */
+  function qHundredsStep(){
+    const c = pick3('none', 3), vis = mulTable({ a: c.a, b: c.b });
+    return mcqNum({
+      prompt: 'Look at the <b>hundreds digit</b>. What is ' + c.m.h + ' × ' + c.b + '? (That many hundreds.)', visual: vis, answer: c.m.h * c.b,
+      wrong: [{ v: c.m.h + c.b, why: 'You added. Multiply: ' + c.b + ' groups of ' + c.m.h + '.' }, { v: c.m.t * c.b, why: 'That is the tens digit. This question is about the hundreds digit (' + c.m.h + ').' }, { v: c.m.o * c.b, why: 'That is the ones digit. This question is about the hundreds digit (' + c.m.h + ').' }],
+      nearby: NEAR, valid: pos, count: 3, hint: 'The hundreds digit is ' + c.m.h + '. Count in ' + c.m.h + 's, ' + c.b + ' times.',
+      explain: ex('The hundreds step', ['The hundreds digit is <b>' + c.m.h + '</b>.', c.m.h + ' × ' + c.b + ' = <b>' + c.m.h * c.b + '</b> hundreds. ✅']),
+      truth: times(Math.floor(readA(vis) / 100), readB(vis)), decode: function(){ return times(Math.floor(readA(vis) / 100), readB(vis)); }
+    });
+  }
+  function qReadFinished(){
+    const c = pick3('none', 3), vis = mulTable({ a: c.a, b: c.b, res: resultOf(c) });
+    return mcqNum({
+      prompt: 'Here is a finished column multiplication. What is <b>' + c.a + ' × ' + c.b + '</b>?', visual: vis, answer: c.a * c.b, wrong: wrongs(c), nearby: NEAR, valid: pos, count: 3,
+      hint: 'Read the answer row from left to right.',
+      explain: ex('Reading the column', ['The answer row shows <b>' + resultOf(c) + '</b>.', 'Check: ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + ', ' + c.m.t + ' × ' + c.b + ' = ' + c.m.pt + ', ' + c.m.h + ' × ' + c.b + ' = ' + c.m.ph + '.', c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>. ✅']),
+      truth: times(c.a, c.b), decode: function(){ return parseInt(readRow(vis, 'dr'), 10); }
+    });
+  }
+  function qSolveNone(){
+    const c = pick3('none', 3), vis = mulTable({ a: c.a, b: c.b });
+    return mcqNum({
+      prompt: 'Use the column method. What is <b>' + c.a + ' × ' + c.b + '</b>?', visual: vis, answer: c.a * c.b, wrong: wrongs(c), nearby: NEAR, valid: pos, count: 4,
+      hint: 'Multiply each digit by ' + c.b + ', starting with the ones.', explain: ex('Column multiplication', workings(c)),
+      truth: times(readA(vis), readB(vis)), decode: function(){ return times(readA(vis), readB(vis)); }
+    });
+  }
+  /* ---- tier 2: carrying ---- */
+  function qCarryTens(){
+    const c = pickAny(7), vis = mulTable({ a: c.a, b: c.b });
+    return mcqNum({
+      prompt: 'In <b>' + c.a + ' × ' + c.b + '</b> the ones give ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + '. You write ' + c.m.ro + '. How many do you <b>carry to the tens</b>?', visual: vis, answer: c.m.c1,
+      wrong: [{ v: c.m.ro, why: c.m.ro + ' is what you WRITE. You carry the tens digit of ' + c.m.po + '.' }, { v: c.m.po, why: c.m.po + ' is the whole product. Write the ones digit, carry only the tens.' }, { v: c.b, why: c.b + ' is the multiplier, not the carry.' }],
+      nearby: [1, -1, 2, 3, 4, 5], valid: pos, count: 4, hint: c.m.po + ' is made of tens and ones. The ones digit stays; the tens digit moves across.',
+      explain: ex('Carrying', [c.m.o + ' × ' + c.b + ' = ' + c.m.po + ' = <b>' + c.m.c1 + '</b> ten' + (c.m.c1 > 1 ? 's' : '') + ' and ' + c.m.ro + ' ones.', 'Write <b>' + c.m.ro + '</b>, carry <b>' + c.m.c1 + '</b>. ✅']),
+      truth: Math.floor((readA(vis) % 10) * readB(vis) / 10), decode: function(){ return Math.floor((readA(vis) % 10) * readB(vis) / 10); }
+    });
+  }
+  function qCarryHundreds(){
+    const c = pick3('two', 6), vis = mulTable({ a: c.a, b: c.b });
+    return mcqNum({
+      prompt: 'In <b>' + c.a + ' × ' + c.b + '</b> the tens step gives ' + c.m.t + ' × ' + c.b + ' + ' + c.m.c1 + ' = ' + c.m.pt + '. You write ' + c.m.rt + '. How many do you <b>carry to the hundreds</b>?', visual: vis, answer: c.m.c2,
+      wrong: [{ v: c.m.rt, why: c.m.rt + ' is what you WRITE. You carry the tens digit of ' + c.m.pt + '.' }, { v: c.m.pt, why: c.m.pt + ' is the whole total. Write the ones digit, carry the rest.' }, { v: c.m.c1, why: c.m.c1 + ' was the carry from the ONES step. This time carry from the tens step.' }],
+      nearby: [1, -1, 2, 3, 4, 5], valid: pos, count: 4, hint: c.m.pt + ' = tens and ones. The ones digit stays; the tens digit moves across.',
+      explain: ex('Carrying again', [c.m.t + ' × ' + c.b + ' = ' + c.m.t * c.b + ', plus the carried ' + c.m.c1 + ' = ' + c.m.pt + '.', 'Write <b>' + c.m.rt + '</b>, carry <b>' + c.m.c2 + '</b> to the hundreds. ✅']),
+      truth: Math.floor((times(Math.floor(readA(vis) / 10) % 10, readB(vis)) + Math.floor((readA(vis) % 10) * readB(vis) / 10)) / 10), decode: function(){ return Math.floor((times(Math.floor(readA(vis) / 10) % 10, readB(vis)) + Math.floor((readA(vis) % 10) * readB(vis) / 10)) / 10); }
+    });
+  }
+  function qSolveCarry(){
+    const c = pickAny(7), vis = mulTable({ a: c.a, b: c.b, carries: ['', '', '', ''] });
+    return mcqNum({
+      prompt: 'Use the column method. What is <b>' + c.a + ' × ' + c.b + '</b>?', visual: vis, answer: c.a * c.b, wrong: wrongs(c), nearby: NEAR, valid: pos, count: 4,
+      hint: 'Ones first: multiply, write the ones digit, carry the rest. Then the tens, then the hundreds, adding each carry.', explain: ex('Column multiplication', workings(c)),
+      truth: times(readA(vis), readB(vis)), decode: function(){ return times(readA(vis), readB(vis)); }
+    });
+  }
+  function qWordCarry(){
+    const c = pickAny(7), th = pick(THINGS), who = pick(NAMES);
+    return mcqNum({
+      prompt: who + ' has ' + c.b + ' ' + th[0] + '. Each one has ' + c.a + ' ' + th[1] + '. How many ' + th[1] + ' altogether?', answer: c.a * c.b, wrong: wrongs(c), nearby: NEAR, valid: pos, count: 4,
+      hint: 'Think “' + c.b + ' groups of ' + c.a + '”. Use the column method.', explain: ex('Equal groups in a column', workings(c)), truth: times(c.a, c.b)
+    });
+  }
+  /* ---- tier 3 ---- */
+  function qTyped(){
+    const c = pickAny(9);
+    return numeric({
+      prompt: 'Work out  <b>' + c.a + ' × ' + c.b + '</b>  using the column method.', answer: c.a * c.b,
+      hint: 'Ones, then tens, then hundreds. Write the ones digit and carry the rest each time.', explain: ex('Column multiplication', workings(c)), truth: times(c.a, c.b),
+      wrong: function(v){ return v === c.a + c.b ? 'You added. Multiply.' : (c.m.c1 && v === 100 * (c.m.h * c.b + c.m.c2) + 10 * ((c.m.t * c.b) % 10) + c.m.ro) ? 'You forgot the carry from the ones.' : (c.m.c2 && v === 100 * (c.m.h * c.b) + 10 * c.m.rt + c.m.ro) ? 'You forgot the carry from the tens.' : ''; }
+    });
+  }
+  function qForgotCarry(){
+    const c = pick3('two', 9), who = pick(NAMES), bad = 100 * (c.m.h * c.b) + 10 * c.m.rt + c.m.ro;
+    return numeric({
+      prompt: who + ' worked out ' + c.a + ' × ' + c.b + ' and got <b>' + bad + '</b>. ' + who + ' forgot to add the carry from the tens to the hundreds. What is the correct answer?', answer: c.a * c.b,
+      hint: 'The tens step makes ' + c.m.pt + ': write ' + c.m.rt + ' and carry ' + c.m.c2 + ' to the hundreds.', explain: ex('Putting the carry back', workings(c)), truth: times(c.a, c.b),
+      wrong: function(v){ return v === bad ? bad + ' is the answer without that carry. Add the carried ' + c.m.c2 + ' to the hundreds.' : ''; }
+    });
+  }
+  function qMissingDigit(){
+    const c = pickAny(9), res = resultOf(c), idx = randInt(0, res.length - 1), hid = res.split('').map(function(ch, i){ return i === idx ? '?' : ch; }).join(''), vis = mulTable({ a: c.a, b: c.b, res: hid });
+    return numeric({
+      prompt: 'One digit of the answer is hidden. Which digit is the <b>?</b>', visual: vis, answer: Number(res.charAt(idx)),
+      hint: 'Work out ' + c.a + ' × ' + c.b + ' first, then look at the hidden place.', explain: ex('Finding the hidden digit', workings(c).slice(0, 3).concat(['The answer is <b>' + res + '</b>, so the hidden digit is <b>' + res.charAt(idx) + '</b>. ✅'])),
+      truth: Number(String(times(readA(vis), readB(vis))).charAt(String(times(readA(vis), readB(vis))).length - readRow(vis, 'dr').length + readRow(vis, 'dr').indexOf('?'))), decode: function(){ const p = String(times(readA(vis), readB(vis))), r = readRow(vis, 'dr'); return Number(p.charAt(p.length - r.length + r.indexOf('?'))); }
+    });
+  }
+  function qEstimate(){
+    const c = pickAny(9), r100 = Math.round(c.a / 100) * 100, est = r100 * c.b, correct = c.a * c.b, who = pick(NAMES);
+    const ds = [opt(K.num(Number(String(correct) + '0')), String(Number(String(correct) + '0')), 'That is ten times too big. ' + r100 + ' × ' + c.b + ' = ' + est + ' shows the answer is close to ' + est + '.')];
+    wrongs(c).forEach(function(w){ if(w.v !== correct && !ds.some(function(d){ return d.key === K.num(w.v); })) ds.push(opt(K.num(w.v), String(w.v), w.why)); });
+    [10, -10, 100, -100, 20, -20].forEach(function(d){ const v = correct + d; if(v > 0 && !ds.some(function(o){ return o.key === K.num(v); })) ds.push(opt(K.num(v), String(v), 'Check the column working again: ' + c.a + ' × ' + c.b + ' is not ' + v + '.')); });
+    return mcq({
+      prompt: who + ' estimates ' + c.a + ' × ' + c.b + ' by rounding to the nearest 100: ' + r100 + ' × ' + c.b + ' = ' + est + '. Which of these is the <b>exact</b> answer to ' + c.a + ' × ' + c.b + '?', correct: opt(K.num(correct), String(correct)), distractors: ds, keepOrder: true, count: 4,
+      hint: 'Do the column method, then check it is close to the estimate ' + est + '.', explain: ex('Estimate and check', workings(c).slice(0, 3).concat([c.a + ' × ' + c.b + ' = <b>' + correct + '</b>, close to the estimate ' + est + '. ✅'])), truth: K.num(times(c.a, c.b))
+    });
+  }
+  function qTwoStep(){
+    const c = pickAny(7), th = pick(THINGS), who = pick(NAMES), k = randInt(2, 9), plus = chance(0.5);
+    return numeric({
+      prompt: who + ' has ' + c.b + ' ' + th[0] + ' with ' + c.a + ' ' + th[1] + ' in each. ' + (plus ? k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?' : k + ' ' + th[1] + ' are used. How many ' + th[1] + ' are left?'), answer: c.a * c.b + (plus ? k : -k),
+      hint: 'Two steps. First ' + c.a + ' × ' + c.b + ' in a column. Then ' + (plus ? 'add ' : 'take away ') + k + '.', explain: ex('Two steps', ['Step 1: ' + c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>.', 'Step 2: ' + c.a * c.b + (plus ? ' + ' : ' − ') + k + ' = <b>' + (c.a * c.b + (plus ? k : -k)) + '</b>. ✅']),
+      truth: times(c.a, c.b) + (plus ? k : -k), wrong: function(v){ return v === c.a * c.b ? c.a * c.b + ' is only step 1. Now ' + (plus ? 'add ' : 'take away ') + k + '.' : ''; }
+    });
+  }
+  const L1 = mulTable({ a: 213, b: 3, res: 639 }), L2 = mulTable({ a: 346, b: 2, res: 692, carries: ['', '', 1, ''] }), L3 = mulTable({ a: 275, b: 4, res: 1100, carries: ['', 3, 2, ''] });
+  registerSkill({
+    id: 'multdiv-mult-3d', strand: 'multdiv', name: 'Multiplying 3-digit numbers', emoji: '✖️', year: 4, order: 405, prereq: ['multdiv-formal-mult'],
+    lesson: { title: '3-digit × 1-digit in a column', steps: [
+      { say: 'The column method works for bigger numbers too: multiply <b>ones, then tens, then hundreds</b>. 213 × 3: 3×3 = 9, 1×3 = 3, 2×3 = 6. The answer is <b>639</b>.', vis: { kind: 'html', args: [L1] } },
+      { say: '346 × 2. Ones: 6 × 2 = 12, write <b>2</b>, carry <b>1</b>. Tens: 4 × 2 = 8, add 1 = <b>9</b>. Hundreds: 3 × 2 = <b>6</b>. So 346 × 2 = <b>692</b>.', vis: { kind: 'html', args: [L2] },
+        quiz: { prompt: 'In 346 × 2, the ones give 12. What do you carry?', options: [{ label: '1', ok: true }, { label: '2', ok: false }, { label: '12', ok: false }], right: 'Yes! Write 2, carry 1.', wrong: '12 is 1 ten and 2 ones. Write 2, carry 1.' } },
+      { say: '275 × 4. Ones: 5×4 = 20, write 0 carry 2. Tens: 7×4 = 28 + 2 = 30, write 0 carry 3. Hundreds: 2×4 = 8 + 3 = 11. So <b>1,100</b>. Estimate: 300 × 4 = 1,200, close ✓', vis: { kind: 'html', args: [L3] },
+        quiz: { prompt: 'About how big is 398 × 3? (Round 398 to 400.)', options: [{ label: 'About 1,200', ok: true }, { label: 'About 120', ok: false }, { label: 'About 12,000', ok: false }], right: 'Yes! 400 × 3 = 1,200.', wrong: '400 × 3 = 1,200, so 398 × 3 is a little less.' } }
+    ] },
+    trick: { title: 'Right to left, carry, estimate', say: 'Start on the <b>right</b>. At every column: multiply, add the carry, <b>write</b> the ones digit and <b>carry</b> the rest. Then <b>estimate</b> by rounding to check.', vis: { kind: 'html', args: [L2] }, example: '346 × 2 → 6×2 = 12 (write 2, carry 1) → 4×2+1 = 9 → 3×2 = 6 → <b>692</b> &nbsp; (estimate 300 × 2 = 600 ✓)' },
+    gen: {
+      1: function(){ return pick([qHundredsStep, qReadFinished, qSolveNone, qSolveNone])(); },
+      2: function(){ return pick([qCarryTens, qCarryHundreds, qSolveCarry, qSolveCarry, qSolveCarry, qWordCarry])(); },
+      3: function(){ return pick([qTyped, qTyped, qForgotCarry, qMissingDigit, qEstimate, qTwoStep])(); }
     }
   });
 })();
@@ -14971,6 +15418,128 @@ if(typeof module !== 'undefined') module.exports = V;
   });
 })();
 
+/* ===== src/skills/number-4-digit.js ===== */
+/* number-4-digit — 4-digit numbers: place value, partitioning, comparing, ordering, 1000 more/less (Year 4 bridge). */
+(function(){
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  const PLACE = ['ones', 'tens', 'hundreds', 'thousands'];
+  function build(th, h, t, o){ return th * 1000 + h * 100 + t * 10 + o; }
+  function digits(n){ return String(n).split('').map(Number); }
+  function rnd4(){ return build(randInt(1, 9), randInt(0, 9), randInt(0, 9), randInt(0, 9)); }
+  function rnd4nz(){ return build(randInt(1, 9), randInt(1, 9), randInt(1, 9), randInt(1, 9)); }
+  /* place a digit by position counting from the right, independent of string tricks */
+  function digitAt(n, p){ let x = n; for(let i = 0; i < p; i++) x = (x - x % 10) / 10; return x % 10; }
+
+  function qDigitValue(){
+    const n = rnd4nz(), p = randInt(0, 3), d = digitAt(n, p), val = d * Math.pow(10, p);
+    const w = [];
+    w.push({ v: d, why: 'That is the digit itself. In the ' + PLACE[p] + ' place it is worth ' + val + '.' });
+    [0, 1, 2, 3].forEach(function(q){ if(q !== p) w.push({ v: d * Math.pow(10, q), why: 'The ' + d + ' is in the ' + PLACE[p] + ' place, so it is worth ' + val + ', not ' + d * Math.pow(10, q) + '.' }); });
+    return mcqNum({
+      prompt: 'In <b>' + n + '</b>, what is the value of the digit <b>' + d + '</b> in the <b>' + PLACE[p] + '</b> place?', answer: val, wrong: w, nearby: [], valid: function(v){ return v > 0; }, count: 4,
+      hint: 'Which column is it in? Ones, tens, hundreds or thousands?',
+      explain: ex('Value of a digit', ['Read the columns from the right: ones, tens, hundreds, <b>thousands</b>.', 'In ' + n + ' the ' + PLACE[p] + ' digit is ' + d + '.', 'Its value is <b>' + val + '</b>. ✅']), truth: digitAt(n, p) * Math.pow(10, p)
+    });
+  }
+  function qPartitionMcq(){
+    const th = randInt(1, 9), h = randInt(1, 9), t = randInt(1, 9), o = randInt(1, 9), n = build(th, h, t, o);
+    return mcqNum({
+      prompt: '<b>' + th * 1000 + ' + ' + h * 100 + ' + ' + t * 10 + ' + ' + o + '</b> is the same as which number?', answer: n,
+      wrong: [{ v: build(th, t, h, o), why: 'The hundreds and tens are swapped. ' + h + ' hundreds is ' + h * 100 + '.' }, { v: build(h, th, t, o), why: 'The thousands digit is ' + th + ' (that is ' + th * 1000 + ').' }, { v: build(th, h, o, t), why: 'The tens digit is ' + t + ' and the ones digit is ' + o + '.' }, { v: build(th, h, t, o) + 1000, why: 'Check the thousands: ' + th * 1000 + '.' }],
+      nearby: [1, -1, 10, 100], valid: function(v){ return v > 999 && v < 10000; }, count: 4, hint: 'Write each part in its own column: thousands, hundreds, tens, ones.',
+      explain: ex('Partitioning', [th * 1000 + ' is ' + th + ' thousands, ' + h * 100 + ' is ' + h + ' hundreds, ' + t * 10 + ' is ' + t + ' tens, ' + o + ' is ' + o + ' ones.', 'Together: <b>' + n + '</b>. ✅']), truth: th * 1000 + h * 100 + t * 10 + o
+    });
+  }
+  function qZero(){
+    const th = randInt(1, 9), h = randInt(1, 9), o = randInt(1, 9), n = build(th, h, 0, o);
+    return mcqNum({
+      prompt: 'Which number is <b>' + th + ' thousands, ' + h + ' hundreds, 0 tens and ' + o + ' ones</b>?', answer: n,
+      wrong: [{ v: build(th, h, o, 0), why: 'There are 0 tens, so the tens digit is 0 and the ones digit is ' + o + '.' }, { v: build(th, h, 0, 0) * 10 + o, why: 'You wrote one digit too many. A zero fills the empty tens place.' }, { v: build(th, 0, h, o), why: 'The hundreds digit is ' + h + ' and the tens digit is 0.' }, { v: th * 100 + h * 10 + o, why: 'That is only 3 digits. We need a zero for the 0 tens.' }],
+      nearby: [1, -1, 10, 100], valid: function(v){ return v > 0; }, count: 4, hint: 'Use 0 as a placeholder for an empty column.',
+      explain: ex('Zero as a placeholder', ['Thousands ' + th + ', hundreds ' + h + ', tens 0, ones ' + o + '.', 'The 0 holds the tens place: <b>' + n + '</b>. ✅']), truth: digitAt(n, 3) * 1000 + digitAt(n, 2) * 100 + digitAt(n, 1) * 10 + digitAt(n, 0)
+    });
+  }
+  function qLine(){
+    const base = randInt(1, 9) * 1000, n = base + randInt(1, 9) * 100, vis = V.numberLine({ min: base, max: base + 1000, minor: 100, major: 500, width: 340, marks: [{ value: n }] });
+    return mcqNum({
+      prompt: 'Which number does the arrow point to?', visual: vis, answer: n,
+      wrong: [{ v: n + 100, why: 'Count the small steps from ' + base + ': each one is 100.' }, { v: n - 100, why: 'Count the small steps from ' + base + ': each one is 100.' }, { v: base + (n - base) / 10, why: 'Each small step is 100, not 10.' }, { v: base + 1000 - (n - base), why: 'Count from the LEFT end (' + base + ').' }],
+      nearby: [100, -100, 200], valid: function(v){ return v >= base && v <= base + 1000; }, count: 4, hint: 'The line starts at ' + base + ' and goes up in steps of 100.',
+      explain: ex('Reading the line', ['The left end is ' + base + ' and each small step is 100.', 'The arrow is ' + (n - base) / 100 + ' steps along.', base + ' + ' + (n - base) + ' = <b>' + n + '</b>. ✅']),
+      truth: n, decode: function(){ return Math.round(V.decodeNumberLine(vis)); }
+    });
+  }
+  function qCompare(){
+    const a = rnd4(); let b;
+    const mode = randInt(0, 2);
+    if(mode === 0) b = build(digitAt(a, 3), digitAt(a, 2), digitAt(a, 1) === 9 ? 8 : digitAt(a, 1) + 1, digitAt(a, 0));
+    else if(mode === 1) b = build(digitAt(a, 3), digitAt(a, 2) === 9 ? 8 : digitAt(a, 2) + 1, digitAt(a, 1), digitAt(a, 0));
+    else b = build(digitAt(a, 3) === 9 ? 8 : digitAt(a, 3) + 1, digitAt(a, 2), digitAt(a, 1), digitAt(a, 0));
+    const askBig = chance(0.5), big = Math.max(a, b), small = Math.min(a, b), ans = askBig ? big : small, oth = askBig ? small : big;
+    return mcq2({
+      prompt: 'Which number is <b>' + (askBig ? 'greater' : 'smaller') + '</b>?', correct: opt(K.num(ans), String(ans), 'Compare the thousands first, then the hundreds, then the tens, then the ones.'), other: opt(K.num(oth), String(oth), 'Compare digit by digit from the left. Find the first column that is different.'),
+      hint: 'Start with the thousands digit. If they match, move to the hundreds.',
+      explain: ex('Comparing 4-digit numbers', ['Compare from the left: thousands, hundreds, tens, ones.', 'The first different column decides.', '<b>' + ans + '</b> is ' + (askBig ? 'greater' : 'smaller') + ' than ' + oth + '. ✅']), truth: K.num(askBig ? Math.max(a, b) : Math.min(a, b))
+    });
+  }
+  function qOrder(){
+    const th = randInt(1, 8), nums = []; const seen = {};
+    while(nums.length < 4){ const n = build(chance(0.6) ? th : randInt(1, 9), randInt(0, 9), randInt(0, 9), randInt(0, 9)); if(!seen[n]){ seen[n] = 1; nums.push(n); } }
+    const asc = chance(0.5), sorted = nums.slice().sort(function(x, y){ return x - y; }), inOrder = asc ? sorted : sorted.slice().reverse();
+    return order({
+      prompt: 'Put these numbers in order, <b>' + (asc ? 'smallest to largest' : 'largest to smallest') + '</b>. Tap them one at a time.', items: inOrder.map(function(n){ return { key: String(n), label: String(n) }; }),
+      hint: 'Find the ' + (asc ? 'smallest' : 'largest') + ' first. Compare thousands, then hundreds, then tens, then ones.',
+      explain: ex('Ordering 4-digit numbers', ['Compare the thousands first. If two match, compare the hundreds, then the tens, then the ones.', 'From ' + (asc ? 'smallest to largest' : 'largest to smallest') + ': <b>' + inOrder.join(', ') + '</b>. ✅']), truth: 'o:' + inOrder.join('|')
+    });
+  }
+  function qMoreLess(){
+    const n = build(randInt(1, 8), randInt(0, 9), randInt(0, 9), randInt(0, 9)), step = pick([1000, 1000, 100, 10]), more = chance(0.5), ans = more ? n + step : n - step, nm = {1000: 'a thousand', 100: 'a hundred', 10: 'ten'}[step];
+    return numeric({
+      prompt: 'Type the number that is <b>' + (step === 1000 ? '1000' : step === 100 ? '100' : '10') + ' ' + (more ? 'more' : 'less') + '</b> than <b>' + n + '</b>.', answer: ans,
+      hint: 'Only one digit changes: the ' + (step === 1000 ? 'thousands' : step === 100 ? 'hundreds' : 'tens') + ' digit goes ' + (more ? 'up' : 'down') + ' by 1.',
+      explain: ex(step + ' ' + (more ? 'more' : 'less'), ['Change the ' + (step === 1000 ? 'thousands' : step === 100 ? 'hundreds' : 'tens') + ' digit by 1, ' + (more ? 'up' : 'down') + '.', n + (more ? ' + ' : ' − ') + step + ' = <b>' + ans + '</b>. ✅']), truth: more ? n + step : n - step,
+      wrong: function(v){ return v === (more ? n - step : n + step) ? 'That is ' + step + ' ' + (more ? 'less' : 'more') + '. Read the question again.' : v === (more ? n + 1000 : n - 1000) && step !== 1000 ? 'That changes the thousands digit. Which digit should change?' : ''; }
+    });
+  }
+  function qBuildTyped(){
+    const th = randInt(1, 9), h = randInt(0, 9), t = randInt(0, 9), o = randInt(0, 9), n = build(th, h, t, o);
+    return numeric({
+      prompt: 'Type the number:  <b>' + th * 1000 + ' + ' + h * 100 + ' + ' + t * 10 + ' + ' + o + '</b>', answer: n, hint: 'Put each part in its own column. Use 0 for empty columns.',
+      explain: ex('Partitioning', ['Thousands ' + th + ', hundreds ' + h + ', tens ' + t + ', ones ' + o + '.', 'Together: <b>' + n + '</b>. ✅']), truth: th * 1000 + h * 100 + t * 10 + o
+    });
+  }
+  function qWhichDigit(){
+    const n = rnd4nz(), p = randInt(0, 3), d = digitAt(n, p);
+    return numeric({
+      prompt: 'Which digit is in the <b>' + PLACE[p] + '</b> place of <b>' + n + '</b>? Type it.', answer: d, hint: 'Count columns from the right: ones, tens, hundreds, thousands.',
+      explain: ex('Reading the columns', [n + ' has thousands ' + digitAt(n, 3) + ', hundreds ' + digitAt(n, 2) + ', tens ' + digitAt(n, 1) + ', ones ' + digitAt(n, 0) + '.', 'The ' + PLACE[p] + ' digit is <b>' + d + '</b>. ✅']), truth: digits(n)[3 - p]
+    });
+  }
+  function qWord(){
+    const who = pick(NAMES), n = build(randInt(2, 8), randInt(0, 9), randInt(0, 9), randInt(0, 9)), more = chance(0.5), thing = pick(['stickers', 'cards', 'beads', 'coins']);
+    return numeric({
+      prompt: who + ' has ' + n + ' ' + thing + '. A friend gives ' + who + ' <b>1000 ' + (more ? 'more' : 'fewer') + '</b>' + (more ? '' : ' to keep') + '. ' + (more ? 'How many does ' + who + ' have now?' : 'How many are left?'), answer: more ? n + 1000 : n - 1000,
+      hint: 'Change only the thousands digit.', explain: ex('1000 ' + (more ? 'more' : 'less'), ['Only the thousands digit changes.', n + (more ? ' + 1000 = ' : ' − 1000 = ') + '<b>' + (more ? n + 1000 : n - 1000) + '</b>. ✅']), truth: more ? n + 1000 : n - 1000
+    });
+  }
+  registerSkill({
+    id: 'number-4-digit', strand: 'number', name: '4-digit numbers', emoji: '🔢', year: 4, order: 165, prereq: ['number-place-value', 'number-compare-order'],
+    lesson: { title: 'Numbers up to 9,999', steps: [
+      { say: 'After <b>999</b> comes <b>1,000</b>: ten hundreds make one <b>thousand</b>. A 4-digit number has columns: <b>thousands, hundreds, tens, ones</b>.', vis: { kind: 'baseTen', args: [9, 9, 9] } },
+      { say: '<b>5,284</b> = 5,000 + 200 + 80 + 4. The 5 is in the thousands place, so it is worth <b>5,000</b>. A <b>0</b> holds an empty column: in 5,<b>0</b>84 there are <b>0 hundreds</b>.',
+        quiz: { prompt: 'What is the value of the 7 in 3,742?', options: [{ label: '700', ok: true }, { label: '7', ok: false }, { label: '7,000', ok: false }], right: 'Yes! 7 is in the hundreds place.', wrong: 'Columns from the right: 2 ones, 4 tens, 7 hundreds, 3 thousands. The 7 is worth 700.' } },
+      { say: 'To compare, start at the <b>left</b>. 4,512 and 4,498: thousands match (4), then hundreds: 5 is more than 4. So <b>4,512 is greater</b>.',
+        quiz: { prompt: 'Which is greater: 6,310 or 6,301?', options: [{ label: '6,310', ok: true }, { label: '6,301', ok: false }], right: 'Yes! Tens: 1 is more than 0.', wrong: 'Thousands and hundreds match. Tens: 1 is more than 0, so 6,310 is greater.' } }
+    ] },
+    trick: { title: 'Start at the left', say: 'To <b>compare or order</b> big numbers, start at the <b>left</b> and find the first column that is different. For 1000 more or less, change <b>only the thousands digit</b>.', example: '4,512 vs 4,498 → hundreds 5 &gt; 4 → <b>4,512 is greater</b>' },
+    gen: {
+      1: function(){ return pick([qDigitValue, qLine, qLine, qPartitionMcq, qZero])(); },
+      2: function(){ return pick([qDigitValue, qCompare, qCompare, qOrder, qZero, qPartitionMcq, qLine])(); },
+      3: function(){ return pick([qBuildTyped, qMoreLess, qMoreLess, qWhichDigit, qOrder, qWord])(); }
+    }
+  });
+})();
+
 /* ===== src/skills/number-compare-order.js ===== */
 /* number-compare-order — compare 3-digit numbers (<, >, =) and put them in order. */
 (function(){
@@ -15957,6 +16526,98 @@ if(typeof module !== 'undefined') module.exports = V;
           }
         }
       }
+    }
+  });
+})();
+
+/* ===== src/skills/number-round-1000.js ===== */
+/* number-round-1000 — round 3- and 4-digit numbers to the nearest 1000 (Year 4), with number-line support. */
+(function(){
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  function r1000(n){ return Math.floor((n + 500) / 1000) * 1000; }
+  function down(n){ return Math.floor(n / 1000) * 1000; }
+  /* independent check by DISTANCE (halfway goes up) */
+  function nearest(n){ const lo = down(n), hi = lo + 1000; return (hi - n) <= (n - lo) ? hi : lo; }
+  function pickN(){ let n; do { n = randInt(1100, 9899); } while(n % 1000 === 0 || n % 1000 === 500 && chance(0.5)); return n; }
+  function lineFor(n){ const lo = down(n); return V.numberLine({ min: lo, max: lo + 1000, minor: 100, major: 500, width: 340, marks: [{ value: n }] }); }
+  function readLine(html){ return Math.round(V.decodeNumberLine(html)); }
+  function wrongs(n){
+    const lo = down(n), hi = lo + 1000, ans = r1000(n), other = ans === lo ? hi : lo, h = Math.floor(n / 100) % 10, w = [];
+    if(h === 5) w.push({ v: lo, why: 'Halfway rounds UP. A hundreds digit of 5 or more means go up to ' + hi + '.' });
+    w.push({ v: other, why: 'The hundreds digit is ' + h + ', which is ' + (ans === hi ? '5 or more, so we round UP to ' + hi : '4 or less, so we stay DOWN at ' + lo) + '.' });
+    w.push({ v: Math.floor((n + 50) / 100) * 100, why: 'That is rounding to the nearest 100. This question asks for the nearest 1000.' });
+    w.push({ v: Math.floor((n + 5) / 10) * 10, why: 'That is rounding to the nearest 10. This question asks for the nearest 1000.' });
+    w.push({ v: ans + 1000, why: 'Too far. Only ' + lo + ' and ' + hi + ' are next to ' + n + '.' });
+    w.push({ v: ans - 1000, why: 'Too far. Only ' + lo + ' and ' + hi + ' are next to ' + n + '.' });
+    w.push({ v: n, why: 'Rounding means finding a tidier number. ' + n + ' is not a multiple of 1000.' });
+    w.push({ v: ans + 500, why: 'A rounded thousand ends in 000, not 500.' });
+    w.push({ v: ans + 100, why: 'A rounded thousand ends in 000.' });
+    return w;
+  }
+  function explain(n){
+    const lo = down(n), hi = lo + 1000, ans = r1000(n), h = Math.floor(n / 100) % 10;
+    return ex('Rounding to the nearest 1000', ['The two thousands next to ' + n + ' are <b>' + lo + '</b> and <b>' + hi + '</b>.', 'Look at the <b>hundreds</b> digit: it is ' + h + '.', h >= 5 ? '5 or more, so round <b>up</b> to <b>' + hi + '</b>. ✅' : '4 or less, so stay <b>down</b> at <b>' + lo + '</b>. ✅']);
+  }
+  function qLine(){
+    const n = pickN(), vis = lineFor(n), ans = r1000(n), lo = down(n), hi = lo + 1000;
+    return mcqNum({
+      prompt: 'The arrow shows a number between ' + lo + ' and ' + hi + '. Which thousand is it <b>closest</b> to?', visual: vis, answer: ans,
+      wrong: [{ v: ans === lo ? hi : lo, why: 'Look at which end of the line the arrow is nearer to.' }, { v: ans + 500, why: 'Rounding to the nearest 1000 gives a thousand, not a number ending in 500.' }, { v: ans - 1000, why: 'That is too far away.' }, { v: ans + 1000, why: 'That is too far away.' }, { v: ans + 100, why: 'A rounded thousand ends in 000.' }, { v: ans === lo ? lo + 500 : hi - 500, why: 'That is the halfway mark, not a thousand.' }],
+      nearby: [1000, -1000, 100, 500], valid: function(v){ return v > 0; }, count: 3, hint: 'Is the arrow in the first half or the second half of the line?',
+      explain: ex('Closest thousand', ['The arrow is at about ' + n + '.', 'It is nearer to <b>' + ans + '</b> than to ' + (ans === lo ? hi : lo) + '. ✅']),
+      truth: nearest(n), decode: function(){ return nearest(readLine(vis)); }
+    });
+  }
+  function qMcq(){
+    const n = pickN();
+    return mcqNum({ prompt: 'Round <b>' + n + '</b> to the nearest 1000.', answer: r1000(n), wrong: wrongs(n), nearby: [1000, -1000], valid: function(v){ return v > 0; }, count: 4, hint: 'Look at the hundreds digit. 5 or more goes up.', explain: explain(n), truth: nearest(n) });
+  }
+  function qBetween(){
+    const n = pickN(), lo = down(n);
+    return mcqNum({ prompt: n + ' is between which two thousands?', answer: lo,
+      wrong: [{ v: lo + 1000, why: 'That is the upper thousand. ' + n + ' is above ' + lo + '.' }, { v: lo - 1000, why: 'Too low. ' + n + ' is above ' + lo + '.' }, { v: lo + 100, why: 'We need thousands. ' + lo + ' and ' + (lo + 1000) + ' are neighbouring thousands.' }],
+      nearby: [1000, -1000], valid: function(v){ return v > 0; }, count: 3, hint: 'Look at the thousands digit and the one after it.',
+      explain: ex('Neighbouring thousands', [n + ' has ' + Math.floor(n / 1000) + ' thousands.', 'It sits between <b>' + lo + '</b> and <b>' + (lo + 1000) + '</b>. The first of these is the answer. ✅']), truth: Math.floor(n / 1000) * 1000 });
+  }
+  function qTyped(){
+    const n = pickN();
+    return numeric({ prompt: 'Type the answer: round <b>' + n + '</b> to the nearest 1000.', answer: r1000(n), hint: 'Look at the hundreds digit. 5 or more goes up.', explain: explain(n), truth: nearest(n),
+      wrong: function(v){ return v === down(n) + (r1000(n) === down(n) ? 1000 : -1000) && v > 0 ? 'Check the hundreds digit: ' + Math.floor(n / 100) % 10 + '.' : ''; } });
+  }
+  function qBoundary(){
+    const t = randInt(1, 8) * 1000, up = chance(0.5), n = t + (up ? 500 : 499);
+    return numeric({ prompt: 'Round <b>' + n + '</b> to the nearest 1000.', answer: nearest(n),
+      hint: 'Halfway between two thousands is ' + (t + 500) + '. Is ' + n + ' at or past halfway?',
+      explain: ex('Right at the halfway point', [n + ' has ' + Math.floor(n / 100) % 10 + ' hundreds.', up ? 'Exactly halfway (500) rounds <b>up</b> to <b>' + (t + 1000) + '</b>. ✅' : '499 is just below halfway, so it rounds <b>down</b> to <b>' + t + '</b>. ✅']), truth: nearest(n),
+      wrong: function(v){ return v === (up ? t : t + 1000) ? (up ? 'Halfway always rounds UP.' : '499 has not reached halfway.') : ''; } });
+  }
+  function qWord(){
+    const n = pickN(), who = pick(NAMES), things = pick(['visitors came to the museum', 'people watched the match', 'books are in the library', 'steps did the walkers take']);
+    return numeric({ prompt: n + ' ' + things + '. ' + who + ' says “about how many, to the nearest 1000?” Type the number.', answer: nearest(n), hint: 'Round the number to the nearest 1000.', explain: explain(n), truth: nearest(n) });
+  }
+  function qMost(){
+    const lo = randInt(1, 8) * 1000, below = lo + randInt(1, 499), above = lo + randInt(501, 999), pickLow = chance(0.5);
+    const who = pick(NAMES);
+    return mcq2({ prompt: who + ' rounded to the nearest 1000 and got <b>' + (pickLow ? lo : lo + 1000) + '</b>. Which number could ' + who + ' have started with?',
+      correct: opt(K.num(pickLow ? below : above), String(pickLow ? below : above), (pickLow ? below : above) + ' rounds to ' + (pickLow ? lo : lo + 1000) + '.'),
+      other: opt(K.num(pickLow ? above : below), String(pickLow ? above : below), (pickLow ? above : below) + ' rounds to ' + (pickLow ? lo + 1000 : lo) + ', not ' + (pickLow ? lo : lo + 1000) + '.'),
+      hint: 'Round each choice and see which gives the answer.',
+      explain: ex('Working backwards', ['Round each number to the nearest 1000.', (pickLow ? below : above) + ' → <b>' + nearest(pickLow ? below : above) + '</b>. ✅']), truth: K.num([below, above].filter(function(c){ return nearest(c) === (pickLow ? lo : lo + 1000); })[0]) });
+  }
+  registerSkill({
+    id: 'number-round-1000', strand: 'number', name: 'Round to 1000', emoji: '🎯', year: 4, order: 175, prereq: ['number-round'],
+    lesson: { title: 'Rounding to the nearest 1000', steps: [
+      { say: 'To round to the nearest <b>1000</b>, find the two thousands on each side. For 3,400 they are <b>3,000</b> and <b>4,000</b>.', vis: { kind: 'numberLine', args: [{ min: 3000, max: 4000, minor: 100, major: 500, width: 340, marks: [{ value: 3400 }] }] } },
+      { say: 'Look at the <b>hundreds</b> digit. <b>4 or less → down. 5 or more → up.</b> 3,400 has 4 hundreds, so it goes down to <b>3,000</b>.', vis: { kind: 'numberLine', args: [{ min: 3000, max: 4000, minor: 100, major: 500, width: 340, marks: [{ value: 3400 }] }] },
+        quiz: { prompt: 'Round 6,700 to the nearest 1000.', options: [{ label: '7,000', ok: true }, { label: '6,000', ok: false }, { label: '6,700', ok: false }], right: 'Yes! 7 hundreds → round up.', wrong: 'The hundreds digit is 7 (5 or more), so go up to 7,000.' } },
+      { say: 'Exactly halfway rounds <b>up</b>. 4,500 → <b>5,000</b>. But 4,499 is below halfway, so it goes down to 4,000.', vis: { kind: 'numberLine', args: [{ min: 4000, max: 5000, minor: 100, major: 500, width: 340, marks: [{ value: 4500 }] }] },
+        quiz: { prompt: 'Round 8,499 to the nearest 1000.', options: [{ label: '8,000', ok: true }, { label: '9,000', ok: false }, { label: '8,500', ok: false }], right: 'Yes! 4 hundreds → down.', wrong: 'The hundreds digit is 4, so go down to 8,000.' } }
+    ] },
+    trick: { title: 'Peek at the hundreds', say: 'To round to the nearest 1000, only the <b>hundreds</b> digit matters. <b>5 or more: up. 4 or less: down.</b>', vis: { kind: 'numberLine', args: [{ min: 2000, max: 3000, minor: 100, major: 500, width: 340, marks: [{ value: 2600 }] }] }, example: '2,600 → hundreds digit 6 → up → <b>3,000</b>' },
+    gen: {
+      1: function(){ return pick([qLine, qLine, qBetween, qMcq])(); },
+      2: function(){ return pick([qMcq, qMcq, qLine, qBetween, qMost])(); },
+      3: function(){ return pick([qTyped, qTyped, qBoundary, qWord, qMost])(); }
     }
   });
 })();
@@ -17649,7 +18310,7 @@ function levelFromXp(xp){ let n = 1; while(xp >= xpForLevel(n + 1)) n++; return 
 function levelTitle(n){ return LEVEL_TITLES[Math.min(LEVEL_TITLES.length - 1, Math.floor((n - 1) / 2))]; }
 
 /* SCHOOL-ORDER:BEGIN (generated by tools/curriculum-export.js from curriculum/curriculum.json - do not edit) */
-const SCHOOL_SEQ = {"addsub-add-column":5,"addsub-bonds":0,"addsub-difference":9,"addsub-mental-3d":2,"addsub-missing-inverse":9,"addsub-sub-column":9,"addsub-word":9,"data-bar-charts":14,"data-pictograms":14,"data-tally-tables":14,"data-two-step":14,"frac-add-sub":11,"frac-compare-order":11,"frac-equivalent":11,"frac-nonunit":11,"frac-number-line":11,"frac-of-quantity":11,"frac-read":11,"frac-tenths":11,"geo-2d-shapes":10,"geo-3d-shapes":10,"geo-angles":7,"geo-coordinates":20,"geo-lines":7,"geo-symmetry":20,"geo-turns":7,"logic-patterns":null,"logic-puzzles":null,"logic-sorting":null,"logic-strategies":null,"measure-capacity":13,"measure-length":6,"measure-mass":13,"measure-money":13,"measure-perimeter":6,"measure-units":13,"multdiv-2-5-10":3,"multdiv-2digit-partition":8.5,"multdiv-3":4,"multdiv-4":3,"multdiv-6-9":8,"multdiv-8":3,"multdiv-arrays-groups":8.5,"multdiv-bridge-tables":20,"multdiv-division-facts":8.5,"multdiv-doubles-halves":0,"multdiv-formal-mult":8.5,"multdiv-remainders":8.5,"multdiv-word":8.5,"number-10-100-more-less":1,"number-compare-order":1,"number-count-steps":1,"number-line-3digit":1,"number-place-value":1,"number-round":20,"time-24h-ampm":12,"time-duration":12,"time-five-minutes":12,"time-minutes":12,"time-quarters":12,"time-roman":12};   // unit position in the school sequence; null = reasoning stream that runs alongside every unit
+const SCHOOL_SEQ = {"addsub-add-column":5,"addsub-bonds":0,"addsub-difference":9,"addsub-mental-3d":2,"addsub-missing-inverse":9,"addsub-sub-column":9,"addsub-word":9,"data-bar-charts":14,"data-pictograms":14,"data-tally-tables":14,"data-two-step":14,"frac-add-sub":11,"frac-compare-order":11,"frac-equivalent":11,"frac-nonunit":11,"frac-number-line":11,"frac-of-quantity":11,"frac-read":11,"frac-tenths":11,"geo-2d-shapes":10,"geo-3d-shapes":10,"geo-angles":7,"geo-coordinates":20,"geo-lines":7,"geo-symmetry":20,"geo-turns":7,"logic-patterns":null,"logic-puzzles":null,"logic-sorting":null,"logic-strategies":null,"measure-area":20,"measure-capacity":13,"measure-length":6,"measure-mass":13,"measure-money":13,"measure-perimeter":6,"measure-units":13,"multdiv-10-100":20,"multdiv-2-5-10":3,"multdiv-2digit-partition":8.5,"multdiv-3":4,"multdiv-4":3,"multdiv-6-9":8,"multdiv-8":3,"multdiv-arrays-groups":8.5,"multdiv-bridge-tables":20,"multdiv-division-facts":8.5,"multdiv-doubles-halves":0,"multdiv-formal-mult":8.5,"multdiv-mult-3d":20,"multdiv-remainders":8.5,"multdiv-word":8.5,"number-10-100-more-less":1,"number-4-digit":20,"number-compare-order":1,"number-count-steps":1,"number-line-3digit":1,"number-place-value":1,"number-round":20,"number-round-1000":20,"time-24h-ampm":12,"time-duration":12,"time-five-minutes":12,"time-minutes":12,"time-quarters":12,"time-roman":12};   // unit position in the school sequence; null = reasoning stream that runs alongside every unit
 /* SCHOOL-ORDER:END */
 
 /* ---------- planning ---------- */
