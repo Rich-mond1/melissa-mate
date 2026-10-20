@@ -37,8 +37,10 @@ S = E.mergeState({}); ['number-place-value', 'addsub-mental-3d', 'multdiv-2-5-10
   let x = SS(); { const r = E.recommend(x); ok(r.skill.id === 'addsub-bonds' && E.nextStepFor(x, r.skill) === 'testout', 'fresh player starts with the Year 2 base as a quick check, got ' + r.skill.id + '/' + E.nextStepFor(x, r.skill)); }
   { const y = SS(); y.skills['addsub-bonds'] = { medal: 0, box: 0, seen: 3, correct: 1, credit: 1, lessonDone: false, last: null, due: null, wobbly: false, placed: false, triedOut: true }; ok(E.nextStepFor(y, E.SKILLS.find(k => k.id === 'addsub-bonds')) === 'learn', 'a failed quick check leads to the lesson, not a second quick check'); }
   gold(x, ['addsub-bonds', 'multdiv-doubles-halves']);
+  ok(E.recommend(x).skill.id === 'number-pv-counters', 'after the Year 2 base the school starts with place value counters, got ' + E.recommend(x).skill.id);
+  gold(x, ['number-pv-counters']);
   ok(E.recommend(x).skill.id === 'number-place-value', 'after the Year 2 base the school starts at place value, got ' + E.recommend(x).skill.id);
-  gold(x, ['number-place-value', 'number-compare-order', 'number-10-100-more-less', 'number-count-steps', 'number-line-3digit', 'addsub-mental-3d', 'multdiv-2-5-10', 'multdiv-4', 'multdiv-8', 'multdiv-3']);
+  gold(x, ['number-pv-counters', 'number-place-value', 'number-compare-order', 'number-10-100-more-less', 'number-count-steps', 'number-line-3digit', 'addsub-mental-3d', 'multdiv-2-5-10', 'multdiv-4', 'multdiv-8', 'multdiv-3']);
   ok(E.recommend(x).skill.id === 'addsub-add-column', 'after units 1-4 the school goes to column addition, got ' + E.recommend(x).skill.id);
   x.focus = 'time'; ok(E.recommend(x).skill.strand === 'time', 'her chosen focus area is respected'); x.focus = null;
   let bad2 = 0; for(let t = 0; t < 300; t++){ const y = SS(); E.SKILLS.forEach(s => { const r = Math.random(); if(r < 0.5) gold(y, [s.id]); else if(r < 0.65) y.skills[s.id] = { medal: 1, box: 1, seen: 5, correct: 5, credit: 5, lessonDone: true, last: null, due: null, wobbly: false, placed: false }; });

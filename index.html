@@ -2626,6 +2626,152 @@ if(typeof module !== 'undefined') module.exports = V;
   });
 })();
 
+/* ===== src/skills/data-line-graphs.js ===== */
+/* data-line-graphs — Year 4: read time graphs (a quantity changing over the day): values, highest/lowest, rises and falls, differences. */
+(function(){
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  const THEMES = [
+    { intro: 'The temperature in a garden was measured every hour.', unit: '°C', what: 'temperature', noun: 'degrees', title: '°C', hi: 'warmest', lo: 'coolest', maxV: 24, step: 2 },
+    { intro: 'A water tank was checked every hour.', unit: ' litres', what: 'amount of water', noun: 'litres', title: 'litres', hi: 'fullest', lo: 'emptiest', maxV: 24, step: 2 },
+    { intro: 'A plant was measured as it grew.', unit: ' cm', what: 'height of the plant', noun: 'cm', title: 'cm', hi: 'tallest', lo: 'shortest', maxV: 24, step: 2 }
+  ];
+  const HOURS = ['8am', '9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm'];
+  const PX = 20, LEFT = 44, TOP = 24, BOT = 184, W = 340;
+  /* verified line graph: every point is <circle class="pt" data-i cx cy>; y labels <text class="yl" data-v>; x labels <text class="xl"> */
+  function render(times, vals, o){
+    const ymax = o.ymax, step = o.step, n = times.length, pxU = (BOT - TOP) / ymax, slot = (W - LEFT - 40) / (n - 1 || 1);
+    let s = '';
+    for(let v = 0; v <= ymax + 1e-9; v += step){
+      const y = BOT - v * pxU;
+      s += '<line x1="' + LEFT + '" y1="' + y.toFixed(2) + '" x2="' + (W - 6) + '" y2="' + y.toFixed(2) + '" stroke="#C9CEE0" stroke-width="1"/><text class="yl" data-v="' + v + '" x="' + (LEFT - 6) + '" y="' + (y + 4).toFixed(2) + '" text-anchor="end" font-size="11" font-weight="700" fill="#1B1B2F">' + v + '</text>';
+    }
+    s += '<line x1="' + LEFT + '" y1="' + TOP + '" x2="' + LEFT + '" y2="' + BOT + '" stroke="#1B1B2F" stroke-width="2.5"/><line x1="' + LEFT + '" y1="' + BOT + '" x2="' + (W - 6) + '" y2="' + BOT + '" stroke="#1B1B2F" stroke-width="2.5"/>';
+    const pts = vals.map(function(v, i){ return [LEFT + 18 + i * slot, BOT - v * pxU]; });
+    s += '<polyline points="' + pts.map(function(p){ return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ') + '" fill="none" stroke="#4F8FE8" stroke-width="3"/>';
+    pts.forEach(function(p, i){
+      s += '<circle class="pt" data-i="' + i + '" cx="' + p[0].toFixed(2) + '" cy="' + p[1].toFixed(2) + '" r="5" fill="#EB5757" stroke="#fff" stroke-width="1.5"/>';
+      s += '<text class="xl" x="' + p[0].toFixed(2) + '" y="' + (BOT + 16) + '" text-anchor="middle" font-size="11" font-weight="800" fill="#1B1B2F">' + times[i] + '</text>';
+    });
+    if(o.title) s += '<text x="6" y="14" font-size="11" font-weight="800" fill="#9B51E0">' + o.title + '</text>';
+    return '<svg viewBox="0 0 ' + W + ' ' + (BOT + 26) + '" width="' + W + '" role="img" style="max-width:100%;height:auto;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Arial,sans-serif">' + s + '</svg>';
+  }
+  function attr(tag, name){ const m = new RegExp(name + '="([^"]*)"').exec(tag); return m ? m[1] : null; }
+  function tagsOfClass(html, cls){ return html.match(new RegExp('<[a-z]+[^>]*class="' + cls + '"[^>]*>', 'g')) || []; }
+  function decode(html){
+    const L = tagsOfClass(html, 'yl').map(function(t){ return { v: parseFloat(attr(t, 'data-v')), y: parseFloat(attr(t, 'y')) - 4 }; }), a = L[0], b = L[L.length - 1];
+    return tagsOfClass(html, 'pt').map(function(t){ return Math.round((a.v + (parseFloat(attr(t, 'cy')) - a.y) / (b.y - a.y) * (b.v - a.v)) * 100) / 100; });
+  }
+  function xlabels(html){ return (html.match(/<text class="xl"[^>]*>([^<]*)</g) || []).map(function(t){ return t.replace(/.*>/, '').replace('<', ''); }); }
+  V.extra.linegraph = { render: function(times, vals, o){ return render(times, vals, o); }, verify: function(a, html){ const d = decode(html); return JSON.stringify(d) === JSON.stringify(a[1]) ? '' : 'line graph draws ' + JSON.stringify(d) + ' not ' + JSON.stringify(a[1]); } };
+
+  /* build a believable data set: 7-9 hourly readings, even values, with one clear peak and trough, no ties for max/min */
+  function dataset(){
+    const th = pick(THEMES), n = randInt(6, 9), times = HOURS.slice(0, n);
+    for(let k = 0; k < 500; k++){
+      const vals = []; let v = randInt(2, 8) * 2;
+      for(let i = 0; i < n; i++){ vals.push(v); v += pick([-4, -2, 0, 2, 2, 4, -2]); v = Math.max(2, Math.min(th.maxV - 2, v)); }
+      const mx = Math.max.apply(null, vals), mn = Math.min.apply(null, vals);
+      if(vals.filter(function(x){ return x === mx; }).length === 1 && vals.filter(function(x){ return x === mn; }).length === 1 && mx - mn >= 6) return { th: th, times: times, vals: vals, vis: render(times, vals, { ymax: th.maxV, step: th.step, title: th.title }) };
+    }
+    const vals = [4, 6, 10, 14, 12, 8]; return { th: th, times: HOURS.slice(0, 6), vals: vals, vis: render(HOURS.slice(0, 6), vals, { ymax: th.maxV, step: th.step, title: th.title }) };
+  }
+  function indexOfMax(a){ let b = 0; a.forEach(function(v, i){ if(v > a[b]) b = i; }); return b; }
+  function indexOfMin(a){ let b = 0; a.forEach(function(v, i){ if(v < a[b]) b = i; }); return b; }
+  function readAt(d, i){ return decode(d.vis)[i]; }
+  function unitOf(d, v){ return v + d.th.unit; }
+  function stepsAlong(vals, i, j){ let x = vals[i], n = 0; const dir = vals[j] > x ? 1 : -1; while(x !== vals[j]){ x += dir; n++; } return n; }
+
+  /* ---- tier 1 ---- */
+  function qReadAt(){
+    const d = dataset(), i = randInt(0, d.times.length - 1), ans = d.vals[i];
+    return mcqNum({ prompt: d.th.intro + ' What was the ' + d.th.what + ' at <b>' + d.times[i] + '</b>?', visual: d.vis, answer: ans, fmt: function(v){ return unitOf(d, v); },
+      wrong: [{ v: ans + 2, why: 'Go straight up from ' + d.times[i] + ' to the dot, then straight across to the side numbers.' }, { v: ans - 2, why: 'Go straight up from ' + d.times[i] + ' to the dot, then straight across to the side numbers.' }, { v: d.vals[Math.min(i + 1, d.times.length - 1)] !== ans ? d.vals[Math.min(i + 1, d.times.length - 1)] : ans + 4, why: 'That is the reading for the next time. Check the time under the dot.' }, { v: d.vals[Math.max(i - 1, 0)] !== ans ? d.vals[Math.max(i - 1, 0)] : ans - 4, why: 'That is the reading for the time before. Check the time under the dot.' }],
+      nearby: [2, -2, 4, -4], valid: function(v){ return v >= 0 && v <= d.th.maxV; }, count: 4, hint: 'Find ' + d.times[i] + ' along the bottom. Go up to the dot, then across to the numbers on the left.',
+      explain: ex('Reading a time graph', ['Find <b>' + d.times[i] + '</b> along the bottom and go up to the dot.', 'Read across to the side: <b>' + unitOf(d, ans) + '</b>. ✅']), truth: d.vals[i], decode: function(){ return decode(d.vis)[i]; } });
+  }
+  function qHighest(){
+    const d = dataset(), askHi = chance(0.5), idx = askHi ? indexOfMax(d.vals) : indexOfMin(d.vals), ans = d.times[idx];
+    const others = d.times.filter(function(_, k){ return k !== idx; });
+    const near = [idx - 1, idx + 1].filter(function(k){ return k >= 0 && k < d.times.length; }).map(function(k){ return d.times[k]; });
+    const ds = []; near.concat(shuffle(others)).forEach(function(t){ if(ds.every(function(x){ return x.key !== 't:' + t; })) ds.push(opt('t:' + t, t, t + ' is not the ' + (askHi ? 'highest' : 'lowest') + ' point of the line.')); });
+    return mcq({ prompt: d.th.intro + ' At what time was the ' + d.th.what + ' the <b>' + (askHi ? 'highest' : 'lowest') + '</b>?', visual: d.vis, correct: opt('t:' + ans, ans), distractors: ds, keepOrder: true, count: 4,
+      hint: 'Look for the ' + (askHi ? 'highest' : 'lowest') + ' dot on the line. Then read the time underneath it.', explain: ex('Highest and lowest', ['The ' + (askHi ? 'highest' : 'lowest') + ' dot is at <b>' + ans + '</b>.', 'There the ' + d.th.what + ' was ' + unitOf(d, askHi ? Math.max.apply(null, d.vals) : Math.min.apply(null, d.vals)) + '. ✅']),
+      truth: 't:' + d.times[(function(){ const dv = decode(d.vis); return askHi ? dv.indexOf(Math.max.apply(null, dv)) : dv.indexOf(Math.min.apply(null, dv)); })()], decode: function(){ const dv = decode(d.vis), xs = xlabels(d.vis); return 't:' + xs[askHi ? dv.indexOf(Math.max.apply(null, dv)) : dv.indexOf(Math.min.apply(null, dv))]; } });
+  }
+  /* ---- tier 2 ---- */
+  function qRiseFall(){
+    const d = dataset(); let i, j, tries = 0;
+    do { i = randInt(0, d.times.length - 2); j = i + 1; tries++; } while(d.vals[i] === d.vals[j] && tries < 40);
+    if(d.vals[i] === d.vals[j]) return qReadAt();
+    const rose = d.vals[j] > d.vals[i];
+    return mcq2({ prompt: d.th.intro + ' Between <b>' + d.times[i] + '</b> and <b>' + d.times[j] + '</b>, did the ' + d.th.what + ' go <b>up</b> or <b>down</b>?', visual: d.vis,
+      correct: opt(K.bool(rose), rose ? 'Up' : 'Down', rose ? 'The line slopes up, so the number went up.' : 'The line slopes down, so the number went down.'), other: opt(K.bool(!rose), rose ? 'Down' : 'Up', rose ? 'The line goes UP between these times.' : 'The line goes DOWN between these times.'),
+      hint: 'If the line climbs from left to right, the number goes up.', explain: ex('Up or down?', ['At ' + d.times[i] + ' it was ' + unitOf(d, d.vals[i]) + ' and at ' + d.times[j] + ' it was ' + unitOf(d, d.vals[j]) + '.', 'Answer: <b>' + (rose ? 'Up' : 'Down') + '</b>. ✅']), truth: K.bool(decode(d.vis)[j] > decode(d.vis)[i]) });
+  }
+  function qDiff(){
+    const d = dataset(); let i, j, tries = 0;
+    do { i = randInt(0, d.times.length - 1); j = randInt(0, d.times.length - 1); tries++; } while((i === j || d.vals[i] === d.vals[j]) && tries < 60);
+    const hi = d.vals[i] > d.vals[j] ? i : j, lo = hi === i ? j : i, ans = d.vals[hi] - d.vals[lo];
+    return mcqNum({ prompt: d.th.intro + ' How many ' + d.th.noun + ' higher was it at <b>' + d.times[hi] + '</b> than at <b>' + d.times[lo] + '</b>?', visual: d.vis, answer: ans, fmt: function(v){ return v + ' ' + d.th.noun; },
+      wrong: [{ v: d.vals[hi], why: 'That is the reading at ' + d.times[hi] + '. Take away the reading at ' + d.times[lo] + '.' }, { v: d.vals[hi] + d.vals[lo], why: 'You added. To find how much higher, subtract.' }, { v: ans + 2, why: 'Read both dots again, then subtract.' }, { v: ans - 2 > 0 ? ans - 2 : ans + 4, why: 'Read both dots again, then subtract.' }, { v: d.vals[lo], why: 'That is the reading at ' + d.times[lo] + '. We want how much HIGHER the other one is.' }, { v: ans + 4, why: 'Read both dots again, then subtract.' }, { v: ans + 6, why: 'Read both dots again, then subtract.' }],
+      nearby: [2, -2, 4, 6, -4], valid: function(v){ return v > 0; }, count: 4, hint: 'Read both dots, then subtract the smaller from the bigger.',
+      explain: ex('Finding the difference', [d.times[hi] + ': ' + unitOf(d, d.vals[hi]) + '. ' + d.times[lo] + ': ' + unitOf(d, d.vals[lo]) + '.', d.vals[hi] + ' − ' + d.vals[lo] + ' = <b>' + ans + '</b> ' + d.th.noun + '. ✅']), truth: stepsAlong(d.vals, lo, hi), decode: function(){ const dv = decode(d.vis); return dv[hi] - dv[lo]; } });
+  }
+  function qWhenReach(){
+    const d = dataset(), target = pick(d.vals.filter(function(v, k){ return d.vals.indexOf(v) === k; })), k = d.vals.indexOf(target), ans = d.times[k];
+    const ds = []; d.times.forEach(function(t, q){ if(q !== k) ds.push(opt('t:' + t, t, 'At ' + t + ' it was ' + unitOf(d, d.vals[q]) + ', not ' + unitOf(d, target) + '.')); });
+    return mcq({ prompt: d.th.intro + ' At what time was it <b>' + unitOf(d, target) + '</b>?', visual: d.vis, correct: opt('t:' + ans, ans), distractors: shuffle(ds), keepOrder: true, count: 4,
+      hint: 'Find ' + unitOf(d, target) + ' on the side. Go across to the dot, then down to the time.', explain: ex('Reading backwards', ['Find ' + unitOf(d, target) + ' on the side numbers and go across to the dot.', 'Then read the time underneath: <b>' + ans + '</b>. ✅']), truth: 't:' + d.times[decode(d.vis).indexOf(target)] });
+  }
+  /* ---- tier 3: typed ---- */
+  function qDiffTyped(){
+    const d = dataset(); let i, j, tries = 0;
+    do { i = randInt(0, d.times.length - 1); j = randInt(0, d.times.length - 1); tries++; } while((i === j || d.vals[i] === d.vals[j]) && tries < 60);
+    const hi = d.vals[i] > d.vals[j] ? i : j, lo = hi === i ? j : i, ans = d.vals[hi] - d.vals[lo];
+    return numeric({ prompt: d.th.intro + ' How many ' + d.th.noun + ' higher was it at <b>' + d.times[hi] + '</b> than at <b>' + d.times[lo] + '</b>? Type the number.', visual: d.vis, answer: ans, hint: 'Read both dots, then subtract.',
+      explain: ex('Finding the difference', [d.times[hi] + ': ' + unitOf(d, d.vals[hi]) + '. ' + d.times[lo] + ': ' + unitOf(d, d.vals[lo]) + '.', d.vals[hi] + ' − ' + d.vals[lo] + ' = <b>' + ans + '</b>. ✅']), truth: stepsAlong(d.vals, lo, hi), decode: function(){ const dv = decode(d.vis); return dv[hi] - dv[lo]; },
+      wrong: function(v){ return v === d.vals[hi] + d.vals[lo] ? 'You added. Subtract to find how much higher.' : ''; } });
+  }
+  function qRange(){
+    const d = dataset(), mx = Math.max.apply(null, d.vals), mn = Math.min.apply(null, d.vals);
+    return numeric({ prompt: d.th.intro + ' What is the difference between the <b>' + d.th.hi + '</b> and the <b>' + d.th.lo + '</b> readings? Type the number.', visual: d.vis, answer: mx - mn, hint: 'Find the highest dot and the lowest dot. Subtract.',
+      explain: ex('Highest minus lowest', ['Highest: ' + unitOf(d, mx) + '. Lowest: ' + unitOf(d, mn) + '.', mx + ' − ' + mn + ' = <b>' + (mx - mn) + '</b>. ✅']), truth: (function(){ const dv = decode(d.vis); return stepsAlong([Math.min.apply(null, dv), Math.max.apply(null, dv)], 0, 1); })(), decode: function(){ const dv = decode(d.vis); return Math.max.apply(null, dv) - Math.min.apply(null, dv); } });
+  }
+  function qBiggestJump(){
+    const d = dataset(); let best = 0, bi = 0;
+    for(let k = 0; k < d.vals.length - 1; k++){ const j = Math.abs(d.vals[k + 1] - d.vals[k]); if(j > best){ best = j; bi = k; } }
+    const unique = d.vals.slice(0, -1).filter(function(_, k){ return Math.abs(d.vals[k + 1] - d.vals[k]) === best; }).length === 1;
+    if(!unique) return qRange();
+    return mcq({ prompt: d.th.intro + ' Between which two times did it change the <b>most</b>?', visual: d.vis, correct: opt('j:' + bi, d.times[bi] + ' and ' + d.times[bi + 1]),
+      distractors: d.times.slice(0, -1).map(function(t, k){ return k === bi ? null : opt('j:' + k, t + ' and ' + d.times[k + 1], 'That change is ' + Math.abs(d.vals[k + 1] - d.vals[k]) + ', but another gap changes by ' + best + '.'); }).filter(Boolean), keepOrder: false, count: 4,
+      hint: 'The steepest part of the line is the biggest change.', explain: ex('Steepest part', ['The line changes most between ' + d.times[bi] + ' and ' + d.times[bi + 1] + ': from ' + unitOf(d, d.vals[bi]) + ' to ' + unitOf(d, d.vals[bi + 1]) + '.', 'That is a change of <b>' + best + '</b>. ✅']),
+      truth: 'j:' + (function(){ const dv = decode(d.vis); let b = 0, bk = 0; for(let k = 0; k < dv.length - 1; k++){ const jj = Math.abs(dv[k + 1] - dv[k]); if(jj > b){ b = jj; bk = k; } } return bk; })() });
+  }
+  function qWord(){
+    const d = dataset(), who = pick(NAMES), i = randInt(0, d.times.length - 1), extra = pick([2, 4, 6]);
+    return numeric({ prompt: d.th.intro + ' At <b>' + d.times[i] + '</b> ' + who + ' reads the graph, then the value goes up by another <b>' + extra + '</b>. What would the reading be? Type the number.', visual: d.vis, answer: d.vals[i] + extra, hint: 'First read the dot at ' + d.times[i] + ', then add ' + extra + '.',
+      explain: ex('Read, then add', ['At ' + d.times[i] + ' the reading is ' + d.vals[i] + '.', d.vals[i] + ' + ' + extra + ' = <b>' + (d.vals[i] + extra) + '</b>. ✅']), truth: decode(d.vis)[i] + extra, decode: function(){ return decode(d.vis)[i] + extra; },
+      wrong: function(v){ return v === d.vals[i] ? 'That is only the reading. Now add ' + extra + '.' : ''; } });
+  }
+  const LV1 = render(['8am', '9am', '10am', '11am', '12pm'], [6, 8, 12, 14, 10], { ymax: 24, step: 2, title: '°C' });
+  registerSkill({
+    id: 'data-line-graphs', strand: 'data', name: 'Time graphs', emoji: '📈', year: 4, order: 840, prereq: ['data-bar-charts'],
+    lesson: { title: 'Reading a time graph', steps: [
+      { say: 'A <b>time graph</b> shows how something changes over time. The <b>bottom</b> shows the time and the <b>side</b> shows the amount. Each dot is one reading, joined by a line.', vis: { kind: 'linegraph', args: [['8am', '9am', '10am', '11am', '12pm'], [6, 8, 12, 14, 10], { ymax: 24, step: 2, title: '°C' }] } },
+      { say: 'To read a value: find the time at the bottom, go <b>up</b> to the dot, then <b>across</b> to the side numbers. At 10am it is <b>12°C</b>. The line going <b>up</b> means it is rising; going <b>down</b> means it is falling.', vis: { kind: 'linegraph', args: [['8am', '9am', '10am', '11am', '12pm'], [6, 8, 12, 14, 10], { ymax: 24, step: 2, title: '°C' }] },
+        quiz: { prompt: 'Between 11am and 12pm, did the temperature go up or down?', options: [{ label: 'Down', ok: true }, { label: 'Up', ok: false }], right: 'Yes! 14°C to 10°C: the line slopes down.', wrong: 'At 11am it was 14°C and at 12pm 10°C. The line goes down.' } },
+      { say: 'To find a <b>difference</b>, read both dots and subtract. Highest 14°C, lowest 6°C: 14 − 6 = <b>8°C</b>. The steepest part of the line is where it changed the most.', vis: { kind: 'linegraph', args: [['8am', '9am', '10am', '11am', '12pm'], [6, 8, 12, 14, 10], { ymax: 24, step: 2, title: '°C' }] },
+        quiz: { prompt: 'How much warmer was it at 11am (14°C) than at 9am (8°C)?', options: [{ label: '6°C', ok: true }, { label: '22°C', ok: false }, { label: '14°C', ok: false }], right: 'Yes! 14 − 8 = 6.', wrong: 'Subtract: 14 − 8 = 6.' } }
+    ] },
+    trick: { title: 'Up, across, subtract', say: 'Find the <b>time</b> at the bottom, go <b>up</b> to the dot, then <b>across</b> to read the amount. For a difference, read both dots and <b>subtract</b>.', vis: { kind: 'linegraph', args: [['8am', '9am', '10am', '11am', '12pm'], [6, 8, 12, 14, 10], { ymax: 24, step: 2, title: '°C' }] }, example: 'Highest 14, lowest 6 → difference 14 − 6 = <b>8</b>' },
+    gen: {
+      1: function(){ return pick([qReadAt, qReadAt, qHighest])(); },
+      2: function(){ return pick([qDiff, qRiseFall, qWhenReach, qHighest, qReadAt])(); },
+      3: function(){ return pick([qDiffTyped, qDiffTyped, qRange, qBiggestJump, qWord])(); }
+    }
+  });
+})();
+
 /* ===== src/skills/data-pictograms.js ===== */
 /* data-pictograms: reading pictograms with keys of 1, 2, 5, 10 and half symbols */
 (function(){
@@ -16076,6 +16222,122 @@ if(typeof module !== 'undefined') module.exports = V;
   });
 })();
 
+/* ===== src/skills/number-decimals.js ===== */
+/* number-decimals — Year 4: tenths and hundredths as decimals, hundred square, place value, comparing, ordering, money. */
+(function(){
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  /* all arithmetic is in HUNDREDTHS (whole numbers); dec() only formats */
+  function dec(h){ const w = Math.floor(h / 100), f = h % 100; if(f === 0) return String(w); const fs = (f < 10 ? '0' : '') + f; return w + '.' + fs.replace(/0$/, ''); }
+  function val(h){ return Math.round(h) / 100; }                 // numeric value for typed answers
+  /* the picture: a 10 × 10 square; shaded cells are <rect class="hs">, unshaded <rect class="hu"> */
+  function hundredRender(n, byColumns){
+    let s = '';
+    for(let i = 0; i < 100; i++){
+      const r = Math.floor(i / 10), c = i % 10, shaded = byColumns ? (c < Math.floor(n / 10)) || (c === Math.floor(n / 10) && r < n % 10) : i < n;
+      s += '<rect class="' + (shaded ? 'hs' : 'hu') + '" x="' + (6 + c * 20) + '" y="' + (6 + r * 20) + '" width="20" height="20" fill="' + (shaded ? '#8EC5FF' : '#FFFFFF') + '" stroke="#1B1B2F" stroke-width="1.2"/>';
+    }
+    return '<svg viewBox="0 0 212 212" width="190" role="img" style="max-width:100%;height:auto;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">' + s + '<rect x="6" y="6" width="200" height="200" fill="none" stroke="#1B1B2F" stroke-width="2.5"/></svg>';
+  }
+  function hundredDecode(html){ return (html.match(/class="hs"/g) || []).length; }
+  V.extra.hundred = { render: hundredRender, verify: function(a, html){ return hundredDecode(html) === a[0] && (html.match(/<rect class="h[su]"/g) || []).length === 100 ? '' : 'hundred square draws ' + hundredDecode(html) + ' not ' + a[0]; } };
+  function hq(n, col){ return hundredRender(n, col); }
+  function lineTenths(t){ return V.numberLine({ min: 0, max: 1, minor: 0.1, major: 0.5, width: 320, labels: function(v){ return v === 0 ? '0' : v === 1 ? '1' : '0.5'; }, marks: [{ value: t / 10 }] }); }
+
+  /* ---- tier 1 ---- */
+  function qReadSquare(){
+    const col = chance(0.5), n = col ? randInt(1, 9) * 10 : randInt(1, 99), vis = hq(n, col && n % 10 === 0);
+    return mcqNum({ prompt: 'The whole square is <b>1</b>. What decimal is shaded?', visual: vis, answer: n, fmt: dec,
+      wrong: [{ v: n % 10 === 0 ? n / 10 : Math.floor(n / 10) + (n % 10) * 10, why: n % 10 === 0 ? 'There are ' + n + ' shaded squares out of 100, which is ' + dec(n) + ', not ' + dec(n / 10) + '.' : 'Count the shaded squares: ' + n + ' out of 100 is ' + dec(n) + '.' }, { v: n * 10 > 99 ? n + 100 : n * 10, why: 'That is too big. The whole square is 1, and ' + n + ' hundredths is ' + dec(n) + '.' }, { v: n + 10, why: 'Count the shaded squares again.' }, { v: n - 1 > 0 ? n - 1 : n + 2, why: 'Count the shaded squares again.' }],
+      nearby: [1, -1, 10, -10, 5, -5], valid: function(v){ return v > 0 && v <= 120; }, count: 4, hint: 'Count the shaded squares. Each square is one hundredth (0.01).',
+      explain: ex('Reading the hundred square', ['There are <b>' + n + '</b> shaded squares out of 100.', n + ' hundredths = <b>' + dec(n) + '</b>. ✅']), truth: n, decode: function(){ return hundredDecode(vis); } });
+  }
+  function qFracToDec(){
+    const den = pick([10, 100]), num = den === 10 ? randInt(1, 9) : randInt(1, 99), h = den === 10 ? num * 10 : num, f = num + '/' + den;
+    return mcqNum({ prompt: 'Which decimal is the same as <b>' + num + '⁄' + den + '</b>?', answer: h, fmt: dec,
+      wrong: [{ v: den === 10 ? num : num * 10 > 99 ? num + 10 : num * 10, why: den === 10 ? num + '⁄10 is ' + num + ' tenths = ' + dec(h) + ', not ' + dec(num) + '.' : num + '⁄100 is ' + num + ' hundredths = ' + dec(h) + '.' }, { v: den === 10 ? h / 10 || h + 5 : h + 10, why: 'Tenths are the first digit after the point; hundredths are the second.' }, { v: h + 1, why: 'Say it as ' + num + ' ' + (den === 10 ? 'tenths' : 'hundredths') + ' and write it in the matching place.' }, { v: h > 10 ? h - 10 : h + 20, why: 'Say it as ' + num + ' ' + (den === 10 ? 'tenths' : 'hundredths') + '.' }],
+      nearby: [1, -1, 10, -10, 5], valid: function(v){ return v > 0 && v <= 120; }, count: 4, hint: 'Tenths go in the first place after the point, hundredths in the second.',
+      explain: ex('Fractions as decimals', [num + '⁄' + den + ' means ' + num + ' ' + (den === 10 ? 'tenths' : 'hundredths') + '.', den === 10 ? '1 tenth = 0.1, so ' + num + ' tenths = <b>' + dec(h) + '</b>. ✅' : '1 hundredth = 0.01, so ' + num + ' hundredths = <b>' + dec(h) + '</b>. ✅']), truth: num * (100 / den) });
+  }
+  function qDigitValue(){
+    const t = randInt(1, 9), u = randInt(1, 9), n = 10 * t + u, askT = chance(0.5), ans = askT ? t * 10 : u, d = askT ? t : u;
+    return mcqNum({ prompt: 'In <b>' + dec(n) + '</b>, what is the value of the digit <b>' + d + '</b> in the ' + (askT ? 'tenths' : 'hundredths') + ' place?', answer: ans, fmt: dec,
+      wrong: [{ v: askT ? u : t * 10, why: askT ? 'That is the other digit (' + u + ' hundredths). The tenths digit is ' + t + '.' : 'That is the tenths digit. The hundredths digit is ' + u + '.' }, { v: askT ? t : u * 10, why: askT ? t + ' is in the tenths place: ' + t + ' tenths = ' + dec(t * 10) + '.' : u + ' is in the hundredths place: ' + dec(u) + '.' }, { v: ans === 100 ? 90 : ans * 10 > 99 ? ans + 10 : ans * 10, why: 'Check the place: tenths are 0.1, hundredths are 0.01.' }],
+      nearby: [1, -1, 10, -10], valid: function(v){ return v > 0 && v <= 120; }, count: 4, hint: 'First place after the point = tenths. Second place = hundredths.',
+      explain: ex('Decimal place value', [dec(n) + ' has <b>' + t + ' tenths</b> and <b>' + u + ' hundredths</b>.', 'The ' + d + ' in the ' + (askT ? 'tenths' : 'hundredths') + ' place is worth <b>' + dec(ans) + '</b>. ✅']), truth: askT ? Math.floor(n / 10) * 10 : n % 10 });
+  }
+  /* ---- tier 2 ---- */
+  function qCompare(){
+    const a = randInt(1, 99); let b; do { b = randInt(1, 99); } while(b === a);
+    const big = Math.max(a, b), sm = Math.min(a, b), askBig = chance(0.5);
+    return mcq2({ prompt: 'Which is <b>' + (askBig ? 'greater' : 'smaller') + '</b>: <b>' + dec(a) + '</b> or <b>' + dec(b) + '</b>?', correct: opt(K.num(askBig ? big : sm), dec(askBig ? big : sm), 'Compare tenths first, then hundredths.'), other: opt(K.num(askBig ? sm : big), dec(askBig ? sm : big), 'Compare the tenths digit first. More digits does not mean a bigger number.'),
+      hint: 'Compare the tenths first. If they match, compare the hundredths.', explain: ex('Comparing decimals', ['Line them up by place: ' + dec(a) + ' and ' + dec(b) + ' as hundredths are ' + a + ' and ' + b + '.', 'The ' + (askBig ? 'greater' : 'smaller') + ' one is <b>' + dec(askBig ? big : sm) + '</b>. ✅']), truth: K.num(askBig ? Math.max(a, b) : Math.min(a, b)) });
+  }
+  function qOrder(){
+    const set = {}; const nums = []; while(nums.length < 4){ const n = randInt(1, 99); if(!set[n]){ set[n] = 1; nums.push(n); } }
+    const asc = chance(0.5), sorted = nums.slice().sort(function(x, y){ return x - y; }), ord = asc ? sorted : sorted.slice().reverse();
+    return order({ prompt: 'Put these decimals in order, <b>' + (asc ? 'smallest to largest' : 'largest to smallest') + '</b>. Tap them one at a time.', items: ord.map(function(n){ return { key: String(n), label: dec(n) }; }),
+      hint: 'Compare the tenths first. 0.4 is bigger than 0.35 because 4 tenths is more than 3 tenths.', explain: ex('Ordering decimals', ['Compare the tenths digit first, then the hundredths.', 'In order: <b>' + ord.map(dec).join(', ') + '</b>. ✅']), truth: 'o:' + ord.join('|') });
+  }
+  function qLine(){
+    const t = randInt(1, 9), vis = lineTenths(t);
+    return mcqNum({ prompt: 'Which decimal does the red dot show?', visual: vis, answer: t * 10, fmt: dec,
+      wrong: [{ v: t, why: 'The dot is at ' + t + ' tenths = ' + dec(t * 10) + ', not ' + dec(t) + ' (that is ' + t + ' hundredths).' }, { v: (10 - t) * 10, why: 'Count the steps from 0, not from 1.' }, { v: t * 10 + 10, why: 'Count the steps from 0 again.' }, { v: t * 10 - 10 > 0 ? t * 10 - 10 : t * 10 + 20, why: 'Count the steps from 0 again.' }],
+      nearby: [10, -10, 5], valid: function(v){ return v > 0 && v <= 120; }, count: 4, hint: 'There are 10 equal steps from 0 to 1. Each step is 0.1.',
+      explain: ex('Tenths on a line', ['0 to 1 is split into 10 equal steps. Each step is 0.1.', 'The dot is ' + t + ' steps along: <b>' + dec(t * 10) + '</b>. ✅']), truth: t * 10, decode: function(){ return Math.round(V.decodeNumberLine(vis) * 100); } });
+  }
+  function qMoney(){
+    const p = randInt(105, 899), pounds = Math.floor(p / 100), pence = p % 100;
+    return mcqNum({ prompt: '<b>' + p + 'p</b> is how many pounds? (£1 = 100p)', answer: p, fmt: function(v){ return '£' + (Math.floor(v / 100)) + '.' + (v % 100 < 10 ? '0' : '') + (v % 100); },
+      wrong: [{ v: pounds * 100 + (pence < 10 ? pence * 10 : Math.floor(pence / 10)), why: 'Pence need two digits after the point: ' + pence + 'p is £0.' + (pence < 10 ? '0' : '') + pence + '.' }, { v: pence * 100 + pounds, why: 'Pounds come before the point, pence after.' }, { v: p + 100, why: 'Divide the pence by 100 to get pounds.' }, { v: p - 100, why: 'Divide the pence by 100 to get pounds.' }],
+      nearby: [1, -1, 10, -10], valid: function(v){ return v > 100; }, count: 4, hint: '100p make £1. The pounds go before the point, the leftover pence after it.',
+      explain: ex('Pence to pounds', [p + 'p = ' + pounds + ' pounds and ' + pence + ' pence.', 'As pounds: <b>£' + pounds + '.' + (pence < 10 ? '0' : '') + pence + '</b>. ✅']), truth: pounds * 100 + pence });
+  }
+  /* ---- tier 3: typed ---- */
+  function qHundredthsTyped(){
+    const n = randInt(11, 99);
+    return numeric({ prompt: 'How many <b>hundredths</b> are in <b>' + dec(n) + '</b>? Type the number.', answer: n, hint: dec(n) + ' = ' + n + '⁄100.',
+      explain: ex('Counting hundredths', [dec(n) + ' = ' + Math.floor(n / 10) + ' tenths and ' + (n % 10) + ' hundredths.', 'One tenth is 10 hundredths, so that is <b>' + n + '</b> hundredths. ✅']), truth: Math.floor(n / 10) * 10 + n % 10 });
+  }
+  function qTenthMore(){
+    const t = randInt(1, 8), more = chance(0.5), n = t * 10 + (chance(0.5) ? randInt(1, 9) : 0), ans = more ? n + 10 : n - 10;
+    if(ans <= 0) return qTenthMore();
+    return numeric({ prompt: 'What is <b>0.1 ' + (more ? 'more' : 'less') + '</b> than <b>' + dec(n) + '</b>? Type the answer.', answer: val(ans), hint: '0.1 is one tenth. Only the tenths digit changes.',
+      explain: ex('One tenth ' + (more ? 'more' : 'less'), ['Only the tenths digit changes by 1.', dec(n) + (more ? ' + 0.1 = ' : ' − 0.1 = ') + '<b>' + dec(ans) + '</b>. ✅']), truth: (more ? n + 10 : n - 10) / 100 });
+  }
+  function qAddTenths(){
+    const a = randInt(1, 8), b = randInt(1, 9 - 0), sum = a + b, who = pick(NAMES);
+    return numeric({ prompt: who + ' adds <b>' + dec(a * 10) + ' + ' + dec(b * 10) + '</b>. What is the total? Type it.', answer: val(sum * 10), hint: 'Add the tenths: ' + a + ' tenths + ' + b + ' tenths. If you get 10 tenths, that makes 1.',
+      explain: ex('Adding tenths', [a + ' tenths + ' + b + ' tenths = ' + sum + ' tenths.', sum >= 10 ? sum + ' tenths = ' + (sum === 10 ? '1' : '1 and ' + (sum - 10) + ' tenths') + ', which is <b>' + dec(sum * 10) + '</b>. ✅' : '<b>' + dec(sum * 10) + '</b>. ✅']), truth: (a * 10 + b * 10) / 100 });
+  }
+  function qMissingTo1(){
+    const n = randInt(1, 9) * 10 + (chance(0.5) ? randInt(1, 9) : 0), ans = 100 - n;
+    return numeric({ prompt: 'Type the missing number:  <b>' + dec(n) + ' + ▢ = 1</b>', answer: val(ans), hint: 'How much more do you need to reach 1? Think in hundredths: 100 − ' + n + '.',
+      explain: ex('Making 1', [dec(n) + ' is ' + n + ' hundredths. 1 is 100 hundredths.', '100 − ' + n + ' = ' + ans + ' hundredths = <b>' + dec(ans) + '</b>. ✅', 'Check: ' + dec(n) + ' + ' + dec(ans) + ' = 1.']), truth: (100 - n) / 100 });
+  }
+  function qMoneyTyped(){
+    const p = randInt(2, 9), c = randInt(5, 95), tot = p * 100 + c;
+    return numeric({ prompt: 'A toy costs <b>£' + p + '.' + (c < 10 ? '0' : '') + c + '</b>. How many <b>pence</b> is that? Type the number.', answer: tot, hint: '£1 = 100p. Multiply the pounds by 100 and add the pence.',
+      explain: ex('Pounds to pence', [p + ' pounds = ' + p * 100 + 'p.', p * 100 + ' + ' + c + ' = <b>' + tot + 'p</b>. ✅']), truth: p * 100 + c });
+  }
+  const T1 = hq(30, true), T2 = hq(45, false);
+  registerSkill({
+    id: 'number-decimals', strand: 'number', name: 'Tenths, hundredths and decimals', emoji: '🔸', year: 4, order: 205, prereq: ['frac-tenths', 'number-place-value'],
+    lesson: { title: 'Decimals: tenths and hundredths', steps: [
+      { say: 'This square is split into <b>100</b> small squares. 30 are shaded: that is <b>30 hundredths</b>, or <b>3 tenths</b>, written <b>0.3</b>.', vis: { kind: 'hundred', args: [30] } },
+      { say: '<b>One tenth = 0.1</b> and <b>one hundredth = 0.01</b>. The first digit after the decimal point is tenths; the second is hundredths. 45 squares shaded = 4 tenths + 5 hundredths = <b>0.45</b>.', vis: { kind: 'hundred', args: [45] },
+        quiz: { prompt: 'What decimal is 7 hundredths?', options: [{ label: '0.07', ok: true }, { label: '0.7', ok: false }, { label: '7.0', ok: false }], right: 'Yes! Hundredths use the SECOND place: 0.07.', wrong: '7 tenths is 0.7. 7 hundredths is 0.07.' } },
+      { say: 'To compare decimals, look at the <b>tenths first</b>. 0.4 is greater than 0.35, because 4 tenths is more than 3 tenths. £2.45 means 2 pounds and 45 pence; 245p is the same money.', vis: { kind: 'hundred', args: [40] },
+        quiz: { prompt: 'Which is greater: 0.6 or 0.58?', options: [{ label: '0.6', ok: true }, { label: '0.58', ok: false }], right: 'Yes! 6 tenths beats 5 tenths.', wrong: '0.6 = 60 hundredths, and 0.58 = 58 hundredths. So 0.6 is greater.' } }
+    ] },
+    trick: { title: 'Tenths then hundredths', say: 'After the point, the <b>first</b> digit is <b>tenths</b> and the <b>second</b> is <b>hundredths</b>. Compare <b>tenths first</b>. 10 hundredths make 1 tenth, and 10 tenths make 1.', vis: { kind: 'hundred', args: [25] }, example: '0.25 = 2 tenths + 5 hundredths = 25 hundredths &nbsp;·&nbsp; <b>0.4 &gt; 0.35</b>' },
+    gen: {
+      1: function(){ return pick([qReadSquare, qReadSquare, qFracToDec, qDigitValue])(); },
+      2: function(){ return pick([qCompare, qCompare, qOrder, qLine, qMoney, qDigitValue, qFracToDec])(); },
+      3: function(){ return pick([qHundredthsTyped, qTenthMore, qTenthMore, qAddTenths, qMissingTo1, qMoneyTyped, qOrder])(); }
+    }
+  });
+})();
+
 /* ===== src/skills/number-line-3digit.js ===== */
 /* number-line-3digit — read and place 3-digit numbers on number lines with different scales. */
 (function(){
@@ -16270,6 +16532,130 @@ if(typeof module !== 'undefined') module.exports = V;
           default: return qHalfway();
         }
       }
+    }
+  });
+})();
+
+/* ===== src/skills/number-negative.js ===== */
+/* number-negative — Year 4: negative numbers in context (temperature), number lines through zero, ordering, counting back, differences. */
+(function(){
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  const PLACES = ['Oslo', 'Helsinki', 'Moscow', 'Quebec', 'Reykjavik', 'Edinburgh', 'Warsaw', 'Denver'];
+  function fm(v){ return v < 0 ? '−' + (-v) : String(v); }          // proper minus sign for display
+  function lab(v){ return v < 0 ? '−' + (-v) : v; }
+  function deg(v){ return fm(v) + '°C'; }
+  /* independent truths: step along the number line one unit at a time */
+  function stepBy(start, n, dir){ let x = start; for(let i = 0; i < n; i++) x += dir; return x; }
+  function stepsBetween(a, b){ let n = 0, x = a; const d = b > a ? 1 : -1; while(x !== b){ x += d; n++; } return n; }
+  function line(lo, hi, mark){ return V.numberLine({ min: lo, max: hi, minor: 1, major: hi - lo > 12 ? 5 : 1, width: 340, labels: lab, marks: mark === undefined ? [] : [{ value: mark }] }); }
+  function readLine(html){ return Math.round(V.decodeNumberLine(html)); }
+  function valid10(v){ return v >= -20 && v <= 20; }
+
+  /* ---- tier 1 ---- */
+  function qReadLine(){
+    const n = randInt(-9, 9), vis = line(-10, 10, n);
+    return mcqNum({
+      prompt: 'Which number does the red dot show?', visual: vis, answer: n, fmt: fm,
+      wrong: [{ v: -n, why: 'Check which side of zero the dot is on. Left of zero is negative.' }, { v: n + 1, why: 'Count the steps from zero again.' }, { v: n - 1, why: 'Count the steps from zero again.' }, { v: n + 2, why: 'Count the steps from zero again.' }],
+      nearby: [1, -1, 2, -2, 3], valid: function(v){ return v >= -10 && v <= 10; }, count: 4, hint: 'Find 0, then count the steps. Left is negative, right is positive.',
+      explain: ex('Reading the line', ['Zero is in the middle. The dot is ' + Math.abs(n) + ' step' + (Math.abs(n) === 1 ? '' : 's') + ' ' + (n < 0 ? 'to the LEFT, so it is negative' : n > 0 ? 'to the RIGHT, so it is positive' : 'on zero') + '.', 'It shows <b>' + fm(n) + '</b>. ✅']),
+      truth: n, decode: function(){ return readLine(vis); }
+    });
+  }
+  function qColder(){
+    const a = randInt(-9, 9); let b; do { b = randInt(-9, 9); } while(b === a || Math.abs(b) === Math.abs(a));
+    const cold = Math.min(a, b), warm = Math.max(a, b), askCold = chance(0.6), pa = pick(PLACES); let pb; do { pb = pick(PLACES); } while(pb === pa);
+    const ans = askCold ? cold : warm, oth = askCold ? warm : cold, cityOf = {}; cityOf[a] = pa; cityOf[b] = pb;
+    return mcq2({
+      prompt: 'It is ' + deg(a) + ' in ' + pa + ' and ' + deg(b) + ' in ' + pb + '. Which temperature is <b>' + (askCold ? 'colder' : 'warmer') + '</b>?',
+      correct: opt(K.num(ans), deg(ans), askCold ? 'Further below zero means colder.' : 'The one nearer the top of the thermometer is warmer.'),
+      other: opt(K.num(oth), deg(oth), askCold ? (oth < 0 ? deg(oth) + ' is below zero but not as far below as ' + deg(ans) + '.' : 'A temperature above zero is warmer than one below zero.') : 'Further below zero is colder, not warmer.'),
+      hint: 'On the number line, the smaller number is further LEFT. Colder = smaller.',
+      explain: ex('Colder means smaller', [fm(cold) + ' is further left on the number line than ' + fm(warm) + ', so it is smaller and colder.', 'The ' + (askCold ? 'colder' : 'warmer') + ' temperature is <b>' + deg(ans) + '</b>. ✅']), truth: K.num(askCold ? Math.min(a, b) : Math.max(a, b))
+    });
+  }
+  function qOneLess(){
+    const n = randInt(-8, 3), less = chance(0.5), ans = less ? n - 1 : n + 1, vis = line(-10, 10);
+    return mcqNum({
+      prompt: 'What number is <b>1 ' + (less ? 'less' : 'more') + '</b> than <b>' + fm(n) + '</b>?', visual: vis, answer: ans, fmt: fm,
+      wrong: [{ v: less ? n + 1 : n - 1, why: 'That goes the wrong way. ' + (less ? 'Less means move LEFT.' : 'More means move RIGHT.') }, { v: -ans, why: 'Keep the sign: start at ' + fm(n) + ' and take one step.' }, { v: n, why: 'Take one step ' + (less ? 'left' : 'right') + ' from ' + fm(n) + '.' }],
+      nearby: [1, -1, 2, -2], valid: function(v){ return v >= -10 && v <= 10; }, count: 4, hint: (less ? 'Less: one step left' : 'More: one step right') + ' on the number line.',
+      explain: ex('One step on the line', ['Start at ' + fm(n) + '.', (less ? 'One less is one step LEFT' : 'One more is one step RIGHT') + ': <b>' + fm(ans) + '</b>. ✅']), truth: stepBy(n, 1, less ? -1 : 1)
+    });
+  }
+  /* ---- tier 2 ---- */
+  function qOrder(){
+    const set = {}; const nums = []; while(nums.length < 4){ const n = randInt(-9, 9); if(!set[n]){ set[n] = 1; nums.push(n); } }
+    if(!nums.some(function(n){ return n < 0; })) nums[0] = -randInt(1, 9) === nums[1] ? -nums[1] - 1 : -randInt(1, 9);
+    const uniq = {}; const cl = nums.filter(function(n){ if(uniq[n]) return false; uniq[n] = 1; return true; }); while(cl.length < 4){ const n = randInt(-9, 9); if(!uniq[n]){ uniq[n] = 1; cl.push(n); } }
+    const asc = chance(0.5), sorted = cl.slice().sort(function(a, b){ return a - b; }), ord = asc ? sorted : sorted.slice().reverse();
+    return order({ prompt: 'Put these numbers in order, <b>' + (asc ? 'smallest to largest' : 'largest to smallest') + '</b>. Tap them one at a time.', items: ord.map(function(n){ return { key: String(n), label: fm(n) }; }),
+      hint: 'Picture the number line. The furthest left is the smallest.', explain: ex('Ordering with negatives', ['Further left on the number line = smaller.', 'In order: <b>' + ord.map(fm).join(', ') + '</b>. ✅']), truth: 'o:' + ord.join('|') });
+  }
+  function qCountBack(){
+    const start = randInt(1, 6), k = randInt(start + 1, start + 5), ans = stepBy(start, k, -1);
+    return mcqNum({
+      prompt: 'Start at <b>' + start + '</b> and count back <b>' + k + '</b>. Where do you land?', visual: line(-10, 10), answer: ans, fmt: fm,
+      wrong: [{ v: k - start, why: 'You stopped at zero. Counting back goes THROUGH zero into the negatives.' }, { v: -(k - start) + 1, why: 'Count the steps carefully: ' + start + ' steps to reach zero, then ' + (k - start) + ' more.' }, { v: start - k + 1, why: 'Count the steps again.' }, { v: start + k, why: 'Back means move LEFT, not right.' }],
+      nearby: [1, -1, 2], valid: function(v){ return v >= -10 && v <= 10; }, count: 4, hint: 'It takes ' + start + ' steps to reach 0. Then keep going left.',
+      explain: ex('Counting back through zero', [start + ' steps to reach 0.', k + ' − ' + start + ' = ' + (k - start) + ' more steps into the negatives.', 'You land on <b>' + fm(ans) + '</b>. ✅']), truth: stepBy(start, k, -1)
+    });
+  }
+  function qGreater(){
+    const a = -randInt(1, 9); let b; do { b = -randInt(1, 9); } while(b === a);
+    const big = Math.max(a, b), small = Math.min(a, b);
+    return mcq2({ prompt: 'Which is <b>greater</b>: <b>' + fm(a) + '</b> or <b>' + fm(b) + '</b>?', correct: opt(K.num(big), fm(big), 'Closer to zero is greater when both numbers are negative.'), other: opt(K.num(small), fm(small), fm(small) + ' is further left on the number line, so it is smaller.'),
+      hint: 'Which one is further to the right on the number line?', explain: ex('Comparing negatives', [fm(big) + ' is nearer to zero, so it is further right.', 'The greater number is <b>' + fm(big) + '</b>. ✅']), truth: K.num(Math.max(a, b)) });
+  }
+  /* ---- tier 3 ---- */
+  function qCountHard(){
+    const up = chance(0.35);
+    if(up){ const s0 = -randInt(2, 9), kk = randInt(-s0 + 1, -s0 + 8), ans = stepBy(s0, kk, 1);
+      return mcqNum({ prompt: 'Start at <b>' + fm(s0) + '</b> and count on <b>' + kk + '</b>. Where do you land?', answer: ans, fmt: fm,
+        wrong: [{ v: kk + s0 - 1, why: 'Count the steps again: ' + -s0 + ' to reach 0, then ' + (kk + s0) + ' more.' }, { v: s0 + kk + 1, why: 'Count the steps again: ' + -s0 + ' to reach 0, then ' + (kk + s0) + ' more.' }, { v: s0 - kk, why: 'On means move RIGHT, towards bigger numbers.' }, { v: -ans, why: 'Check which side of zero you end on.' }],
+        nearby: [1, -1, 2, -2], valid: function(v){ return v >= -20 && v <= 20; }, count: 4, hint: 'It takes ' + -s0 + ' steps to reach 0, then keep counting up.',
+        explain: ex('Counting on through zero', [-s0 + ' steps to reach 0.', kk + ' − ' + -s0 + ' = ' + (kk + s0) + ' more steps.', 'You land on <b>' + fm(ans) + '</b>. ✅']), truth: stepBy(s0, kk, 1) }); }
+    const start = randInt(2, 9), k = randInt(start + 1, start + 9), ans = stepBy(start, k, -1);
+    return mcqNum({ prompt: 'Start at <b>' + start + '</b> and count back <b>' + k + '</b>. Where do you land?', answer: ans, fmt: fm,
+      wrong: [{ v: k - start, why: 'You stopped at zero. Counting back goes THROUGH zero into the negatives.' }, { v: ans + 1, why: 'Count the steps again: ' + start + ' to reach 0, then ' + (k - start) + ' more.' }, { v: ans - 1, why: 'Count the steps again: ' + start + ' to reach 0, then ' + (k - start) + ' more.' }, { v: start + k, why: 'Back means move LEFT, not right.' }],
+      nearby: [1, -1, 2, -2], valid: function(v){ return v >= -20 && v <= 20; }, count: 4, hint: 'It takes ' + start + ' steps to reach 0, then keep counting back.',
+      explain: ex('Counting back through zero', [start + ' steps to reach 0.', k + ' − ' + start + ' = ' + (k - start) + ' more steps.', 'You land on <b>' + fm(ans) + '</b>. ✅']), truth: stepBy(start, k, -1) });
+  }
+  function qRise(){
+    const a = -randInt(2, 9), b = randInt(2, 9), who = pick(PLACES), up = chance(0.5), from = up ? a : b, to = up ? b : a;
+    return numeric({ prompt: 'In ' + who + ' the temperature ' + (up ? 'rises' : 'falls') + ' from <b>' + deg(from) + '</b> to <b>' + deg(to) + '</b>. By how many degrees does it ' + (up ? 'rise' : 'fall') + '?', answer: stepsBetween(from, to), hint: 'Count the steps from ' + fm(from) + ' to 0, then from 0 to ' + fm(to) + '.',
+      explain: ex('The difference across zero', [Math.abs(a) + ' degrees to reach 0, then ' + b + ' more.', Math.abs(a) + ' + ' + b + ' = <b>' + (Math.abs(a) + b) + '</b> degrees. ✅']), truth: stepsBetween(from, to),
+      wrong: function(v){ return v === Math.abs(Math.abs(a) - b) ? 'You took one from the other. The temperature crosses zero, so ADD the two parts.' : ''; } });
+  }
+  function qFall(){
+    const start = randInt(1, 8), drop = randInt(start + 1, start + 9), who = pick(PLACES), ans = stepBy(start, drop, -1);
+    return mcqNum({ prompt: 'At noon it is <b>' + deg(start) + '</b> in ' + who + '. By midnight it has fallen by <b>' + drop + '</b> degrees. What is the temperature at midnight?', answer: ans, fmt: deg,
+      wrong: [{ v: drop - start, why: 'The sign is missing: it fell BELOW zero, so the answer is negative.' }, { v: start - drop + 1, why: 'Count the steps again.' }, { v: start - drop - 1, why: 'Count the steps again.' }, { v: start + drop, why: 'Fallen means colder: move LEFT.' }],
+      nearby: [1, -1, 2, -2], valid: function(v){ return v >= -20 && v <= 20; }, count: 4, hint: 'Count down ' + start + ' to reach 0, then keep going.',
+      explain: ex('Falling below zero', [start + ' degrees to reach 0, then ' + (drop - start) + ' more.', 'Midnight: <b>' + deg(ans) + '</b>. ✅']), truth: stepBy(start, drop, -1) });
+  }
+  function qColdest(){
+    const t = []; const used = {}; while(t.length < 4){ const n = randInt(-9, 6); if(!used[n]){ used[n] = 1; t.push(n); } }
+    const names = shuffle(PLACES.slice()).slice(0, 4), cold = Math.min.apply(null, t), idx = t.indexOf(cold);
+    return mcq({ prompt: 'Temperatures today: ' + t.map(function(v, i){ return names[i] + ' ' + deg(v); }).join(', ') + '. Which place is the <b>coldest</b>?', correct: opt('c:' + names[idx], names[idx]),
+      distractors: names.map(function(nm, i){ return i === idx ? null : opt('c:' + nm, nm, deg(t[i]) + ' is warmer than ' + deg(cold) + '.'); }).filter(Boolean), keepOrder: true, count: 4,
+      hint: 'The coldest is the smallest number, the one furthest below zero.', explain: ex('Finding the coldest', ['The smallest number is the coldest: <b>' + deg(cold) + '</b>.', 'That is ' + names[idx] + '. ✅']), truth: 'c:' + names[t.indexOf(Math.min.apply(null, t))] });
+  }
+  const NL = line(-5, 5, -3);
+  registerSkill({
+    id: 'number-negative', strand: 'number', name: 'Negative numbers', emoji: '🌡️', year: 4, order: 195, prereq: ['number-count-steps', 'number-compare-order'],
+    lesson: { title: 'Numbers below zero', steps: [
+      { say: 'Numbers can go <b>below zero</b>. On a number line, left of 0 is <b>negative</b>. A temperature of −3°C means 3 degrees below freezing.', vis: { kind: 'numberLine', args: [{ min: -5, max: 5, minor: 1, major: 1, width: 340, labels: lab, marks: [{ value: -3 }] }] } },
+      { say: 'Further <b>left</b> means <b>smaller</b>. So −5 is smaller than −2, and any negative is smaller than 0. Colder means smaller.', vis: { kind: 'numberLine', args: [{ min: -5, max: 5, minor: 1, major: 1, width: 340, labels: lab, marks: [{ value: -5 }] }] },
+        quiz: { prompt: 'Which is colder: −4°C or −1°C?', options: [{ label: '−4°C', ok: true }, { label: '−1°C', ok: false }], right: 'Yes! −4 is further left, so it is smaller.', wrong: '−4 is further below zero than −1, so it is colder.' } },
+      { say: 'Counting back from 2: 1, 0, <b>−1, −2, −3</b>. You go through zero. To find a difference across zero, count to zero and then on: from −4 to 3 is 4 + 3 = <b>7</b>.', vis: { kind: 'numberLine', args: [{ min: -5, max: 5, minor: 1, major: 1, width: 340, labels: lab, marks: [{ value: -2 }] }] },
+        quiz: { prompt: 'Start at 1 and count back 3. Where do you land?', options: [{ label: '−2', ok: true }, { label: '2', ok: false }, { label: '−3', ok: false }], right: 'Yes! 1, 0, −1, −2.', wrong: 'Count back: 1 → 0 → −1 → −2. You land on −2.' } }
+    ] },
+    trick: { title: 'Left is smaller', say: 'On a number line, <b>left is smaller</b> and <b>right is bigger</b>. Negatives live left of zero. To count or find a difference across zero, go <b>to zero first</b>, then keep going.', vis: { kind: 'numberLine', args: [{ min: -5, max: 5, minor: 1, major: 1, width: 340, labels: lab, marks: [{ value: 0 }] }] }, example: 'From −4 up to 3: 4 steps to zero + 3 more = <b>7</b>' },
+    gen: {
+      1: function(){ return pick([qReadLine, qReadLine, qColder, qOneLess])(); },
+      2: function(){ return pick([qOrder, qCountBack, qCountBack, qGreater, qColder, qReadLine])(); },
+      3: function(){ return pick([qCountHard, qRise, qRise, qFall, qColdest, qOrder])(); }
     }
   });
 })();
@@ -16526,6 +16912,206 @@ if(typeof module !== 'undefined') module.exports = V;
           }
         }
       }
+    }
+  });
+})();
+
+/* ===== src/skills/number-pv-counters.js ===== */
+/* number-pv-counters — place value counters on a chart (Hundreds | Tens | Ones): read, build, exchange, zero as placeholder. */
+(function(){
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  const COL = [{ cls: 'c100', name: 'Hundreds', short: 'H', val: 100, fill: '#8EC5FF' }, { cls: 'c10', name: 'Tens', short: 'T', val: 10, fill: '#C9A7F2' }, { cls: 'c1', name: 'Ones', short: 'O', val: 1, fill: '#FFD479' }];
+  /* every counter is <circle class="c100|c10|c1" data-v="100|10|1">; decode = sum of the values of the counters drawn */
+  function render(h, t, o){
+    const cnt = [h, t, o], rows = Math.max(1, Math.ceil(Math.max(h, t, o) / 3)), cw = 96, ch = 24 + rows * 30 + 8;
+    let s = '';
+    COL.forEach(function(c, k){
+      const x0 = 8 + k * cw;
+      s += '<rect x="' + x0 + '" y="4" width="' + (cw - 6) + '" height="' + (ch + 20) + '" rx="8" fill="#F6F7FD" stroke="#1B1B2F" stroke-width="2"/><text x="' + (x0 + (cw - 6) / 2) + '" y="22" text-anchor="middle" font-size="14" font-weight="800" fill="#1B1B2F">' + c.name + '</text>';
+      for(let i = 0; i < cnt[k]; i++){
+        const cx = x0 + 20 + (i % 3) * 28, cy = 48 + Math.floor(i / 3) * 30;
+        s += '<circle class="' + c.cls + '" data-v="' + c.val + '" cx="' + cx + '" cy="' + cy + '" r="12" fill="' + c.fill + '" stroke="#1B1B2F" stroke-width="2"/><text x="' + cx + '" y="' + (cy + 4) + '" text-anchor="middle" font-size="10" font-weight="800" fill="#1B1B2F">' + c.val + '</text>';
+      }
+    });
+    return '<svg viewBox="0 0 ' + (8 + 3 * cw) + ' ' + (ch + 28) + '" width="300" role="img" style="max-width:100%;height:auto;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Arial,sans-serif">' + s + '</svg>';
+  }
+  function decode(html){ const re = /<circle class="c(?:100|10|1)" data-v="(\d+)"/g; let m, t = 0; while((m = re.exec(html))) t += Number(m[1]); return t; }
+  function countIn(html, cls){ return (html.match(new RegExp('<circle class="' + cls + '"', 'g')) || []).length; }
+  V.extra.counters = { render: render, verify: function(a, html){ return decode(html) === a[0] * 100 + a[1] * 10 + a[2] ? '' : 'counters draw ' + decode(html); } };
+  function times(a, b){ let s = 0; for(let i = 0; i < b; i++) s += a; return s; }
+  function digits(n){ return [Math.floor(n / 100), Math.floor(n / 10) % 10, n % 10]; }
+
+  /* ---- tier 1 ---- */
+  function qRead(){
+    const h = randInt(1, 6), t = randInt(1, 6), o = randInt(1, 6), n = h * 100 + t * 10 + o, vis = render(h, t, o);
+    return mcqNum({ prompt: 'Which number do the counters show?', visual: vis, answer: n,
+      wrong: [{ v: o * 100 + t * 10 + h, why: 'The columns are Hundreds, Tens, Ones from LEFT to right. Check which column each group is in.' }, { v: h * 100 + o * 10 + t, why: 'The tens column is the middle one.' }, { v: h + t + o, why: h + t + o + ' is the number of counters. Each counter has a value: ' + h + ' hundreds, ' + t + ' tens, ' + o + ' ones.' }, { v: n + 10, why: 'Count the counters in each column again.' }],
+      nearby: [1, -1, 10, -10, 100, -100], valid: function(v){ return v > 0 && v < 1000; }, count: 4, hint: 'Count the counters in each column and say what each column is worth.',
+      explain: ex('Reading counters', [h + ' hundreds counters = ' + h * 100 + '.', t + ' tens counters = ' + t * 10 + '.', o + ' ones counters = ' + o + '.', h * 100 + ' + ' + t * 10 + ' + ' + o + ' = <b>' + n + '</b>. ✅']), truth: h * 100 + t * 10 + o, decode: function(){ return decode(vis); } });
+  }
+  function qCountColumn(){
+    const h = randInt(1, 6), t = randInt(1, 6), o = randInt(1, 6), vis = render(h, t, o), k = randInt(0, 2), nm = COL[k].name.toLowerCase(), ans = [h, t, o][k];
+    return mcqNum({ prompt: 'How many <b>' + nm + '</b> counters are on the chart?', visual: vis, answer: ans,
+      wrong: [{ v: [h, t, o][(k + 1) % 3], why: 'That is the number in a different column. Look at the ' + COL[k].name + ' column.' }, { v: ans * COL[k].val, why: 'That is the VALUE of those counters. The question asks how many counters.' }, { v: h + t + o, why: 'That is every counter. Count only the ' + nm + ' column.' }],
+      nearby: [1, -1, 2], valid: function(v){ return v > 0; }, count: 3, hint: 'Look at the ' + COL[k].name + ' column only and count its counters.',
+      explain: ex('Counting one column', ['The ' + COL[k].name + ' column has <b>' + ans + '</b> counters. ✅']), truth: countIn(vis, COL[k].cls), decode: function(){ return countIn(vis, COL[k].cls); } });
+  }
+  function qValueColumn(){
+    const h = randInt(1, 5), t = randInt(1, 5), o = randInt(1, 5), vis = render(h, t, o), k = randInt(0, 1), ans = [h, t, o][k] * COL[k].val;
+    return mcqNum({ prompt: 'What is the <b>total value</b> of the ' + COL[k].name.toLowerCase() + ' counters?', visual: vis, answer: ans,
+      wrong: [{ v: [h, t, o][k], why: 'That is how many counters there are. Each ' + COL[k].name.toLowerCase().slice(0, -1) + ' counter is worth ' + COL[k].val + '.' }, { v: [h, t, o][k] * COL[(k + 1) % 3].val, why: 'Check the value of one counter in this column: ' + COL[k].val + '.' }, { v: ans + COL[k].val, why: 'Count the counters again.' }],
+      nearby: [10, -10, 100], valid: function(v){ return v > 0; }, count: 4, hint: 'Each counter in this column is worth ' + COL[k].val + '. Count them and multiply.',
+      explain: ex('Value of a column', [[h, t, o][k] + ' counters × ' + COL[k].val + ' = <b>' + ans + '</b>. ✅']), truth: times(COL[k].val, countIn(vis, COL[k].cls)), decode: function(){ return times(COL[k].val, countIn(vis, COL[k].cls)); } });
+  }
+  /* ---- tier 2: zero and exchange ---- */
+  function qZero(){
+    const h = randInt(1, 8), o = randInt(1, 8), t = 0, n = h * 100 + o, vis = render(h, t, o);
+    return mcqNum({ prompt: 'Which number do the counters show? (An empty column means <b>0</b>.)', visual: vis, answer: n,
+      wrong: [{ v: h * 10 + o, why: 'The tens column is empty, so there is a 0 in the tens place: ' + n + '.' }, { v: o * 100 + h, why: 'Hundreds are on the left.' }, { v: h * 100 + o * 10, why: 'The ones counters are worth ' + o + ', not ' + o * 10 + '.' }, { v: n + 100, why: 'Count the hundreds counters again.' }],
+      nearby: [1, -1, 10, 100], valid: function(v){ return v > 0 && v < 1000; }, count: 4, hint: 'A column with no counters is worth 0. Write 0 in that place.',
+      explain: ex('Zero as a placeholder', [h + ' hundreds, <b>0 tens</b>, ' + o + ' ones.', 'The 0 holds the tens place: <b>' + n + '</b>. ✅']), truth: h * 100 + o, decode: function(){ return decode(vis); } });
+  }
+  function qExchange(){
+    const kind = randInt(0, 1), t = kind === 0 ? randInt(1, 6) : randInt(11, 14) - 10, o = 10 + randInt(0, 4), h = randInt(1, 5), n = h * 100 + t * 10 + o;
+    /* picture: 10+ ones counters in the ones column: exchange 10 ones for 1 ten */
+    const vis = render(h, t, o), ones = o;
+    const newT = t + 1, newO = o - 10;
+    return mcqNum({ prompt: 'There are ' + ones + ' ones counters, which is too many for one column. Swap <b>10 ones</b> for <b>1 ten</b>. How many tens counters are there <b>now</b>?', visual: vis, answer: newT,
+      wrong: [{ v: t, why: 'That is the number before the swap. Swapping 10 ones gives one more ten.' }, { v: newT + 1, why: 'Swap 10 ones for ONE ten counter, so tens go up by 1 only.' }, { v: ones, why: ones + ' is the number of ones counters.' }, { v: newO > 0 ? newO : newT + 2, why: 'That is how many ones are left. We want the number of tens.' }],
+      nearby: [1, -1, 2], valid: function(v){ return v >= 0; }, count: 4, hint: '10 ones = 1 ten. Take 10 ones away and put 1 ten in the tens column.',
+      explain: ex('Exchanging', ['10 ones = 1 ten.', 'Take away 10 ones: ' + ones + ' − 10 = ' + newO + ' ones left.', 'Tens: ' + t + ' + 1 = <b>' + newT + '</b>. The number is still ' + n + '. ✅']), truth: t + Math.floor(ones / 10), decode: function(){ return countIn(vis, 'c10') + Math.floor(countIn(vis, 'c1') / 10); } });
+  }
+  function qMake(){
+    const n = (function(){ let x; do { x = randInt(120, 890); } while(x % 10 === 0 || Math.floor(x / 100) === Math.floor(x / 10) % 10); return x; })(), d = digits(n), k = randInt(0, 2), nm = COL[k].name.toLowerCase();
+    return mcqNum({ prompt: 'To make <b>' + n + '</b> with counters, how many <b>' + nm + '</b> counters do you need?', answer: d[k],
+      wrong: [{ v: d[(k + 1) % 3], why: 'That is the digit in another place.' }, { v: d[(k + 2) % 3], why: 'That is the digit in another place.' }, { v: d[k] * COL[k].val, why: 'That is the value, not the number of counters.' }],
+      nearby: [1, -1, 2], valid: function(v){ return v >= 0; }, count: 4, hint: 'Look at the digit in the ' + nm + ' place of ' + n + '.',
+      explain: ex('Making a number', [n + ' = ' + d[0] + ' hundreds, ' + d[1] + ' tens, ' + d[2] + ' ones.', 'So you need <b>' + d[k] + '</b> ' + nm + ' counters. ✅']), truth: digits(n)[k] });
+  }
+  /* ---- tier 3 ---- */
+  function qTypedRead(){
+    const h = randInt(1, 9), t = randInt(0, 9), o = randInt(0, 9), vis = render(h, t, o), n = h * 100 + t * 10 + o;
+    return numeric({ prompt: 'Type the number shown by the counters.', visual: vis, answer: n, hint: 'Hundreds, then tens, then ones. An empty column is 0.',
+      explain: ex('Reading counters', [h + ' hundreds, ' + t + ' tens, ' + o + ' ones.', h * 100 + ' + ' + t * 10 + ' + ' + o + ' = <b>' + n + '</b>. ✅']), truth: h * 100 + t * 10 + o, decode: function(){ return decode(vis); },
+      wrong: function(v){ return v === h + t + o ? 'You counted the counters. Each one has a value: add the VALUES.' : ''; } });
+  }
+  function qHowManyMore(){
+    const h = randInt(2, 7), t = randInt(1, 8), o = randInt(1, 8), vis = render(h, t, o), n = h * 100 + t * 10 + o, add = pick([10, 100, 1]), nm = add === 10 ? 'tens' : add === 100 ? 'hundreds' : 'ones';
+    return numeric({ prompt: 'Add <b>1 more ' + nm.slice(0, -1) + ' counter</b> (worth ' + add + ') to the chart. What number is shown now?', visual: vis, answer: n + add, hint: 'Which column changes? The number goes up by ' + add + '.',
+      explain: ex('One more counter', ['A ' + nm.slice(0, -1) + ' counter is worth ' + add + '.', n + ' + ' + add + ' = <b>' + (n + add) + '</b>. ✅']), truth: decode(vis) + add, decode: function(){ return decode(vis) + add; } });
+  }
+  function qWord(){
+    const who = pick(NAMES), h = randInt(1, 9), t = randInt(1, 9), o = randInt(1, 9), n = h * 100 + t * 10 + o;
+    return numeric({ prompt: who + ' used <b>' + h + '</b> hundreds counters, <b>' + t + '</b> tens counters and <b>' + o + '</b> ones counters. What number did ' + who + ' make? Type it.', answer: n, hint: 'Each hundreds counter is 100, each tens counter is 10 and each ones counter is 1.',
+      explain: ex('Counters to a number', [h + ' × 100 = ' + h * 100 + ', ' + t + ' × 10 = ' + t * 10 + ', ' + o + ' × 1 = ' + o + '.', 'Together: <b>' + n + '</b>. ✅']), truth: times(100, h) + times(10, t) + o,
+      wrong: function(v){ return v === h + t + o ? 'You added the counters. Add their VALUES.' : ''; } });
+  }
+  function qExchangeTyped(){
+    const t = randInt(12, 25), n = t * 10, hundreds = Math.floor(t / 10), left = t % 10;
+    return numeric({ prompt: 'You have <b>' + t + ' tens counters</b>. You swap every group of 10 tens for a hundreds counter. How many <b>hundreds</b> counters do you get? Type the number.', answer: hundreds, hint: '10 tens = 1 hundred. How many groups of 10 tens are in ' + t + '?',
+      explain: ex('Exchanging tens for hundreds', ['10 tens = 1 hundred.', t + ' tens: <b>' + hundreds + '</b> group' + (hundreds > 1 ? 's' : '') + ' of 10, with ' + left + ' tens left.', n + ' = ' + hundreds + ' hundred' + (hundreds > 1 ? 's' : '') + ' and ' + left + ' tens. ✅']), truth: (function(){ let g = 0, x = t; while(x >= 10){ x -= 10; g++; } return g; })() });
+  }
+  const L1 = render(2, 3, 4), L2 = render(1, 0, 6), L3 = render(2, 1, 12);
+  registerSkill({
+    id: 'number-pv-counters', strand: 'number', name: 'Place value counters', emoji: '🔴', year: 3, order: 12, prereq: [],
+    lesson: { title: 'Counters on a place value chart', steps: [
+      { say: 'A place value chart has columns: <b>Hundreds, Tens, Ones</b>. A counter in the hundreds column is worth <b>100</b>, in the tens <b>10</b>, in the ones <b>1</b>. This shows 200 + 30 + 4 = <b>234</b>.', vis: { kind: 'counters', args: [2, 3, 4] } },
+      { say: 'An <b>empty column is 0</b>. This chart has 1 hundred, 0 tens and 6 ones: that is <b>106</b>. The 0 keeps the 6 in the ones place.', vis: { kind: 'counters', args: [1, 0, 6] },
+        quiz: { prompt: 'What number has 3 hundreds, 0 tens and 5 ones?', options: [{ label: '305', ok: true }, { label: '35', ok: false }, { label: '350', ok: false }], right: 'Yes! The 0 holds the tens place.', wrong: '3 hundreds, 0 tens, 5 ones is 305.' } },
+      { say: 'When a column has <b>10 counters</b>, swap them for <b>1 counter</b> in the next column to the left. 12 ones can become 1 ten and 2 ones. The number stays the same: 210 + 12 = 222.', vis: { kind: 'counters', args: [2, 1, 12] },
+        quiz: { prompt: '10 ones counters can be swapped for how many tens counters?', options: [{ label: '1', ok: true }, { label: '10', ok: false }, { label: '100', ok: false }], right: 'Yes! 10 ones = 1 ten.', wrong: '10 ones is worth 10, which is the same as 1 ten counter.' } }
+    ] },
+    trick: { title: 'Ten in a column? Swap left!', say: 'Each counter is worth its <b>column</b>: 100, 10 or 1. <b>Empty column = 0.</b> When you have <b>10 counters</b> in a column, swap them for <b>1 counter</b> in the column on the left.', vis: { kind: 'counters', args: [1, 4, 7] }, example: '1 hundred + 4 tens + 7 ones = 100 + 40 + 7 = <b>147</b>' },
+    gen: {
+      1: function(){ return pick([qRead, qRead, qCountColumn, qValueColumn])(); },
+      2: function(){ return pick([qZero, qZero, qExchange, qMake, qRead, qValueColumn])(); },
+      3: function(){ return pick([qTypedRead, qTypedRead, qHowManyMore, qWord, qExchangeTyped])(); }
+    }
+  });
+})();
+
+/* ===== src/skills/number-roman-100.js ===== */
+/* number-roman-100 — Year 4: Roman numerals to 100 (I V X L C), subtractive rule, reading and writing. */
+(function(){
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  const VAL = [[100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+  function toRoman(n){ let s = ''; VAL.forEach(function(p){ while(n >= p[0]){ s += p[1]; n -= p[0]; } }); return s; }
+  /* independent route: digit-wise lookup tables (the generator above is greedy) */
+  const TENS = ['', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC', 'C'], ONES = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+  function toRomanTable(n){ if(n === 100) return 'C'; return TENS[Math.floor(n / 10)] + ONES[n % 10]; }
+  function parseRoman(s){
+    const v = { I: 1, V: 5, X: 10, L: 50, C: 100 }; let t = 0;
+    for(let i = 0; i < s.length; i++){ const a = v[s[i]], b = v[s[i + 1]] || 0; t += a < b ? -a : a; }
+    return t;
+  }
+  function rk(s){ return 'r:' + s; }
+  function additive(n){ /* the tempting wrong form: no subtraction */ let s = ''; [[100, 'C'], [50, 'L'], [10, 'X'], [5, 'V'], [1, 'I']].forEach(function(p){ while(n >= p[0]){ s += p[1]; n -= p[0]; } }); return s; }
+
+  const KEY = '<table style="border-collapse:collapse;margin:0 auto;font:800 24px ui-monospace,Menlo,monospace;color:var(--vis-ink,#1B1B2F)"><tr>' + [['I', 1], ['V', 5], ['X', 10], ['L', 50], ['C', 100]].map(function(p){ return '<td style="padding:6px 12px;text-align:center;border:2px solid var(--vis-ink,#1B1B2F)">' + p[0] + '<div style="font-size:15px;color:var(--vis-b,#9B51E0)">' + p[1] + '</div></td>'; }).join('') + '</tr></table>';
+  function qRomanToNum(maxN){
+    const n = randInt(2, maxN), r = toRoman(n), w = [];
+    const sw = r.split('').reverse().join('');
+    if(sw !== r && parseRoman(sw) !== n) w.push({ v: parseRoman(sw), why: 'The order matters. A small numeral BEFORE a bigger one is taken away: ' + r + ' = ' + n + '.' });
+    const add = r.split('').reduce(function(a, c){ return a + ({ I: 1, V: 5, X: 10, L: 50, C: 100 })[c]; }, 0);
+    if(add !== n) w.push({ v: add, why: 'You added every symbol. When a smaller one comes BEFORE a bigger one it is subtracted.' });
+    return mcqNum({
+      prompt: 'Which number is the Roman numeral <b>' + r + '</b>?', answer: n, wrong: w, nearby: [1, -1, 10, -10, 2, -2, 5, -5, 4], valid: function(v){ return v > 0 && v <= 100; }, count: 4,
+      hint: 'Read the symbols: I = 1, V = 5, X = 10, L = 50, C = 100. A smaller one before a bigger one is taken away.',
+      explain: ex('Reading a Roman numeral', [r + ' = ' + (function(){ const v = { I: 1, V: 5, X: 10, L: 50, C: 100 }; const parts = []; for(let i = 0; i < r.length; i++){ const a = v[r[i]], b = v[r[i + 1]] || 0; if(a < b){ parts.push('(' + v[r[i + 1]] + ' − ' + a + ')'); i++; } else parts.push(a); } return parts.join(' + '); })() + ' = <b>' + n + '</b>. ✅']), truth: parseRoman(r)
+    });
+  }
+  function qNumToRoman(maxN){
+    const n = randInt(2, maxN), r = toRoman(n), cands = [], seen = {}; seen[r] = 1;
+    function add(s, why){ if(s && !seen[s] && parseRoman(s) !== n){ seen[s] = 1; cands.push(opt(rk(s), s, why)); } }
+    const ad = additive(n); if(ad !== r) add(ad, 'Roman numerals never repeat a symbol 4 times. Use the subtraction rule (like IV for 4, IX for 9, XL for 40, XC for 90).');
+    add(r.split('').reverse().join(''), 'The order matters: ' + (r.length > 1 ? 'a smaller numeral before a bigger one means subtract.' : 'check the symbol.'));
+    [1, -1, 10, -10, 5, -5, 2].forEach(function(d){ const m = n + d; if(m > 0 && m <= 100) add(toRoman(m), toRoman(m) + ' is ' + m + ', not ' + n + '.'); });
+    return mcq({
+      prompt: 'Which Roman numeral is the number <b>' + n + '</b>?', correct: opt(rk(r), r), distractors: cands, keepOrder: true, count: 4,
+      hint: 'Build it from I = 1, V = 5, X = 10, L = 50, C = 100. Use IV, IX, XL, XC for 4, 9, 40, 90.',
+      explain: ex('Writing a Roman numeral', [(function(){ const t = Math.floor(n / 10) * 10, o = n % 10; return n + ' = ' + (t ? t + ' + ' : '') + o + ' → ' + (t ? toRoman(t) + ' and ' : '') + (o ? toRoman(o) : ''); })() + '.', 'Together: <b>' + r + '</b>. ✅']), truth: rk(toRomanTable(n))
+    });
+  }
+  function qTypedToNum(){
+    const n = randInt(20, 100), r = toRoman(n);
+    return numeric({ prompt: 'Type the number for the Roman numeral  <b>' + r + '</b>', answer: n, hint: 'L = 50, X = 10, V = 5, I = 1. Smaller before bigger means subtract.',
+      explain: ex('Reading a Roman numeral', [r + ' = <b>' + n + '</b>. ✅']), truth: parseRoman(r),
+      wrong: function(v){ return v === r.split('').reduce(function(a, c){ return a + ({ I: 1, V: 5, X: 10, L: 50, C: 100 })[c]; }, 0) && v !== n ? 'You added everything. A smaller numeral BEFORE a bigger one is subtracted.' : ''; } });
+  }
+  function qOrderRoman(){
+    const nums = []; const seen = {}; while(nums.length < 4){ const n = randInt(3, 99); if(!seen[n]){ seen[n] = 1; nums.push(n); } }
+    const asc = chance(0.5), sorted = nums.slice().sort(function(a, b){ return a - b; }), ord = asc ? sorted : sorted.slice().reverse();
+    return order({ prompt: 'Put these Roman numerals in order, <b>' + (asc ? 'smallest to largest' : 'largest to smallest') + '</b>. Tap them one at a time.', items: ord.map(function(n){ return { key: toRoman(n), label: toRoman(n) }; }),
+      hint: 'Work out the value of each one first.', explain: ex('Ordering Roman numerals', ['Values: ' + ord.map(function(n){ return toRoman(n) + ' = ' + n; }).join(', ') + '.', 'In order: <b>' + ord.map(toRoman).join(', ') + '</b>. ✅']), truth: 'o:' + ord.map(toRomanTable).join('|') });
+  }
+  function qAddRoman(){
+    const a = randInt(3, 40), b = randInt(2, 30), r = toRoman(a) + ' + ' + toRoman(b);
+    return numeric({ prompt: 'Work out  <b>' + r + '</b>  Type your answer as a normal number.', answer: a + b, hint: 'Change each Roman numeral to a number, then add.',
+      explain: ex('Roman sums', [toRoman(a) + ' = ' + a + ' and ' + toRoman(b) + ' = ' + b + '.', a + ' + ' + b + ' = <b>' + (a + b) + '</b> (in Roman: ' + toRoman(a + b) + '). ✅']), truth: parseRoman(toRoman(a)) + parseRoman(toRoman(b)) });
+  }
+  function qWhichIsWrong(){
+    const n = pick([4, 9, 14, 19, 24, 29, 34, 39, 40, 44, 49, 90, 94, 99]), bad = additive(n), good = toRoman(n);
+    return mcq2({ prompt: 'One of these is the correct Roman numeral for <b>' + n + '</b>. Which one?', correct: opt(rk(good), good, 'Yes: subtraction is used so no symbol repeats 4 times.'), other: opt(rk(bad), bad, 'Roman numerals do not use the same symbol 4 times in a row. Use the subtraction rule.'),
+      hint: 'Do not repeat a symbol 4 times: use IV, IX, XL or XC.', explain: ex('The subtraction rule', [n + ' is written <b>' + good + '</b>.', 'Writing ' + bad + ' would repeat a symbol too many times. ✅']), truth: rk(toRomanTable(n)) });
+  }
+  function qYearWord(){
+    const who = pick(NAMES), n = randInt(12, 99), r = toRoman(n);
+    return numeric({ prompt: who + ' sees the page number <b>' + r + '</b> in an old book. What page number is that? Type it.', answer: n, hint: 'Change the Roman numeral to a number.', explain: ex('Reading a Roman numeral', [r + ' = <b>' + n + '</b>. ✅']), truth: parseRoman(r) });
+  }
+  registerSkill({
+    id: 'number-roman-100', strand: 'number', name: 'Roman numerals to 100', emoji: '🏛️', year: 4, order: 185, prereq: ['time-roman'],
+    lesson: { title: 'Roman numerals up to 100', steps: [
+      { say: 'Roman numerals use letters: <b>I = 1, V = 5, X = 10, L = 50, C = 100</b>. Put them side by side to add: XVI = 10 + 5 + 1 = <b>16</b>.', vis: { kind: 'html', args: [KEY] } },
+      { say: 'A smaller numeral <b>before</b> a bigger one is <b>taken away</b>: IV = 5 − 1 = <b>4</b>, IX = <b>9</b>, XL = 50 − 10 = <b>40</b>, XC = 100 − 10 = <b>90</b>. We never write the same symbol four times.',
+        quiz: { prompt: 'Which Roman numeral is 9?', options: [{ label: 'IX', ok: true }, { label: 'VIIII', ok: false }, { label: 'XI', ok: false }], right: 'Yes! 10 − 1 = 9.', wrong: 'IX means 10 − 1 = 9. XI is 11.' } },
+      { say: 'To write a number, say its tens and ones: <b>47</b> = 40 + 7 = <b>XL</b> + <b>VII</b> = <b>XLVII</b>. To read one, go left to right and watch for a small numeral before a big one.',
+        quiz: { prompt: 'What is XLII?', options: [{ label: '42', ok: true }, { label: '62', ok: false }, { label: '38', ok: false }], right: 'Yes! XL = 40, II = 2.', wrong: 'XL = 40 (50 − 10), then II = 2. So 42.' } }
+    ] },
+    trick: { title: 'Tens then ones', say: 'Write the <b>tens</b> first, then the <b>ones</b>. Use <b>IV, IX, XL, XC</b> for 4, 9, 40, 90. Never write the same symbol 4 times.', example: '68 = 60 + 8 = LX + VIII = <b>LXVIII</b> &nbsp;·&nbsp; 94 = XC + IV = <b>XCIV</b>' },
+    gen: {
+      1: function(){ return pick([function(){ return qRomanToNum(39); }, function(){ return qNumToRoman(39); }, function(){ return qRomanToNum(19); }])(); },
+      2: function(){ return pick([function(){ return qRomanToNum(100); }, function(){ return qNumToRoman(100); }, qWhichIsWrong, qOrderRoman])(); },
+      3: function(){ return pick([qTypedToNum, qTypedToNum, qAddRoman, qOrderRoman, qYearWord, qWhichIsWrong])(); }
     }
   });
 })();
@@ -18310,7 +18896,7 @@ function levelFromXp(xp){ let n = 1; while(xp >= xpForLevel(n + 1)) n++; return 
 function levelTitle(n){ return LEVEL_TITLES[Math.min(LEVEL_TITLES.length - 1, Math.floor((n - 1) / 2))]; }
 
 /* SCHOOL-ORDER:BEGIN (generated by tools/curriculum-export.js from curriculum/curriculum.json - do not edit) */
-const SCHOOL_SEQ = {"addsub-add-column":5,"addsub-bonds":0,"addsub-difference":9,"addsub-mental-3d":2,"addsub-missing-inverse":9,"addsub-sub-column":9,"addsub-word":9,"data-bar-charts":14,"data-pictograms":14,"data-tally-tables":14,"data-two-step":14,"frac-add-sub":11,"frac-compare-order":11,"frac-equivalent":11,"frac-nonunit":11,"frac-number-line":11,"frac-of-quantity":11,"frac-read":11,"frac-tenths":11,"geo-2d-shapes":10,"geo-3d-shapes":10,"geo-angles":7,"geo-coordinates":20,"geo-lines":7,"geo-symmetry":20,"geo-turns":7,"logic-patterns":null,"logic-puzzles":null,"logic-sorting":null,"logic-strategies":null,"measure-area":20,"measure-capacity":13,"measure-length":6,"measure-mass":13,"measure-money":13,"measure-perimeter":6,"measure-units":13,"multdiv-10-100":20,"multdiv-2-5-10":3,"multdiv-2digit-partition":8.5,"multdiv-3":4,"multdiv-4":3,"multdiv-6-9":8,"multdiv-8":3,"multdiv-arrays-groups":8.5,"multdiv-bridge-tables":20,"multdiv-division-facts":8.5,"multdiv-doubles-halves":0,"multdiv-formal-mult":8.5,"multdiv-mult-3d":20,"multdiv-remainders":8.5,"multdiv-word":8.5,"number-10-100-more-less":1,"number-4-digit":20,"number-compare-order":1,"number-count-steps":1,"number-line-3digit":1,"number-place-value":1,"number-round":20,"number-round-1000":20,"time-24h-ampm":12,"time-duration":12,"time-five-minutes":12,"time-minutes":12,"time-quarters":12,"time-roman":12};   // unit position in the school sequence; null = reasoning stream that runs alongside every unit
+const SCHOOL_SEQ = {"addsub-add-column":5,"addsub-bonds":0,"addsub-difference":9,"addsub-mental-3d":2,"addsub-missing-inverse":9,"addsub-sub-column":9,"addsub-word":9,"data-bar-charts":14,"data-line-graphs":20,"data-pictograms":14,"data-tally-tables":14,"data-two-step":14,"frac-add-sub":11,"frac-compare-order":11,"frac-equivalent":11,"frac-nonunit":11,"frac-number-line":11,"frac-of-quantity":11,"frac-read":11,"frac-tenths":11,"geo-2d-shapes":10,"geo-3d-shapes":10,"geo-angles":7,"geo-coordinates":20,"geo-lines":7,"geo-symmetry":20,"geo-turns":7,"logic-patterns":null,"logic-puzzles":null,"logic-sorting":null,"logic-strategies":null,"measure-area":20,"measure-capacity":13,"measure-length":6,"measure-mass":13,"measure-money":13,"measure-perimeter":6,"measure-units":13,"multdiv-10-100":20,"multdiv-2-5-10":3,"multdiv-2digit-partition":8.5,"multdiv-3":4,"multdiv-4":3,"multdiv-6-9":8,"multdiv-8":3,"multdiv-arrays-groups":8.5,"multdiv-bridge-tables":20,"multdiv-division-facts":8.5,"multdiv-doubles-halves":0,"multdiv-formal-mult":8.5,"multdiv-mult-3d":20,"multdiv-remainders":8.5,"multdiv-word":8.5,"number-10-100-more-less":1,"number-4-digit":20,"number-compare-order":1,"number-count-steps":1,"number-decimals":20,"number-line-3digit":1,"number-negative":20,"number-place-value":1,"number-pv-counters":1,"number-roman-100":20,"number-round":20,"number-round-1000":20,"time-24h-ampm":12,"time-duration":12,"time-five-minutes":12,"time-minutes":12,"time-quarters":12,"time-roman":12};   // unit position in the school sequence; null = reasoning stream that runs alongside every unit
 /* SCHOOL-ORDER:END */
 
 /* ---------- planning ---------- */

@@ -2008,24 +2008,30 @@
    "placementSource": "S1"
   },
   {
-   "id": "obj:place-value-counters",
-   "skillId": null,
-   "plannedSkillId": "place-value-counters",
-   "status": "missing",
+   "id": "obj:number-pv-counters",
+   "skillId": "number-pv-counters",
+   "status": "exists",
    "year": 3,
-   "strand": null,
+   "strand": "number",
    "unit": "u01-place-value",
    "objective": "Place value counters as a verified picture",
-   "prereq": [
-    "number-place-value"
-   ],
+   "prereq": [],
    "methods": [
     "place-value-counters"
    ],
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "counters"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   },
   {
    "id": "obj:multdiv-10-100",
@@ -2109,40 +2115,60 @@
    "placementSource": "S1"
   },
   {
-   "id": "obj:y4-negative-numbers",
-   "skillId": null,
-   "plannedSkillId": "y4-negative-numbers",
-   "status": "missing",
+   "id": "obj:number-negative",
+   "skillId": "number-negative",
+   "status": "exists",
    "year": 4,
-   "strand": null,
+   "strand": "number",
    "unit": "u20-y4-bridge",
    "objective": "Count through zero; negative numbers",
    "prereq": [
-    "number-line-3digit"
+    "number-count-steps",
+    "number-compare-order"
    ],
    "methods": [],
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   },
   {
-   "id": "obj:y4-decimals-hundredths",
-   "skillId": null,
-   "plannedSkillId": "y4-decimals-hundredths",
-   "status": "missing",
+   "id": "obj:number-decimals",
+   "skillId": "number-decimals",
+   "status": "exists",
    "year": 4,
-   "strand": null,
+   "strand": "number",
    "unit": "u20-y4-bridge",
    "objective": "Tenths and hundredths; decimals; money with decimals",
    "prereq": [
-    "frac-tenths"
+    "frac-tenths",
+    "number-place-value"
    ],
    "methods": [],
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "hundred"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   },
   {
    "id": "obj:measure-area",
@@ -2172,12 +2198,11 @@
    "placementSource": "S1"
   },
   {
-   "id": "obj:y4-roman-to-100",
-   "skillId": null,
-   "plannedSkillId": "y4-roman-to-100",
-   "status": "missing",
+   "id": "obj:number-roman-100",
+   "skillId": "number-roman-100",
+   "status": "exists",
    "year": 4,
-   "strand": null,
+   "strand": "number",
    "unit": "u20-y4-bridge",
    "objective": "Roman numerals to C",
    "prereq": [
@@ -2187,15 +2212,24 @@
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "html"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   },
   {
-   "id": "obj:y4-time-graphs",
-   "skillId": null,
-   "plannedSkillId": "y4-time-graphs",
-   "status": "missing",
+   "id": "obj:data-line-graphs",
+   "skillId": "data-line-graphs",
+   "status": "exists",
    "year": 4,
-   "strand": null,
+   "strand": "data",
    "unit": "u20-y4-bridge",
    "objective": "Read time graphs",
    "prereq": [
@@ -2205,7 +2239,16 @@
    "source": [
     "S1"
    ],
-   "sourceStatus": "pendiente de verificar"
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "linegraph"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
   },
   {
    "id": "obj:multdiv-mult-3d",
