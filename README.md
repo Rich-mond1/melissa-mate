@@ -26,6 +26,7 @@ node tools/layout-audit.js --n 20 --widths 360,390,430   # Chromium real: textos
 Todo junto:
 ```
 npm test            # rápido (minutos): build, audit n=300, motor, estado, e2e, layout 360/390/430, toques, seguridad
+# Currículo: curriculum/curriculum.json (datos, la app no lo lee); tras editarlo: node tools/curriculum-report.js
 npm run test:full   # antes de fusionar con main: audit n=3000, e2e 6/skill, layout n=20
 ```
 Seguridad del progreso: `tools/state-test.js` (carga/migración/exportar-importar con `tools/fixtures/`; añade ahí tu export real como `state-v4-real-*.json`) y `tools/safety-test.js` (aviso si falla el guardado, Exportar, Compartir copia, Importar, estado corrupto). `tools/touch-test.js` simula el clic perdido de iOS; sin WebKit instalado solo cubre Chromium y lo dice. Antes de fusionar con `main`: `docs/IPAD-CHECKLIST.md` en el iPad real.

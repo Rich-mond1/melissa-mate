@@ -2142,5 +2142,9 @@
    ],
    "sourceStatus": "pendiente de verificar"
   }
+ ],
+ "knownOrderConflicts": [
+  "geo-angles<-geo-2d-shapes",
+  "geo-lines<-geo-2d-shapes"
  ]
 }

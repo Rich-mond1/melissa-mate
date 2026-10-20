@@ -10,6 +10,7 @@ const steps = [
   ['audit', 'node tools/audit.js --quiet --n ' + (FULL ? 3000 : 300)],
   ['engine', 'node tools/engine-test.js'],
   ['state', 'node tools/state-test.js'],
+  ['curric', 'node tools/curriculum-test.js'],
   ['e2e', 'node tools/e2e.js --per ' + (FULL ? 6 : 2)],
   ['layout', 'node tools/layout-audit.js --n ' + (FULL ? 20 : 4) + ' --widths 360,390,430'],
   ['touch', 'node tools/touch-test.js'],
