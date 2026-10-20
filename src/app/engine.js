@@ -202,23 +202,81 @@ function openSkills(state){
 /* Recommendation follows the SCHOOL ORDER (unit position), then the lowest medal inside the unit, then the skill order.
    Reasoning skills (seq null) run alongside: one in every 6 sessions. A skill still locked behind a prerequisite is never offered, so a prerequisite can outrank the school order. */
 const STREAM_EVERY = 6;
-function recommend(state){
-  let open = openSkills(state); if(!open.length) return null;
+/* ---------- adaptive rules ---------- */
+const BACKOFF_ACC = 0.5;        // two sessions in a row below this on one skill: go back to its weakest prerequisite
+const GATE_SILVER = 0.8;        // Year 4 content opens when this share of the Year 3 skills is at least silver (and none is wobbly)
+function struggling(state, id){
+  const log = state.sessionLog.filter(function(l){ return l.skill === id && ['guided', 'practice', 'challenge'].indexOf(l.kind) > -1; });
+  return log.length >= 2 && log.slice(-2).every(function(l){ return l.credit < BACKOFF_ACC; });
+}
+function weakestPrereq(state, sk){
+  const c = (sk.prereq || []).map(skillById).filter(function(p){ return p && isUnlocked(state, p) && medalOf(state, p.id) < 2 && !(state.skills[p.id] && state.skills[p.id].goldFrom); });
+  c.sort(function(a, b){ return (medalOf(state, a.id) - medalOf(state, b.id)) || (a.order - b.order); });
+  return c[0] || null;
+}
+function yearGateOpen(state){
+  const y3 = SKILLS.filter(function(s){ return s.year === 3; }); if(!y3.length) return true;
+  const silver = y3.filter(function(s){ return medalOf(state, s.id) >= 2; }).length;
+  return silver / y3.length >= GATE_SILVER && !y3.some(function(s){ return state.skills[s.id] && state.skills[s.id].wobbly; });
+}
+/* the ordered list of skills to work on (best first); the first entry already includes the "go back to a prerequisite" rule */
+function rankOpen(state){
+  let open = openSkills(state); if(!open.length) return [];
+  if(!yearGateOpen(state)){ const y3 = open.filter(function(s){ return s.year < 4; }); if(y3.length) open = y3; }   // depth before Year 4
   if(state.focus){ const f = open.filter(function(s){ return s.strand === state.focus; }); if(f.length) open = f; }
   const cmp = function(a, b){ return (SCHOOL_SEQ[a.id] - SCHOOL_SEQ[b.id]) || (medalOf(state, a.id) - medalOf(state, b.id)) || (a.order - b.order); };
   const main = open.filter(function(s){ return SCHOOL_SEQ[s.id] !== null; }).sort(cmp);
   const stream = open.filter(function(s){ return SCHOOL_SEQ[s.id] === null; }).sort(function(a, b){ return (medalOf(state, a.id) - medalOf(state, b.id)) || (a.order - b.order); });
-  let pick = main[0] || stream[0];
+  let ranked = main.concat(stream);
   if(main[0] && stream[0]){
     const log = state.sessionLog.filter(function(l){ return ['guided', 'practice', 'challenge', 'testout'].indexOf(l.kind) > -1; }); let since = 0;
     for(let i = log.length - 1; i >= 0; i--){ const sk = skillById(log[i].skill); if(sk && SCHOOL_SEQ[sk.id] === null) break; since++; }
-    if(since >= STREAM_EVERY) pick = stream[0];
+    if(since >= STREAM_EVERY) ranked = stream.concat(main);
   }
-  return { skill: pick, step: nextStepFor(state, pick) };
+  const first = ranked[0], pre = struggling(state, first.id) ? weakestPrereq(state, first) : null;
+  if(pre){ ranked = [pre].concat(ranked.filter(function(s){ return s.id !== pre.id; })); ranked.backoffFrom = first.id; }
+  return ranked;
+}
+function recommend(state){
+  const r = rankOpen(state); if(!r.length) return null;
+  const out = { skill: r[0], step: nextStepFor(state, r[0]) };
+  if(r.backoffFrom) out.backoffFrom = r.backoffFrom;
+  return out;
 }
 
+/* ---------- the 25-minute mission (retrieval -> goal -> explanation -> practice -> reasoning -> feedback) ----------
+   The next stage is always decided from the CURRENT state, so a failed quick check or a lesson changes what comes next.
+   m = { elapsed: seconds so far, budget: seconds, done: [{kind, skillId, acc}] } */
+const MISSION_SECONDS = 25 * 60, MISSION_MAX_STAGES = 9;
+function nextMissionStage(state, m){
+  const budget = m.budget || MISSION_SECONDS, done = m.done || [];
+  if(done.length >= MISSION_MAX_STAGES) return null;
+  const warmed = done.some(function(d){ return d.kind === 'review'; });
+  if(!warmed && dueSkills(state).length) return { kind: 'review', skillId: null, label: 'Warm-up: remember' };
+  const blockDone = done.filter(function(d){ return d.kind !== 'review'; });
+  if(blockDone.length && m.elapsed >= budget) return null;
+  if(!blockDone.length && m.elapsed >= budget * 2) return null;
+  const last = blockDone[blockDone.length - 1];
+  if(last){
+    const sk = skillById(last.skillId);
+    if(last.kind === 'learn') { const st = nextStepFor(state, sk); if(st !== 'learn') return { kind: st, skillId: sk.id, label: STEP_NAME[st] }; }
+    if(last.kind === 'testout' && last.acc < 0.99){ const st = nextStepFor(state, sk); if(st !== 'testout') return { kind: st === 'learn' ? 'learn' : st, skillId: sk.id, label: STEP_NAME[st] }; }
+    if(['practice', 'challenge'].indexOf(last.kind) > -1 && last.acc >= 0.6 && !done.some(function(d){ return d.kind === 'think' && d.skillId === sk.id; })) return { kind: 'think', skillId: sk.id, label: 'Think hard' };
+  }
+  /* a new block: the best skill not worked on yet in this mission */
+  const used = {}; done.forEach(function(d){ if(d.skillId) used[d.skillId] = 1; });
+  const ranked = rankOpen(state).filter(function(s){ return !used[s.id]; });
+  for(let i = 0; i < ranked.length; i++){
+    const st = nextStepFor(state, ranked[i]);
+    if(st === 'review') continue;
+    return { kind: st, skillId: ranked[i].id, label: STEP_NAME[st] };
+  }
+  return null;
+}
+const STEP_NAME = { learn: 'Learn it', guided: 'Guided', practice: 'Practice', challenge: 'Challenge', testout: 'Quick check', think: 'Think hard', review: 'Review' };
+
 /* ---------- sessions ---------- */
-const SESSION_LEN = { guided: 4, practice: 6, challenge: 5, testout: 3 };
+const SESSION_LEN = { guided: 4, practice: 6, challenge: 5, testout: 3, think: 3 };
 function buildItems(state, kind, skillId){
   const items = [];
   if(kind === 'review'){
@@ -228,7 +286,7 @@ function buildItems(state, kind, skillId){
       else for(let i = 0; i < 2; i++) items.push({ skillId: s.id, tier: m >= 3 ? 3 : 2 }); });   // 2 questions per skill: one answer is too little evidence to move a review box
     return items;
   }
-  const tier = { guided: 1, practice: 2, challenge: 3, testout: 2 }[kind];
+  const tier = { guided: 1, practice: 2, challenge: 3, testout: 2, think: 3 }[kind];
   for(let i = 0; i < SESSION_LEN[kind]; i++) items.push({ skillId: skillId, tier: tier });
   return items;
 }
@@ -256,7 +314,7 @@ function applySkillResult(state, skillId, kind, credits, today){
   else if(kind === 'testout'){ st.triedOut = true; if(acc >= 0.99){ st.medal = Math.max(st.medal, 1); st.box = Math.max(st.box, 1); st.placed = true; } }
   else if(kind === 'review'){ if(acc >= 0.8){ bump(); st.wobbly = false; if(st.goldFrom && st.medal === 2 && st.goldFrom < today){ st.medal = 3; st.goldFrom = null; } } else if(acc < 0.5){ st.box = Math.max(0, st.box - 1); st.wobbly = true; } }
   if(kind !== 'review' && acc >= 0.8) st.wobbly = false;
-  if(kind !== 'review' && acc < 0.5 && st.medal >= 1) st.wobbly = true;
+  if(kind !== 'review' && kind !== 'think' && acc < 0.5 && st.medal >= 1) st.wobbly = true;   // a hard 'think' block never makes a skill wobbly
   // schedule next review
   if(st.medal >= 1) st.due = addDays(today, REVIEW_DAYS[Math.min(st.box, REVIEW_DAYS.length - 1)] || 1);
   if(st.goldFrom && st.medal === 2) st.due = addDays(today, 1);
@@ -447,4 +505,4 @@ function checkBadges(state){
   return fresh;
 }
 
-if(typeof module !== 'undefined') module.exports = { diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
+if(typeof module !== 'undefined') module.exports = { struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };

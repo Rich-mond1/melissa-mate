@@ -18922,23 +18922,81 @@ function openSkills(state){
 /* Recommendation follows the SCHOOL ORDER (unit position), then the lowest medal inside the unit, then the skill order.
    Reasoning skills (seq null) run alongside: one in every 6 sessions. A skill still locked behind a prerequisite is never offered, so a prerequisite can outrank the school order. */
 const STREAM_EVERY = 6;
-function recommend(state){
-  let open = openSkills(state); if(!open.length) return null;
+/* ---------- adaptive rules ---------- */
+const BACKOFF_ACC = 0.5;        // two sessions in a row below this on one skill: go back to its weakest prerequisite
+const GATE_SILVER = 0.8;        // Year 4 content opens when this share of the Year 3 skills is at least silver (and none is wobbly)
+function struggling(state, id){
+  const log = state.sessionLog.filter(function(l){ return l.skill === id && ['guided', 'practice', 'challenge'].indexOf(l.kind) > -1; });
+  return log.length >= 2 && log.slice(-2).every(function(l){ return l.credit < BACKOFF_ACC; });
+}
+function weakestPrereq(state, sk){
+  const c = (sk.prereq || []).map(skillById).filter(function(p){ return p && isUnlocked(state, p) && medalOf(state, p.id) < 2 && !(state.skills[p.id] && state.skills[p.id].goldFrom); });
+  c.sort(function(a, b){ return (medalOf(state, a.id) - medalOf(state, b.id)) || (a.order - b.order); });
+  return c[0] || null;
+}
+function yearGateOpen(state){
+  const y3 = SKILLS.filter(function(s){ return s.year === 3; }); if(!y3.length) return true;
+  const silver = y3.filter(function(s){ return medalOf(state, s.id) >= 2; }).length;
+  return silver / y3.length >= GATE_SILVER && !y3.some(function(s){ return state.skills[s.id] && state.skills[s.id].wobbly; });
+}
+/* the ordered list of skills to work on (best first); the first entry already includes the "go back to a prerequisite" rule */
+function rankOpen(state){
+  let open = openSkills(state); if(!open.length) return [];
+  if(!yearGateOpen(state)){ const y3 = open.filter(function(s){ return s.year < 4; }); if(y3.length) open = y3; }   // depth before Year 4
   if(state.focus){ const f = open.filter(function(s){ return s.strand === state.focus; }); if(f.length) open = f; }
   const cmp = function(a, b){ return (SCHOOL_SEQ[a.id] - SCHOOL_SEQ[b.id]) || (medalOf(state, a.id) - medalOf(state, b.id)) || (a.order - b.order); };
   const main = open.filter(function(s){ return SCHOOL_SEQ[s.id] !== null; }).sort(cmp);
   const stream = open.filter(function(s){ return SCHOOL_SEQ[s.id] === null; }).sort(function(a, b){ return (medalOf(state, a.id) - medalOf(state, b.id)) || (a.order - b.order); });
-  let pick = main[0] || stream[0];
+  let ranked = main.concat(stream);
   if(main[0] && stream[0]){
     const log = state.sessionLog.filter(function(l){ return ['guided', 'practice', 'challenge', 'testout'].indexOf(l.kind) > -1; }); let since = 0;
     for(let i = log.length - 1; i >= 0; i--){ const sk = skillById(log[i].skill); if(sk && SCHOOL_SEQ[sk.id] === null) break; since++; }
-    if(since >= STREAM_EVERY) pick = stream[0];
+    if(since >= STREAM_EVERY) ranked = stream.concat(main);
   }
-  return { skill: pick, step: nextStepFor(state, pick) };
+  const first = ranked[0], pre = struggling(state, first.id) ? weakestPrereq(state, first) : null;
+  if(pre){ ranked = [pre].concat(ranked.filter(function(s){ return s.id !== pre.id; })); ranked.backoffFrom = first.id; }
+  return ranked;
+}
+function recommend(state){
+  const r = rankOpen(state); if(!r.length) return null;
+  const out = { skill: r[0], step: nextStepFor(state, r[0]) };
+  if(r.backoffFrom) out.backoffFrom = r.backoffFrom;
+  return out;
 }
 
+/* ---------- the 25-minute mission (retrieval -> goal -> explanation -> practice -> reasoning -> feedback) ----------
+   The next stage is always decided from the CURRENT state, so a failed quick check or a lesson changes what comes next.
+   m = { elapsed: seconds so far, budget: seconds, done: [{kind, skillId, acc}] } */
+const MISSION_SECONDS = 25 * 60, MISSION_MAX_STAGES = 9;
+function nextMissionStage(state, m){
+  const budget = m.budget || MISSION_SECONDS, done = m.done || [];
+  if(done.length >= MISSION_MAX_STAGES) return null;
+  const warmed = done.some(function(d){ return d.kind === 'review'; });
+  if(!warmed && dueSkills(state).length) return { kind: 'review', skillId: null, label: 'Warm-up: remember' };
+  const blockDone = done.filter(function(d){ return d.kind !== 'review'; });
+  if(blockDone.length && m.elapsed >= budget) return null;
+  if(!blockDone.length && m.elapsed >= budget * 2) return null;
+  const last = blockDone[blockDone.length - 1];
+  if(last){
+    const sk = skillById(last.skillId);
+    if(last.kind === 'learn') { const st = nextStepFor(state, sk); if(st !== 'learn') return { kind: st, skillId: sk.id, label: STEP_NAME[st] }; }
+    if(last.kind === 'testout' && last.acc < 0.99){ const st = nextStepFor(state, sk); if(st !== 'testout') return { kind: st === 'learn' ? 'learn' : st, skillId: sk.id, label: STEP_NAME[st] }; }
+    if(['practice', 'challenge'].indexOf(last.kind) > -1 && last.acc >= 0.6 && !done.some(function(d){ return d.kind === 'think' && d.skillId === sk.id; })) return { kind: 'think', skillId: sk.id, label: 'Think hard' };
+  }
+  /* a new block: the best skill not worked on yet in this mission */
+  const used = {}; done.forEach(function(d){ if(d.skillId) used[d.skillId] = 1; });
+  const ranked = rankOpen(state).filter(function(s){ return !used[s.id]; });
+  for(let i = 0; i < ranked.length; i++){
+    const st = nextStepFor(state, ranked[i]);
+    if(st === 'review') continue;
+    return { kind: st, skillId: ranked[i].id, label: STEP_NAME[st] };
+  }
+  return null;
+}
+const STEP_NAME = { learn: 'Learn it', guided: 'Guided', practice: 'Practice', challenge: 'Challenge', testout: 'Quick check', think: 'Think hard', review: 'Review' };
+
 /* ---------- sessions ---------- */
-const SESSION_LEN = { guided: 4, practice: 6, challenge: 5, testout: 3 };
+const SESSION_LEN = { guided: 4, practice: 6, challenge: 5, testout: 3, think: 3 };
 function buildItems(state, kind, skillId){
   const items = [];
   if(kind === 'review'){
@@ -18948,7 +19006,7 @@ function buildItems(state, kind, skillId){
       else for(let i = 0; i < 2; i++) items.push({ skillId: s.id, tier: m >= 3 ? 3 : 2 }); });   // 2 questions per skill: one answer is too little evidence to move a review box
     return items;
   }
-  const tier = { guided: 1, practice: 2, challenge: 3, testout: 2 }[kind];
+  const tier = { guided: 1, practice: 2, challenge: 3, testout: 2, think: 3 }[kind];
   for(let i = 0; i < SESSION_LEN[kind]; i++) items.push({ skillId: skillId, tier: tier });
   return items;
 }
@@ -18976,7 +19034,7 @@ function applySkillResult(state, skillId, kind, credits, today){
   else if(kind === 'testout'){ st.triedOut = true; if(acc >= 0.99){ st.medal = Math.max(st.medal, 1); st.box = Math.max(st.box, 1); st.placed = true; } }
   else if(kind === 'review'){ if(acc >= 0.8){ bump(); st.wobbly = false; if(st.goldFrom && st.medal === 2 && st.goldFrom < today){ st.medal = 3; st.goldFrom = null; } } else if(acc < 0.5){ st.box = Math.max(0, st.box - 1); st.wobbly = true; } }
   if(kind !== 'review' && acc >= 0.8) st.wobbly = false;
-  if(kind !== 'review' && acc < 0.5 && st.medal >= 1) st.wobbly = true;
+  if(kind !== 'review' && kind !== 'think' && acc < 0.5 && st.medal >= 1) st.wobbly = true;   // a hard 'think' block never makes a skill wobbly
   // schedule next review
   if(st.medal >= 1) st.due = addDays(today, REVIEW_DAYS[Math.min(st.box, REVIEW_DAYS.length - 1)] || 1);
   if(st.goldFrom && st.medal === 2) st.due = addDays(today, 1);
@@ -19214,6 +19272,7 @@ const PET_NAMES = { ginger: 'Pato', bimba: 'Bimba', duck: 'Ducky' };
 let S = defaultState();
 let scr = { name: 'boot', p: {} };
 let SESS = null;
+let MISSION = null;   // the 25-minute mission in progress (memory only: closing the app ends it)
 const $app = function(){ return document.getElementById('app'); };
 const esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
@@ -19260,7 +19319,7 @@ function topbar(title, back){
   return '<div class="topbar"><button class="icon-btn" data-act="go" data-to="' + (back || 'hub') + '" aria-label="Back">←</button><h2 class="white grow center">' + title + '</h2><span class="pill">⭐ ' + S.starBalance + '</span></div>';
 }
 function medalsHTML(n){ return '<span class="medals">' + [1, 2, 3].map(function(i){ return '<span class="medal' + (n >= i ? ' on' : '') + '">' + ['🥉', '🥈', '🥇'][i - 1] + '</span>'; }).join('') + '</span>'; }
-const STEP_LABEL = { learn: 'Learn it', guided: 'Guided', practice: 'Practice', challenge: 'Challenge', review: 'Review', testout: 'Quick check' };
+const STEP_LABEL = { learn: 'Learn it', guided: 'Guided', practice: 'Practice', challenge: 'Challenge', review: 'Review', testout: 'Quick check', think: 'Think hard' };
 const KIND_ES = { guided: 'Guiada', practice: 'Práctica', challenge: 'Reto', review: 'Repaso', testout: 'Prueba', placement: 'Diagnóstico', legacy: 'Antigua' };
 
 /* ---------------- sticker drawing ---------------- */
@@ -19320,7 +19379,9 @@ SCREENS.hub = function(){
   if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
   else {
     h += '<div class="gap"></div>';
-    if(rec) h += '<button class="btn block" data-act="playRec" style="font-size:20px">▶ ' + (rec.step === 'learn' ? 'Learn' : STEP_LABEL[rec.step]) + ': ' + esc(rec.skill.name) + '</button>';
+    if(MISSION) h += '<button class="btn block" data-act="missionNext" style="font-size:20px">🚀 Continue today’s mission</button><div class="gap"></div><button class="btn small block" style="background:#ffffffcc;color:var(--ink)" data-act="missionStop">End mission</button><div class="gap"></div>';
+    else if(rec) h += '<button class="btn block" data-act="mission" style="font-size:20px">🚀 Today’s mission · about 25 min</button><div class="gap"></div>';
+    if(rec) h += '<button class="btn block' + (MISSION ? ' small' : '') + '" data-act="playRec"' + (MISSION ? ' style="background:#ffffffcc;color:var(--ink)"' : ' style="font-size:20px;background:#ffffffcc;color:var(--ink)"') + '>▶ Quick round — ' + (rec.step === 'learn' ? 'Learn' : STEP_LABEL[rec.step]) + ': ' + esc(rec.skill.name) + (rec.backoffFrom ? ' (let’s strengthen this first)' : '') + '</button>';
     if(due.length) h += '<div class="gap"></div><button class="btn good block" data-act="startReview">🧠 Brain boost — ' + due.length + ' to remember</button>';
     h += '<div class="gap"></div><div class="card quest"><h3>📅 Today’s quest <span class="pill">' + dailyDone() + '/3</span></h3>' +
       '<div class="task' + (d.warmup ? ' done' : '') + '"><span class="chk">' + (d.warmup ? '✓' : '') + '</span>Play one round</div>' +
@@ -19426,7 +19487,7 @@ SCREENS.trick = function(p){
   const sk = skillById(p.id); const T = sk.trick;
   R('<div class="center white"><div class="mascot pop">🎩</div><h2>' + (p.after ? 'You unlocked a magic trick!' : 'Magic trick') + '</h2></div><div class="gap"></div>' +
     '<div class="card trickcard"><h3>' + esc(T.title) + '</h3>' + (T.vis ? '<div class="qvis">' + V.render(T.vis) + '</div>' : '') + '<div class="lesson-say">' + T.say + '</div><div class="gap"></div><div class="explain">' + T.example + '</div></div><div class="gap"></div>' +
-    (p.after ? '<button class="btn block" data-act="startSess" data-k="guided" data-id="' + sk.id + '">Try it now! 🌱</button><div class="gap"></div>' : '') +
+    (MISSION && MISSION.cur && MISSION.cur.kind === 'learn' && MISSION.cur.skillId === sk.id ? '<button class="btn block" data-act="missionLearnDone">Continue the mission 🚀</button><div class="gap"></div>' : (p.after ? '<button class="btn block" data-act="startSess" data-k="guided" data-id="' + sk.id + '">Try it now! 🌱</button><div class="gap"></div>' : '')) +
     '<button class="btn block small" style="background:#ffffffcc;color:var(--ink)" data-act="go" data-to="skill:' + sk.id + '">Back to ' + esc(sk.name) + '</button>');
   speak(T.title + '. ' + T.say);
 };
@@ -19656,7 +19717,7 @@ function finishSession(early){
   if(info.perfect) S.hadPerfect = true;
   S.totalStars += info.stars; S.starBalance += info.stars;
   info.levelUp = addXp(S, info.stars * 3 + 5);
-  if(acc >= 0.6 && kind !== 'testout'){ S.packs++; info.packs++; }
+  if(acc >= 0.6 && kind !== 'testout' && !MISSION){ S.packs++; info.packs++; }   // inside a mission the sticker pack is given once, at the end
   if(info.medals.length){ S.packs++; info.packs++; }
   ensureDaily(S, today);
   S.daily.warmup = true;
@@ -19665,13 +19726,68 @@ function finishSession(early){
   info.next = recommend(S);
   info.logIdx = S.sessionLog.length - Object.keys(SESS.by).length;
   save();
-  SESS = null;
+  const sessSkill = SESS.skillId; SESS = null;
+  if(MISSION) return missionStageDone(kind, sessSkill, info, credits);
   go('results', info);
 }
+/* ---------------- the 25-minute mission ---------------- */
+function missionPlanInput(){ return { elapsed: (Date.now() - MISSION.t0) / 1000, budget: MISSION_SECONDS, done: MISSION.done }; }
+ACT.mission = function(){
+  if(timeIsUp()) return go('timeup');
+  const r = recommend(S); if(!r) return ACT.playRec();
+  MISSION = { t0: Date.now(), done: [], cur: null, agg: { stars: 0, medals: [], goldWaiting: [], wobblyCleared: 0, packs: 0, newBadges: [], levelUp: 0, n: 0, sum: 0, perfect: false } };
+  go('missionIntro', { goal: r.skill.name, emoji: r.skill.emoji, back: !!r.backoffFrom, due: dueSkills(S).length });
+};
+ACT.missionStop = function(){ MISSION = null; go('hub'); };
+ACT.missionNext = function(){
+  if(!MISSION) return go('hub');
+  if(timeIsUp()) return ACT.missionEnd();
+  const st = nextMissionStage(S, missionPlanInput()); if(!st) return ACT.missionEnd();
+  MISSION.cur = st;
+  if(st.kind === 'learn') return go('lesson', { id: st.skillId, i: 0 });
+  startSession(st.kind, st.skillId);
+};
+ACT.missionLearnDone = function(){
+  if(!MISSION || !MISSION.cur) return go('hub');
+  MISSION.done.push({ kind: 'learn', skillId: MISSION.cur.skillId, acc: null }); MISSION.cur = null; ACT.missionNext();
+};
+function missionStageDone(kind, skillId, info, credits){
+  const a = MISSION.agg;
+  MISSION.done.push({ kind: kind, skillId: kind === 'review' ? null : skillId, acc: info.acc }); MISSION.cur = null;
+  a.stars += info.stars; a.medals = a.medals.concat(info.medals); a.goldWaiting = a.goldWaiting.concat(info.goldWaiting); a.wobblyCleared += info.wobblyCleared; a.newBadges = a.newBadges.concat(info.newBadges); a.levelUp = Math.max(a.levelUp, info.levelUp);
+  a.n += credits.length; a.sum += credits.reduce(function(x, y){ return x + y; }, 0); a.perfect = a.perfect || info.perfect; a.packs += info.packs;
+  const nx = timeIsUp() ? null : nextMissionStage(S, missionPlanInput());
+  go('missionStep', { info: info, next: nx ? (nx.skillId ? skillById(nx.skillId).name + ' · ' + nx.label : nx.label) : null, n: MISSION.done.length });
+}
+ACT.missionEnd = function(){
+  const m = MISSION; MISSION = null; if(!m || !m.done.length) return go('hub');
+  const a = m.agg; if(a.n && a.sum / a.n >= 0.6){ S.packs++; a.packs++; }
+  const stages = m.done.filter(function(d){ return d.kind !== 'learn'; }).length;
+  save();
+  go('results', { kind: 'mission', stars: a.stars, medals: a.medals, wobblyCleared: a.wobblyCleared, packs: a.packs, newBadges: a.newBadges, levelUp: a.levelUp, acc: a.n ? a.sum / a.n : 0, n: a.n, perfect: a.perfect && a.n >= 4, next: recommend(S), goldWaiting: a.goldWaiting, minutes: Math.max(1, Math.round((Date.now() - m.t0) / 60000)), stages: stages });
+};
+ACT.missionPause = function(){ go('hub'); };
+SCREENS.missionIntro = function(p){
+  R('<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><h1>Today’s mission</h1></div><div class="gap"></div><div class="card center">' +
+    '<p class="qprompt">' + esc(p.emoji) + ' Today’s goal: <b>' + esc(p.goal) + '</b></p>' + (p.back ? '<p class="muted" style="margin-top:6px">First let’s make an earlier step stronger. 💪</p>' : '') +
+    '<div class="gap"></div><div class="task"><span class="chk">1</span>' + (p.due ? 'Remember what you learned' : 'Warm up') + '</div><div class="task"><span class="chk">2</span>Learn and practise</div><div class="task"><span class="chk">3</span>Think hard</div><div class="task"><span class="chk">4</span>See how you did</div>' +
+    '<p class="muted" style="margin-top:10px">About 25 minutes. You can take a break any time.</p><div class="gap"></div><button class="btn block" data-act="missionNext">Let’s go! 🚀</button></div>');
+};
+SCREENS.missionStep = function(p){
+  const i = p.info, good = i.acc >= 0.8;
+  R('<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><h1>' + (good ? 'Great stage!' : 'Good effort!') + '</h1></div><div class="gap"></div><div class="card center">' +
+    '<p class="qprompt">⭐ +' + i.stars + ' stars</p>' + i.medals.map(function(m){ return '<p style="margin-top:8px;font-weight:900">' + ['', '🥉', '🥈', '🥇'][m.medal] + ' New medal: ' + esc(m.name) + '</p>'; }).join('') +
+    (i.goldWaiting && i.goldWaiting.length ? '<p style="margin-top:8px;font-weight:900">🥇 Gold is almost yours! Win a Brain boost tomorrow: ' + i.goldWaiting.map(esc).join(', ') + '</p>' : '') +
+    '<div class="gap"></div><div class="progress">' + Array.from({ length: Math.max(p.n, 1) }).map(function(){ return '<i class="ok"></i>'; }).join('') + (p.next ? '<i class="cur"></i>' : '') + '</div><div class="gap"></div>' +
+    (p.next ? '<p class="muted">Next: <b>' + esc(p.next) + '</b></p><div class="gap"></div><button class="btn block" data-act="missionNext">Keep going ▶</button><div class="gap"></div><button class="btn small block" style="background:#e9ebf7;color:var(--ink)" data-act="missionPause">Take a break</button>'
+      : '<button class="btn block" data-act="missionEnd">Finish the mission 🏁</button>') + '</div>');
+  if(i.medals.length) confetti(40);
+};
 SCREENS.results = function(p){
   const good = p.acc >= 0.8;
-  let h = '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + (p.perfect ? '💯 Purrfect!' : (good ? '🌟 ' + pick(PRAISE).replace(/[.!]$/, '') + ', ' + nick() + '!' : '💪 Mistakes help your brain grow!')) + '</div><h1 style="margin-top:10px">' + (p.kind === 'testout' ? (p.acc >= 0.99 ? 'You really know it!' : 'Not yet — let’s learn it') : (p.perfect ? 'Perfect round!' : (good ? 'Great round!' : 'Good effort!'))) + '</h1></div><div class="gap"></div>';
+  let h = '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + (p.perfect ? '💯 Purrfect!' : (good ? '🌟 ' + pick(PRAISE).replace(/[.!]$/, '') + ', ' + nick() + '!' : '💪 Mistakes help your brain grow!')) + '</div><h1 style="margin-top:10px">' + (p.kind === 'mission' ? 'Mission complete! 🚀' : p.kind === 'testout' ? (p.acc >= 0.99 ? 'You really know it!' : 'Not yet — let’s learn it') : (p.perfect ? 'Perfect round!' : (good ? 'Great round!' : 'Good effort!'))) + '</h1></div><div class="gap"></div>';
   h += '<div class="card center"><p class="qprompt">⭐ +' + p.stars + ' stars</p>' +
+    (p.kind === 'mission' ? '<p class="muted">⏱ ' + p.minutes + ' min · ' + p.stages + ' stage' + (p.stages === 1 ? '' : 's') + '</p>' : '') +
     (p.medals.length ? p.medals.map(function(m){ return '<p style="margin-top:8px;font-weight:900">' + ['', '🥉', '🥈', '🥇'][m.medal] + ' New medal: ' + esc(m.name) + '</p>'; }).join('') : '') +
     (p.goldWaiting && p.goldWaiting.length ? '<p style="margin-top:8px;font-weight:900">🥇 Gold is almost yours! Win a Brain boost tomorrow to get it: ' + p.goldWaiting.map(esc).join(', ') + '</p>' : '') +
     (p.wobblyCleared ? '<p style="margin-top:8px;font-weight:900">💪 You fixed a wobbly skill!</p>' : '') +

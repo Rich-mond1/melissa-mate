@@ -11,6 +11,7 @@ const steps = [
   ['engine', 'node tools/engine-test.js'],
   ['state', 'node tools/state-test.js'],
   ['mastery', 'node tools/mastery-test.js'],
+  ['mission', 'node tools/mission-test.js'],
   ['diag', 'node tools/diag-test.js'],
   ['curric', 'node tools/curriculum-test.js'],
   ['e2e', 'node tools/e2e.js --per ' + (FULL ? 6 : 2)],
@@ -18,6 +19,7 @@ const steps = [
   ['touch', 'node tools/touch-test.js'],
   ['gold', 'node tools/gold-ui-test.js'],
   ['diagui', 'node tools/diag-ui-test.js'],
+  ['missionui', 'node tools/mission-ui-test.js'],
   ['safety', 'node tools/safety-test.js']
 ];
 const rows = []; let failed = 0;

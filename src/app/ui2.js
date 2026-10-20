@@ -222,7 +222,7 @@ function finishSession(early){
   if(info.perfect) S.hadPerfect = true;
   S.totalStars += info.stars; S.starBalance += info.stars;
   info.levelUp = addXp(S, info.stars * 3 + 5);
-  if(acc >= 0.6 && kind !== 'testout'){ S.packs++; info.packs++; }
+  if(acc >= 0.6 && kind !== 'testout' && !MISSION){ S.packs++; info.packs++; }   // inside a mission the sticker pack is given once, at the end
   if(info.medals.length){ S.packs++; info.packs++; }
   ensureDaily(S, today);
   S.daily.warmup = true;
@@ -231,13 +231,68 @@ function finishSession(early){
   info.next = recommend(S);
   info.logIdx = S.sessionLog.length - Object.keys(SESS.by).length;
   save();
-  SESS = null;
+  const sessSkill = SESS.skillId; SESS = null;
+  if(MISSION) return missionStageDone(kind, sessSkill, info, credits);
   go('results', info);
 }
+/* ---------------- the 25-minute mission ---------------- */
+function missionPlanInput(){ return { elapsed: (Date.now() - MISSION.t0) / 1000, budget: MISSION_SECONDS, done: MISSION.done }; }
+ACT.mission = function(){
+  if(timeIsUp()) return go('timeup');
+  const r = recommend(S); if(!r) return ACT.playRec();
+  MISSION = { t0: Date.now(), done: [], cur: null, agg: { stars: 0, medals: [], goldWaiting: [], wobblyCleared: 0, packs: 0, newBadges: [], levelUp: 0, n: 0, sum: 0, perfect: false } };
+  go('missionIntro', { goal: r.skill.name, emoji: r.skill.emoji, back: !!r.backoffFrom, due: dueSkills(S).length });
+};
+ACT.missionStop = function(){ MISSION = null; go('hub'); };
+ACT.missionNext = function(){
+  if(!MISSION) return go('hub');
+  if(timeIsUp()) return ACT.missionEnd();
+  const st = nextMissionStage(S, missionPlanInput()); if(!st) return ACT.missionEnd();
+  MISSION.cur = st;
+  if(st.kind === 'learn') return go('lesson', { id: st.skillId, i: 0 });
+  startSession(st.kind, st.skillId);
+};
+ACT.missionLearnDone = function(){
+  if(!MISSION || !MISSION.cur) return go('hub');
+  MISSION.done.push({ kind: 'learn', skillId: MISSION.cur.skillId, acc: null }); MISSION.cur = null; ACT.missionNext();
+};
+function missionStageDone(kind, skillId, info, credits){
+  const a = MISSION.agg;
+  MISSION.done.push({ kind: kind, skillId: kind === 'review' ? null : skillId, acc: info.acc }); MISSION.cur = null;
+  a.stars += info.stars; a.medals = a.medals.concat(info.medals); a.goldWaiting = a.goldWaiting.concat(info.goldWaiting); a.wobblyCleared += info.wobblyCleared; a.newBadges = a.newBadges.concat(info.newBadges); a.levelUp = Math.max(a.levelUp, info.levelUp);
+  a.n += credits.length; a.sum += credits.reduce(function(x, y){ return x + y; }, 0); a.perfect = a.perfect || info.perfect; a.packs += info.packs;
+  const nx = timeIsUp() ? null : nextMissionStage(S, missionPlanInput());
+  go('missionStep', { info: info, next: nx ? (nx.skillId ? skillById(nx.skillId).name + ' · ' + nx.label : nx.label) : null, n: MISSION.done.length });
+}
+ACT.missionEnd = function(){
+  const m = MISSION; MISSION = null; if(!m || !m.done.length) return go('hub');
+  const a = m.agg; if(a.n && a.sum / a.n >= 0.6){ S.packs++; a.packs++; }
+  const stages = m.done.filter(function(d){ return d.kind !== 'learn'; }).length;
+  save();
+  go('results', { kind: 'mission', stars: a.stars, medals: a.medals, wobblyCleared: a.wobblyCleared, packs: a.packs, newBadges: a.newBadges, levelUp: a.levelUp, acc: a.n ? a.sum / a.n : 0, n: a.n, perfect: a.perfect && a.n >= 4, next: recommend(S), goldWaiting: a.goldWaiting, minutes: Math.max(1, Math.round((Date.now() - m.t0) / 60000)), stages: stages });
+};
+ACT.missionPause = function(){ go('hub'); };
+SCREENS.missionIntro = function(p){
+  R('<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><h1>Today’s mission</h1></div><div class="gap"></div><div class="card center">' +
+    '<p class="qprompt">' + esc(p.emoji) + ' Today’s goal: <b>' + esc(p.goal) + '</b></p>' + (p.back ? '<p class="muted" style="margin-top:6px">First let’s make an earlier step stronger. 💪</p>' : '') +
+    '<div class="gap"></div><div class="task"><span class="chk">1</span>' + (p.due ? 'Remember what you learned' : 'Warm up') + '</div><div class="task"><span class="chk">2</span>Learn and practise</div><div class="task"><span class="chk">3</span>Think hard</div><div class="task"><span class="chk">4</span>See how you did</div>' +
+    '<p class="muted" style="margin-top:10px">About 25 minutes. You can take a break any time.</p><div class="gap"></div><button class="btn block" data-act="missionNext">Let’s go! 🚀</button></div>');
+};
+SCREENS.missionStep = function(p){
+  const i = p.info, good = i.acc >= 0.8;
+  R('<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><h1>' + (good ? 'Great stage!' : 'Good effort!') + '</h1></div><div class="gap"></div><div class="card center">' +
+    '<p class="qprompt">⭐ +' + i.stars + ' stars</p>' + i.medals.map(function(m){ return '<p style="margin-top:8px;font-weight:900">' + ['', '🥉', '🥈', '🥇'][m.medal] + ' New medal: ' + esc(m.name) + '</p>'; }).join('') +
+    (i.goldWaiting && i.goldWaiting.length ? '<p style="margin-top:8px;font-weight:900">🥇 Gold is almost yours! Win a Brain boost tomorrow: ' + i.goldWaiting.map(esc).join(', ') + '</p>' : '') +
+    '<div class="gap"></div><div class="progress">' + Array.from({ length: Math.max(p.n, 1) }).map(function(){ return '<i class="ok"></i>'; }).join('') + (p.next ? '<i class="cur"></i>' : '') + '</div><div class="gap"></div>' +
+    (p.next ? '<p class="muted">Next: <b>' + esc(p.next) + '</b></p><div class="gap"></div><button class="btn block" data-act="missionNext">Keep going ▶</button><div class="gap"></div><button class="btn small block" style="background:#e9ebf7;color:var(--ink)" data-act="missionPause">Take a break</button>'
+      : '<button class="btn block" data-act="missionEnd">Finish the mission 🏁</button>') + '</div>');
+  if(i.medals.length) confetti(40);
+};
 SCREENS.results = function(p){
   const good = p.acc >= 0.8;
-  let h = '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + (p.perfect ? '💯 Purrfect!' : (good ? '🌟 ' + pick(PRAISE).replace(/[.!]$/, '') + ', ' + nick() + '!' : '💪 Mistakes help your brain grow!')) + '</div><h1 style="margin-top:10px">' + (p.kind === 'testout' ? (p.acc >= 0.99 ? 'You really know it!' : 'Not yet — let’s learn it') : (p.perfect ? 'Perfect round!' : (good ? 'Great round!' : 'Good effort!'))) + '</h1></div><div class="gap"></div>';
+  let h = '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + (p.perfect ? '💯 Purrfect!' : (good ? '🌟 ' + pick(PRAISE).replace(/[.!]$/, '') + ', ' + nick() + '!' : '💪 Mistakes help your brain grow!')) + '</div><h1 style="margin-top:10px">' + (p.kind === 'mission' ? 'Mission complete! 🚀' : p.kind === 'testout' ? (p.acc >= 0.99 ? 'You really know it!' : 'Not yet — let’s learn it') : (p.perfect ? 'Perfect round!' : (good ? 'Great round!' : 'Good effort!'))) + '</h1></div><div class="gap"></div>';
   h += '<div class="card center"><p class="qprompt">⭐ +' + p.stars + ' stars</p>' +
+    (p.kind === 'mission' ? '<p class="muted">⏱ ' + p.minutes + ' min · ' + p.stages + ' stage' + (p.stages === 1 ? '' : 's') + '</p>' : '') +
     (p.medals.length ? p.medals.map(function(m){ return '<p style="margin-top:8px;font-weight:900">' + ['', '🥉', '🥈', '🥇'][m.medal] + ' New medal: ' + esc(m.name) + '</p>'; }).join('') : '') +
     (p.goldWaiting && p.goldWaiting.length ? '<p style="margin-top:8px;font-weight:900">🥇 Gold is almost yours! Win a Brain boost tomorrow to get it: ' + p.goldWaiting.map(esc).join(', ') + '</p>' : '') +
     (p.wobblyCleared ? '<p style="margin-top:8px;font-weight:900">💪 You fixed a wobbly skill!</p>' : '') +
