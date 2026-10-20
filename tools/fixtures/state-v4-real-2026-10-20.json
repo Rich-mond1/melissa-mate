@@ -1,0 +1,588 @@
+{
+ "v": 4,
+ "name": "Melissa",
+ "onboardingDone": true,
+ "theme": "rainbow",
+ "prefs": {
+  "likes": [],
+  "dislikes": [],
+  "voice": true,
+  "sound": true
+ },
+ "placement": {
+  "done": true,
+  "started": true,
+  "strandIdx": 9,
+  "asked": 0,
+  "misses": 0,
+  "queue": [],
+  "results": {
+   "number-place-value": 1,
+   "number-compare-order": 0,
+   "number-10-100-more-less": 0,
+   "addsub-mental-3d": 1,
+   "addsub-add-column": 1,
+   "addsub-sub-column": 0,
+   "addsub-difference": 1,
+   "multdiv-2-5-10": 1,
+   "multdiv-3": 0,
+   "multdiv-4": 1,
+   "multdiv-8": 0,
+   "frac-read": 1,
+   "frac-nonunit": 1,
+   "frac-number-line": 1,
+   "frac-of-quantity": 1,
+   "time-quarters": 1,
+   "time-five-minutes": 1,
+   "time-minutes": 1,
+   "time-roman": 1,
+   "measure-length": 1,
+   "measure-mass": 1,
+   "measure-capacity": 1,
+   "measure-units": 0,
+   "geo-2d-shapes": 0,
+   "geo-3d-shapes": 1,
+   "geo-angles": 0,
+   "geo-turns": 1,
+   "data-tally-tables": 0,
+   "data-pictograms": 0,
+   "logic-patterns": 1,
+   "logic-sorting": 1,
+   "logic-puzzles": 0,
+   "logic-strategies": 0
+  }
+ },
+ "skills": {
+  "number-place-value": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "addsub-mental-3d": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "addsub-add-column": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "addsub-difference": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "multdiv-2-5-10": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "multdiv-4": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "frac-read": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "frac-nonunit": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "frac-number-line": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "frac-of-quantity": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "time-quarters": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "time-five-minutes": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "time-minutes": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "time-roman": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "measure-length": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "measure-mass": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "measure-capacity": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "geo-3d-shapes": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "geo-turns": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "data-tally-tables": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "logic-patterns": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "logic-sorting": {
+   "medal": 1,
+   "box": 1,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "multdiv-3": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "multdiv-8": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "multdiv-division-facts": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "multdiv-bridge-tables": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "multdiv-arrays-groups": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "multdiv-2digit-partition": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "multdiv-word": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "number-compare-order": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "number-10-100-more-less": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "number-count-steps": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "number-line-3digit": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  },
+  "number-round": {
+   "medal": 0,
+   "box": 0,
+   "seen": 0,
+   "correct": 0,
+   "credit": 0,
+   "lessonDone": false,
+   "last": null,
+   "due": null,
+   "wobbly": false,
+   "placed": false
+  }
+ },
+ "errors": {
+  "number-compare-order||Add the parts up: 800 + 90 + 3 = 893, which is not 883.": {
+   "skill": "number-compare-order",
+   "why": "Add the parts up: 800 + 90 + 3 = 893, which is not 883.",
+   "n": 1,
+   "last": "2026-10-19"
+  },
+  "number-10-100-more-less||That is 100 LESS, the wrong way round.": {
+   "skill": "number-10-100-more-less",
+   "why": "That is 100 LESS, the wrong way round.",
+   "n": 1,
+   "last": "2026-10-19"
+  },
+  "addsub-sub-column||You added instead of taking away. Look at the minus sign.": {
+   "skill": "addsub-sub-column",
+   "why": "You added instead of taking away. Look at the minus sign.",
+   "n": 1,
+   "last": "2026-10-19"
+  },
+  "multdiv-8||56 is 8 × 7, one group too few.": {
+   "skill": "multdiv-8",
+   "why": "56 is 8 × 7, one group too few.",
+   "n": 1,
+   "last": "2026-10-19"
+  },
+  "measure-units||You multiplied by 100. There are 10 mm in 1 cm, so multiply by 10.": {
+   "skill": "measure-units",
+   "why": "You multiplied by 100. There are 10 mm in 1 cm, so multiply by 10.",
+   "n": 1,
+   "last": "2026-10-19"
+  },
+  "geo-2d-shapes||That is the number of corners. Only the square-looking corners are right angles.": {
+   "skill": "geo-2d-shapes",
+   "why": "That is the number of corners. Only the square-looking corners are right angles.",
+   "n": 1,
+   "last": "2026-10-19"
+  },
+  "data-tally-tables||You counted each bundle as 4 and missed the diagonals.": {
+   "skill": "data-tally-tables",
+   "why": "You counted each bundle as 4 and missed the diagonals.",
+   "n": 1,
+   "last": "2026-10-19"
+  },
+  "data-pictograms||Diego has 11 — some row has more.": {
+   "skill": "data-pictograms",
+   "why": "Diego has 11 — some row has more.",
+   "n": 1,
+   "last": "2026-10-19"
+  },
+  "logic-puzzles||That is the two numbers added. Take them away from 12 instead.": {
+   "skill": "logic-puzzles",
+   "why": "That is the two numbers added. Take them away from 12 instead.",
+   "n": 1,
+   "last": "2026-10-19"
+  }
+ },
+ "totalStars": 0,
+ "starBalance": 0,
+ "xp": 0,
+ "level": 1,
+ "stickers": [],
+ "packs": 0,
+ "tricks": [],
+ "badges": [],
+ "claims": [],
+ "rewards": [
+  {
+   "id": "snack",
+   "emoji": "🥨",
+   "title": "A healthy snack you choose",
+   "cost": 30
+  },
+  {
+   "id": "icecream",
+   "emoji": "🍦",
+   "title": "An ice cream cone — you pick the flavour",
+   "cost": 60
+  },
+  {
+   "id": "tv",
+   "emoji": "📺",
+   "title": "You choose the TV show at dinner",
+   "cost": 80
+  },
+  {
+   "id": "popcorn",
+   "emoji": "🍿",
+   "title": "Popcorn night",
+   "cost": 110
+  },
+  {
+   "id": "movie",
+   "emoji": "🎬",
+   "title": "You choose the weekend movie",
+   "cost": 150
+  }
+ ],
+ "goalReward": null,
+ "timer": {
+  "mode": "free",
+  "minutes": 20,
+  "debtSeconds": 0,
+  "used": {
+   "date": "2026-10-19",
+   "sec": 470
+  }
+ },
+ "streak": {
+  "count": 0,
+  "lastPlayDate": null
+ },
+ "sessionLog": [],
+ "daily": {
+  "date": "2026-10-20",
+  "warmup": false,
+  "learn": false,
+  "boss": false,
+  "claimed": false,
+  "rounds": 0
+ },
+ "focus": null,
+ "legacy": null,
+ "friend": "ginger"
+}
