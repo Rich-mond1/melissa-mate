@@ -10933,6 +10933,206 @@ if(typeof module !== 'undefined') module.exports = V;
   }
 })();
 
+/* ===== src/skills/multdiv-methods-remainders.js ===== */
+/* multdiv-remainders — Year 3 (school calculation policy: division with remainders): what is left over when sharing is not exact, written "q remainder r". */
+(function(){
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  const ITEMS = [['sweets', 'bags'], ['stickers', 'packs'], ['marbles', 'jars'], ['biscuits', 'plates'], ['pencils', 'pots'], ['cupcakes', 'trays'], ['stars', 'boxes'], ['strawberries', 'baskets']];
+  const DIVS = [2, 3, 4, 5, 8, 10];
+  function pos(v){ return v > 0; }
+  function nonneg(v){ return v >= 0; }
+  /* independent source of truth: repeated subtraction (the questions are BUILT from n = d × q + r) */
+  function divmod(n, d){ let q = 0; while(n >= d){ n -= d; q++; } return { q: q, r: n }; }
+  function countIn(d, q){ const out = []; for(let i = 1; i <= q; i++) out.push(i === q ? '<b>' + d * i + '</b>' : String(d * i)); return out.join(', '); }
+  function make(maxQ, forceRem){
+    const d = pick(DIVS), q = randInt(2, maxQ), r = (forceRem || chance(0.85)) ? randInt(1, d - 1) : 0;
+    return { d: d, q: q, r: r, n: d * q + r };
+  }
+  function steps(m){
+    const full = m.d * m.q;
+    return ['Count in <b>' + m.d + 's</b> until the next one would be too big: ' + countIn(m.d, m.q) + '. That is <b>' + m.q + '</b> full groups.', m.n + ' − ' + full + ' = <b>' + m.r + '</b> left over.', m.n + ' ÷ ' + m.d + ' = <b>' + m.q + ' remainder ' + m.r + '</b>. ✅'];
+  }
+  function lbl(q, r){ return r === 0 ? String(q) : q + ' remainder ' + r; }
+
+  /* ---------- tier 1: pictures of the FULL groups; the leftovers are only in the story ---------- */
+  function qFullGroups(){
+    const m = make(5, true), it = pick(ITEMS), vis = V.groups(m.q, m.d);
+    return mcqNum({
+      prompt: 'There are ' + m.n + ' ' + it[0] + '. They go into ' + it[1] + ' of ' + m.d + '. The picture shows the FULL ' + it[1] + '. How many full ' + it[1] + ' are there?', visual: vis, answer: m.q,
+      wrong: [{ v: m.q + 1, why: 'The ' + m.r + ' left over do not fill another ' + it[1].replace(/s$/, '') + ', so they do not count.' }, { v: m.d, why: m.d + ' is how many are in each. Count the full groups in the picture.' }, { v: m.n, why: m.n + ' is how many ' + it[0] + ' there are altogether. Count the full groups.' }, { v: m.q - 1, why: 'Count the groups in the picture again.' }],
+      nearby: [1, -1, 2], valid: pos, count: 3,
+      hint: 'Each ring is one full group of ' + m.d + '. Count the rings.',
+      explain: ex('Full groups', ['Each full group holds <b>' + m.d + '</b>.', 'Count in ' + m.d + 's: ' + countIn(m.d, m.q) + '. That is <b>' + m.q + '</b> full groups.', 'There are ' + m.q + ' full ' + it[1] + ' and ' + m.r + ' left over. ✅']),
+      truth: divmod(m.n, m.d).q, decode: function(){ return V.decodeGroups(vis).groups; }
+    });
+  }
+  function qLeftOver(){
+    const m = make(5, true), it = pick(ITEMS), vis = V.groups(m.q, m.d);
+    return mcqNum({
+      prompt: 'There are ' + m.n + ' ' + it[0] + '. The picture shows the full ' + it[1] + ' of ' + m.d + '. How many ' + it[0] + ' are left over?', visual: vis, answer: m.r,
+      wrong: [{ v: m.d, why: m.d + ' is how many fit in a full group. The left over ones are fewer than that.' }, { v: m.q, why: m.q + ' is the number of full groups, not the number left over.' }, { v: m.d - m.r, why: 'That is how many MORE you would need to fill another group. The question asks how many are left over.' }, { v: m.r + 1, why: 'Count again: ' + m.n + ' − ' + m.d * m.q + ' = ' + m.r + '.' }],
+      nearby: [1, -1, 2], valid: pos, count: 3,
+      hint: 'Count how many ' + it[0] + ' are in the full groups. Take that away from ' + m.n + '.',
+      explain: ex('Left over', ['The picture has ' + m.q + ' full groups of ' + m.d + ': ' + countIn(m.d, m.q) + ' ' + it[0] + '.', m.n + ' − ' + m.d * m.q + ' = <b>' + m.r + '</b>.', m.r + ' ' + it[0] + ' are left over. ✅']),
+      truth: m.n - V.decodeGroups(vis).total, decode: function(){ return m.n - V.decodeGroups(vis).total; }
+    });
+  }
+  function qFitsExactly(){
+    const m = make(5, false), exact = m.r === 0, it = pick(ITEMS);
+    return mcq2({
+      prompt: m.n + ' ' + it[0] + ' go into ' + it[1] + ' of ' + m.d + '. Will there be some left over?', correct: opt(K.bool(!exact), exact ? 'No, none left over' : 'Yes, some left over'), other: opt(K.bool(exact), exact ? 'Yes, some left over' : 'No, none left over', exact ? m.d + ' × ' + m.q + ' = ' + m.n + ' exactly, so nothing is left.' : 'Count in ' + m.d + 's: ' + countIn(m.d, m.q) + '. It skips over ' + m.n + ', so some are left over.'),
+      hint: 'Count in ' + m.d + 's. Do you land exactly on ' + m.n + '?',
+      explain: ex('Exact or not?', ['Count in ' + m.d + 's: ' + countIn(m.d, m.q) + (exact ? '.' : ', then the next is ' + m.d * (m.q + 1) + '.'), exact ? 'We land exactly on <b>' + m.n + '</b>, so nothing is left over.' : 'We never land on ' + m.n + ', so <b>' + m.r + '</b> are left over.', exact ? m.n + ' ÷ ' + m.d + ' = ' + m.q + '. ✅' : m.n + ' ÷ ' + m.d + ' = ' + m.q + ' remainder ' + m.r + '. ✅']),
+      truth: K.bool(divmod(m.n, m.d).r !== 0)
+    });
+  }
+
+  /* ---------- tier 2: recall and meaning ---------- */
+  function qChooseAnswer(){
+    const m = make(8, true), good = lbl(m.q, m.r), ds = [];
+    const add = function(q, r, why){ const l = r === 0 ? String(q) : q + ' remainder ' + r; if(l !== good && !ds.some(function(d){ return d.label === l; }) && q >= 0) ds.push(opt(K.text(l), l, why)); };
+    add(m.q + 1, 0, 'You rounded up. The ' + m.r + ' left over do not make another full group, so we write them as a remainder.');
+    if(m.d - m.r !== m.r) add(m.q, m.d - m.r, 'You found how many MORE are needed to make another group. The remainder is what is LEFT: ' + m.n + ' − ' + m.d * m.q + ' = ' + m.r + '.');
+    if(m.r !== m.q) add(m.r, m.q, 'You swapped the two numbers. The number of full groups comes first (' + m.q + '), then the remainder (' + m.r + ').');
+    add(m.q - 1, m.r + m.d, 'A remainder of ' + (m.r + m.d) + ' is too big: another group of ' + m.d + ' fits. The remainder must be smaller than ' + m.d + '.');
+    add(m.q, m.r + 1, 'Check the subtraction: ' + m.n + ' − ' + m.d * m.q + ' = ' + m.r + ', not ' + (m.r + 1) + '.');
+    add(m.q + 1, m.r, 'There are only ' + m.q + ' full groups. Count in ' + m.d + 's: ' + countIn(m.d, m.q) + '.');
+    return mcq({
+      prompt: 'What is <b>' + m.n + ' ÷ ' + m.d + '</b>?', correct: opt(K.text(good), good), distractors: ds, keepOrder: true, count: 4,
+      hint: 'Count in ' + m.d + 's without going over ' + m.n + '. How many jumps? What is left?',
+      explain: ex('Dividing with a remainder', steps(m)), truth: K.text(lbl(divmod(m.n, m.d).q, divmod(m.n, m.d).r))
+    });
+  }
+  function qRemainderOnly(){
+    const m = make(8, true);
+    return mcqNum({
+      prompt: 'What is the <b>remainder</b> when ' + m.n + ' is divided by ' + m.d + '?', answer: m.r,
+      wrong: [{ v: m.q, why: m.q + ' is the number of full groups. The remainder is what is left over.' }, { v: m.d - m.r, why: 'That is how many more you need to make another group. The remainder is what is left: ' + m.n + ' − ' + m.d * m.q + '.' }, { v: m.d, why: 'A remainder is always smaller than ' + m.d + ', the number you divide by.' }, { v: m.r + 1, why: 'Check: ' + m.n + ' − ' + m.d * m.q + ' = ' + m.r + '.' }],
+      nearby: [1, -1, 2, -2, 3, 4, 5, 6], valid: pos, count: 4,
+      hint: 'Find the biggest number in the ' + m.d + ' times table that fits into ' + m.n + '. Then see how many are left.',
+      explain: ex('Finding the remainder', steps(m)), truth: divmod(m.n, m.d).r
+    });
+  }
+  function qWordFull(){
+    const m = make(8, true), it = pick(ITEMS), who = pick(NAMES), askLeft = chance(0.5);
+    return mcqNum({
+      prompt: who + ' has ' + m.n + ' ' + it[0] + ' and puts ' + m.d + ' in each of the ' + it[1] + '. ' + (askLeft ? 'How many ' + it[0] + ' are left over?' : 'How many ' + it[1] + ' can ' + who + ' fill?'), answer: askLeft ? m.r : m.q,
+      wrong: askLeft ? [{ v: m.q, why: m.q + ' is the number of full ' + it[1] + '. The question asks how many are left over.' }, { v: m.d - m.r, why: 'That is how many more are needed to fill another one. We want the ones left over.' }, { v: m.r + 1, why: 'Check: ' + m.n + ' − ' + m.d * m.q + ' = ' + m.r + '.' }]
+        : [{ v: m.q + 1, why: 'The ' + m.r + ' left over cannot fill another one, so only ' + m.q + ' are filled.' }, { v: m.r, why: m.r + ' is how many are left over. The question asks how many are filled.' }, { v: m.d, why: m.d + ' is how many go in each. Count how many ' + it[1] + ' you can fill.' }],
+      nearby: [1, -1, 2, -2, 3, 4, 5, 6], valid: pos, count: 4,
+      hint: 'Count in ' + m.d + 's without going over ' + m.n + '.', explain: ex(askLeft ? 'What is left over' : 'Full ' + it[1], steps(m)), truth: askLeft ? m.n - m.d * divmod(m.n, m.d).q : divmod(m.n, m.d).q
+    });
+  }
+  function qNearestFact(){
+    const m = make(8, true), good = m.d + ' × ' + m.q + ' = ' + m.d * m.q, ds = [];
+    [[m.q + 1, 'It is bigger than ' + m.n + '. For a remainder we need the nearest fact that does NOT go over.'], [m.q - 1, 'It is true, but not the nearest. A bigger fact still fits into ' + m.n + '.'], [m.q + 2, 'It is bigger than ' + m.n + ', so it goes over.']].forEach(function(c){
+      if(c[0] >= 1){ const l = m.d + ' × ' + c[0] + ' = ' + m.d * c[0]; if(l !== good) ds.push(opt(K.text(l), l, c[1])); }
+    });
+    return mcq({
+      prompt: 'To work out <b>' + m.n + ' ÷ ' + m.d + '</b>, which fact is the <b>nearest</b> to ' + m.n + ' without going over?', correct: opt(K.text(good), good), distractors: ds, keepOrder: true, count: 4,
+      hint: 'All the facts are true. Pick the one that is closest to ' + m.n + ' but not bigger than ' + m.n + '.',
+      explain: ex('Nearest fact', ['Count in ' + m.d + 's: ' + countIn(m.d, m.q) + ', then ' + m.d * (m.q + 1) + ' is too big.', 'The nearest fact without going over ' + m.n + ' is <b>' + good + '</b>.', m.n + ' − ' + m.d * m.q + ' = ' + m.r + ', so ' + m.n + ' ÷ ' + m.d + ' = ' + m.q + ' remainder ' + m.r + '. ✅']),
+      truth: K.text(m.d + ' × ' + divmod(m.n, m.d).q + ' = ' + m.d * divmod(m.n, m.d).q)
+    });
+  }
+
+  /* ---------- tier 3: typed answers, reasoning ---------- */
+  function qTypedRem(){
+    const m = make(10, true);
+    return numeric({
+      prompt: 'What is the remainder when <b>' + m.n + '</b> is divided by <b>' + m.d + '</b>?', answer: m.r,
+      hint: 'Find the biggest number in the ' + m.d + ' times table that is not more than ' + m.n + '. Take it away from ' + m.n + '.',
+      explain: ex('Finding the remainder', steps(m)), truth: divmod(m.n, m.d).r,
+      wrong: function(v){ return v === m.q ? m.q + ' is the number of full groups. The remainder is what is left over.' : v === m.d - m.r ? 'That is how many more you need for another group. The remainder is what is LEFT.' : v >= m.d ? 'A remainder is always smaller than ' + m.d + ', otherwise another group would fit.' : ''; }
+    });
+  }
+  function qTypedFull(){
+    const m = make(10, true), it = pick(ITEMS), who = pick(NAMES);
+    return numeric({
+      prompt: who + ' has ' + m.n + ' ' + it[0] + '. ' + who + ' fills ' + it[1] + ' that each hold ' + m.d + '. How many are filled completely?', answer: m.q,
+      hint: 'Count in ' + m.d + 's without going over ' + m.n + '.', explain: ex('Full ' + it[1], steps(m)), truth: divmod(m.n, m.d).q,
+      wrong: function(v){ return v === m.q + 1 ? 'The ' + m.r + ' left over cannot fill another one.' : v === m.r ? m.r + ' is the number left over, not the number filled.' : ''; }
+    });
+  }
+  function qBoxesNeeded(){
+    const m = make(8, true), it = pick(ITEMS), who = pick(NAMES);
+    return numeric({
+      prompt: who + ' has ' + m.n + ' ' + it[0] + ' to put away. Each of the ' + it[1] + ' holds ' + m.d + '. How many ' + it[1] + ' are needed to hold ALL of them?', answer: m.q + 1,
+      hint: 'First find how many full ones. Then think about the ones left over: they still need somewhere to go!',
+      explain: ex('Do not forget the left over ones', ['Full ' + it[1] + ': ' + countIn(m.d, m.q) + ' → <b>' + m.q + '</b> full, with <b>' + m.r + '</b> left over.', 'The ' + m.r + ' left over still need a home, so we need <b>one more</b>.', m.q + ' + 1 = <b>' + (m.q + 1) + '</b> ' + it[1] + '. ✅']),
+      truth: divmod(m.n, m.d).q + (divmod(m.n, m.d).r > 0 ? 1 : 0),
+      wrong: function(v){ return v === m.q ? m.q + ' leaves ' + m.r + ' ' + it[0] + ' with nowhere to go. Do they need another one?' : ''; }
+    });
+  }
+  function qClaim(){
+    const m = make(8, true), who = pick(NAMES), kind = randInt(0, 2);
+    let q = m.q, r = m.r, why = '';
+    if(kind === 1){ q = m.q - 1; r = m.r + m.d; why = 'A remainder of ' + r + ' is bigger than ' + m.d + ', so another group of ' + m.d + ' fits. It should be ' + m.q + ' remainder ' + m.r + '.'; }
+    else if(kind === 2){ r = m.r === 1 ? 2 : m.r - 1; why = 'Check the subtraction: ' + m.n + ' − ' + m.d * m.q + ' = ' + m.r + ', not ' + r + '.'; }
+    const right = kind === 0, claim = m.n + ' ÷ ' + m.d + ' = ' + q + ' remainder ' + r;
+    return mcq2({
+      prompt: who + ' says <b>' + claim + '</b>. Is ' + who + ' right?', correct: opt(K.bool(right), right ? 'Yes, that is right' : 'No, that is wrong'), other: opt(K.bool(!right), right ? 'No, that is wrong' : 'Yes, that is right', right ? 'Check: ' + q + ' × ' + m.d + ' = ' + q * m.d + ' and ' + q * m.d + ' + ' + r + ' = ' + m.n + '. It works!' : why),
+      hint: 'Check by multiplying: groups × ' + m.d + ', then add the remainder. Do you get back ' + m.n + '? Is the remainder smaller than ' + m.d + '?',
+      explain: ex('Checking a division', ['Check: <b>' + q + ' × ' + m.d + ' + ' + r + '</b> = ' + (q * m.d + r) + '.', right ? 'It makes ' + m.n + ' and ' + r + ' is smaller than ' + m.d + ', so it is right.' : why, right ? 'So ' + who + ' is right. ✅' : 'The right answer is ' + m.n + ' ÷ ' + m.d + ' = ' + m.q + ' remainder ' + m.r + '. ✅']),
+      truth: K.bool(divmod(m.n, m.d).q === q && divmod(m.n, m.d).r === r)
+    });
+  }
+  function qWhichHasRem(){
+    const d = pick([4, 5, 8]), target = randInt(1, d - 1);
+    const mk = function(rem){ const q = randInt(2, 9); return { n: d * q + rem, q: q, r: rem }; };
+    const good = mk(target); const ds = [], used = {}; used[good.n] = 1;
+    shuffle(Array.from({ length: d }, function(_, i){ return i; }).filter(function(x){ return x !== target; })).slice(0, 3).forEach(function(rem){
+      let c, tries = 0; do { c = mk(rem); tries++; } while(used[c.n] && tries < 30); used[c.n] = 1;
+      ds.push(opt(K.text(c.n + ' ÷ ' + d), c.n + ' ÷ ' + d, c.n + ' ÷ ' + d + ' = ' + lbl(c.q, c.r) + (c.r === 0 ? ' (nothing left over)' : '') + ', not remainder ' + target + '.'));
+    });
+    const gl = good.n + ' ÷ ' + d;
+    return mcq({
+      prompt: 'Which division has a remainder of <b>' + target + '</b>?', correct: opt(K.text(gl), gl), distractors: ds, keepOrder: false, count: 4,
+      hint: 'Work out each one: count in ' + d + 's and see how many are left over.',
+      explain: ex('Checking each one', ['Count in ' + d + 's for each number and see what is left.', good.n + ' − ' + d * good.q + ' = <b>' + target + '</b>.', good.n + ' ÷ ' + d + ' = ' + good.q + ' remainder ' + target + '. ✅']),
+      truth: K.text(good.n + ' ÷ ' + d)
+    });
+  }
+  function qNoRemainder(){
+    const d = pick([3, 4, 5, 8]), q = randInt(3, 9), m = d * q, ds = [];
+    shuffle(Array.from({ length: d - 1 }, function(_, i){ return i + 1; })).slice(0, 3).forEach(function(rem){ const x = m + (chance(0.5) ? rem : rem - d); if(x > 0 && x % d !== 0 && !ds.some(function(o){ return o.key === K.num(x); })) ds.push(opt(K.num(x), String(x), x + ' ÷ ' + d + ' = ' + divmod(x, d).q + ' remainder ' + divmod(x, d).r + ', so something is left over.')); });
+    for(let k = 1; ds.length < 3 && k < 30; k++){ const x = m + k; if(x % d !== 0 && !ds.some(function(o){ return o.key === K.num(x); })) ds.push(opt(K.num(x), String(x), x + ' ÷ ' + d + ' = ' + divmod(x, d).q + ' remainder ' + divmod(x, d).r + ', so something is left over.')); }
+    return mcq({
+      prompt: 'Which of these numbers divides by <b>' + d + '</b> with <b>nothing</b> left over?', correct: opt(K.num(m), String(m)), distractors: ds, keepOrder: false, count: 4,
+      hint: 'Which number is in the ' + d + ' times table? Count in ' + d + 's.',
+      explain: ex('No remainder', ['Count in ' + d + 's: ' + countIn(d, q) + '.', '<b>' + m + '</b> is in the ' + d + ' times table (' + q + ' × ' + d + ' = ' + m + ').', m + ' ÷ ' + d + ' = ' + q + ' with nothing left over. ✅']),
+      truth: K.num(divmod(m, d).r === 0 ? m : -1)
+    });
+  }
+
+  registerSkill({
+    id: 'multdiv-remainders', strand: 'multdiv', name: 'Division with remainders', emoji: '🍪', year: 3, order: 355, prereq: ['multdiv-division-facts'],
+    lesson: {
+      title: 'When sharing is not exact',
+      steps: [
+        { say: 'Sometimes things do <b>not</b> share out exactly. 13 sweets go into bags of <b>4</b>. The picture shows <b>3 full bags</b>: that uses 12 sweets, and <b>1 sweet is left over</b>.', vis: { kind: 'groups', args: [3, 4] } },
+        { say: 'Count in <b>4s</b> along the line: 4, 8, 12. The next jump is 16, which is <b>too far</b>. So 3 jumps fit into 13. 13 − 12 = <b>1</b> left over.', vis: { kind: 'numberLine', args: [{ min: 0, max: 16, minor: 4, major: 4, width: 336, marks: [{ value: 13, kind: 'dot' }] }] },
+          quiz: { prompt: 'How many full groups of 4 fit into 13?', options: [{ label: '4', ok: false }, { label: '3', ok: true }, { label: '1', ok: false }], right: 'Yes! 3 × 4 = 12 fits. 4 × 4 = 16 is too big.', wrong: 'Count in 4s: 4, 8, 12 — then 16 is too big. So 3 full groups.' } },
+        { say: 'We write it like this: <b>13 ÷ 4 = 3 remainder 1</b>. The <b>3</b> is the number of full groups. The <b>remainder</b> is what is left over.', vis: { kind: 'groups', args: [3, 4] },
+          quiz: { prompt: '17 ÷ 5 = 3 remainder ?', options: [{ label: '2', ok: true }, { label: '3', ok: false }, { label: '12', ok: false }], right: 'Yes! 3 × 5 = 15 and 17 − 15 = 2.', wrong: '3 × 5 = 15. Then 17 − 15 = 2 left over.' } },
+        { say: 'The remainder is <b>always smaller</b> than the number you divide by. If you divide by 4 and 4 are left, that is another full group! So the remainder can only be 0, 1, 2 or 3.', vis: { kind: 'groups', args: [2, 4] },
+          quiz: { prompt: 'You divide by 3. Which of these can NOT be the remainder?', options: [{ label: '1', ok: false }, { label: '2', ok: false }, { label: '3', ok: true }], right: 'Yes! With 3 left over you could make one more group of 3.', wrong: 'If 3 are left over, they make another group of 3. The remainder must be smaller than 3.' } }
+      ]
+    },
+    trick: {
+      title: 'The nearest fact that fits',
+      say: 'To divide with a remainder: find the <b>nearest fact in the table that does not go over</b>. Take it away from the number. What is left is the <b>remainder</b>. Check: groups × number + remainder gives you back the start.',
+      vis: { kind: 'numberLine', args: [{ min: 0, max: 25, minor: 5, major: 5, width: 348, marks: [{ value: 23, kind: 'dot' }] }] },
+      example: '23 ÷ 5 → 5 × 4 = 20 (5 × 5 = 25 is too big) → 23 − 20 = 3 → <b>4 remainder 3</b> &nbsp; (4 × 5 + 3 = 23 ✓)'
+    },
+    gen: {
+      1: function(){ return pick([qFullGroups, qFullGroups, qLeftOver, qLeftOver, qFitsExactly])(); },
+      2: function(){ return pick([qChooseAnswer, qChooseAnswer, qRemainderOnly, qWordFull, qNearestFact, qFitsExactly])(); },
+      3: function(){ return pick([qTypedRem, qTypedRem, qTypedFull, qBoxesNeeded, qBoxesNeeded, qClaim, qClaim, qWhichHasRem, qNoRemainder])(); }
+    }
+  });
+})();
+
 /* ===== src/skills/multdiv-methods-word.js ===== */
 /* multdiv-word — multiplication & division word problems: equal groups, sharing, grouping, scaling, correspondence, two-step. */
 (function(){
@@ -12379,6 +12579,425 @@ if(typeof module !== 'undefined') module.exports = V;
       say: 'To do <b>4 ×</b> any number, <b>double</b> it, then <b>double the answer</b>. Doubling is just adding the number to itself, so you can do it in your head!',
       vis: { kind: 'array', args: [4, 7] },
       example: '4 × 7 → double 7 = 14 → double 14 = <b>28</b>'
+    },
+    gen: buildGens(cfg)
+  });
+})();
+
+/* ===== src/skills/multdiv-tables-6-9.js ===== */
+/* multdiv-6-9 — Year 3 (school unit "3, 6 and 9 relationships"): the 6 times table as double the 3s, the 9 times table as 10s take away one, with digit and even/odd checks. */
+(function(){
+  /* ---- shared helpers: this block is repeated in every multdiv-tables file so each file stays self-contained ---- */
+  const LOOK = [];                                   // times-table lookup built by REPEATED ADDITION (the answer source)
+  for(let i = 0; i <= 12; i++){ LOOK[i] = [0]; for(let j = 1; j <= 12; j++) LOOK[i][j] = LOOK[i][j - 1] + i; }
+  function P(a, b){ return LOOK[a][b]; }
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
+  const THINGS = [['bags', 'apples'], ['boxes', 'crayons'], ['plates', 'biscuits'], ['trays', 'cupcakes'], ['shelves', 'books'], ['tanks', 'fish'],
+    ['pots', 'pencils'], ['packs', 'stickers'], ['jars', 'marbles'], ['baskets', 'strawberries'], ['stables', 'unicorns'], ['rockets', 'astronauts']];
+  const SHARE_ITEMS = ['stickers', 'marbles', 'beads', 'grapes', 'sweets', 'stars'];
+  function pos(v){ return v > 0; }
+  function digitSum(n){ return String(n).split('').reduce(function(s, d){ return s + Number(d); }, 0); }
+  function skipHTML(t, k){ const out = []; for(let i = 1; i <= k; i++) out.push(i === k ? '<b>' + LOOK[t][i] + '</b>' : String(LOOK[t][i])); return out.join(', '); }
+  function pairOrder(t, n){ return chance(0.5) ? [t, n] : [n, t]; }
+  function range(r){ return randInt(r[0], r[1]); }
+  function eqn(a, b, c){ return a + ' × ' + b + ' = ' + c; }
+  function seqBox(inner){ return '<div style="font:800 24px/1.4 system-ui;text-align:center;color:var(--vis-ink,#1B1B2F);letter-spacing:1px">' + inner + '</div>'; }
+  const CONF = { '7,8': [54, '54 is 6 × 9. Remember the pattern 5, 6, 7, 8: that is 56 = 7 × 8.'], '6,9': [56, '56 is 7 × 8. Do not swap them over: 6 × 9 is a different fact.'] };
+
+  /* typical wrong answers for "a groups of b" (a × b) */
+  function factWrongs(a, b){
+    const p = P(a, b), w = [];
+    const cf = CONF[Math.min(a, b) + ',' + Math.max(a, b)];
+    if(cf) w.push({ v: cf[0], why: cf[1] });
+    const w2 = [
+      { v: a + b, why: 'You added ' + a + ' + ' + b + '. Multiplying means ' + a + ' groups of ' + b + ', so you keep adding the group again and again.' },
+      { v: p + b, why: 'That is ' + (a + 1) + ' × ' + b + ': one group too many. You need exactly ' + a + ' groups of ' + b + '.' },
+      { v: p - b, why: 'That is ' + (a - 1) + ' × ' + b + ': one group too few. You need ' + a + ' groups of ' + b + '.' },
+      { v: p + a, why: 'That is ' + a + ' × ' + (b + 1) + ': you went one step too far when counting on.' },
+      { v: p - a, why: 'That is ' + a + ' × ' + (b - 1) + ': you stopped one step too soon when counting on.' }
+    ];
+    return w.concat(chance(0.5) ? shuffle(w2) : [w2[0]].concat(shuffle(w2.slice(1))));
+  }
+  function factExplain(cfg, a, b, t, n){
+    const p = P(a, b), st = [];
+    if(a === t && b === n && a !== b) st.push('Swap the numbers: <b>' + b + ' × ' + a + '</b> has the same answer as ' + a + ' × ' + b + '. So count in <b>' + t + 's</b>, ' + n + ' times: ' + skipHTML(t, n) + '.');
+    else st.push('Count in <b>' + t + 's</b>, ' + n + ' times: ' + skipHTML(t, n) + '.');
+    const tr = cfg.step ? cfg.step(t, n) : '';
+    if(tr) st.push(tr);
+    st.push('So ' + a + ' × ' + b + ' = <b>' + p + '</b>. ✅');
+    return ex('Working out ' + a + ' × ' + b, st);
+  }
+  function factHint(cfg, t, n){ return 'Count in ' + t + 's, ' + n + ' times, and keep track on your fingers.' + (cfg.hintTip ? ' ' + cfg.hintTip : ''); }
+
+  /* ---------- TIER 1 formats: pictures where the answer can be counted ---------- */
+  function qArray(cfg){
+    const t = pick(cfg.tables), n = range(cfg.n1), rowsAreN = t > 8 ? true : chance(0.5);
+    const r = rowsAreN ? n : t, c = rowsAreN ? t : n, p = P(r, c), vis = V.array(r, c);
+    const variant = randInt(0, 2);
+    const prompt = variant === 0 ? 'How many dots are in this array?' : variant === 1 ? 'This array has ' + r + ' rows. How many dots are there altogether?' : 'Count the dots in the array. Try skip counting!';
+    return mcqNum({
+      prompt: prompt, visual: vis, answer: p, wrong: factWrongs(r, c), nearby: [1, -1, 2, -2, 10, -10], valid: pos, count: 3,
+      hint: 'Count the dots in ONE row. Then count on in that number for each row going down.',
+      explain: ex('Counting an array', ['The array has <b>' + r + ' rows</b> and each row has <b>' + c + ' dots</b>.', 'Count in ' + c + 's, once for each row: ' + skipHTML(c, r) + '.', 'So ' + r + ' × ' + c + ' = <b>' + p + '</b> dots altogether. ✅']),
+      truth: r * c, decode: function(){ return V.decodeArray(vis).total; }
+    });
+  }
+  function qGroups(cfg){
+    const t = pick(cfg.tables), n = range(cfg.n1), p = P(n, t), vis = V.groups(n, t);
+    const th = pick(THINGS);
+    return mcqNum({
+      prompt: chance(0.5) ? 'There are ' + n + ' groups with ' + t + ' dots in each group. How many dots altogether?' : 'How many dots are there in all ' + n + ' groups?', visual: vis, answer: p,
+      wrong: factWrongs(n, t), nearby: [1, -1, 2, -2, 10, -10], valid: pos, count: 3,
+      hint: 'Count the dots in one group. Then count on in that number for each group.',
+      explain: ex('Equal groups', ['There are <b>' + n + ' groups</b> and each group has <b>' + t + ' dots</b>.', 'Count in ' + t + 's, ' + n + ' times: ' + skipHTML(t, n) + '.', 'So ' + n + ' × ' + t + ' = <b>' + p + '</b> dots. ✅']),
+      truth: n * t, decode: function(){ return V.decodeGroups(vis).total; }
+    });
+  }
+  function qLine(cfg){
+    const t = pick(cfg.tables), k = randInt(2, 6), N = Math.min(8, k + randInt(1, 2)), m = P(t, k);
+    const vis = V.numberLine({ min: 0, max: P(t, N), minor: t, major: t, marks: [{ value: m, kind: 'q' }], labels: function(v){ return v === m ? '' : v; } });
+    return mcqNum({
+      prompt: 'Count in ' + t + 's from 0. What number is the red ? on the number line?', visual: vis, answer: m,
+      wrong: [{ v: m - t + 1, why: 'You counted on by 1. Every jump on this line is ' + t + '.' }, { v: m + t, why: 'That is one jump too far.' }, { v: m - t, why: 'That is one jump too few.' }, { v: k + t, why: 'You added ' + k + ' + ' + t + '. Count the jumps in ' + t + 's instead.' }],
+      nearby: [1, -1, 2, -2], valid: pos, count: 3,
+      hint: 'Start at 0 and count the jumps: each one adds ' + t + '. How many jumps to reach the ?',
+      explain: ex('Counting in ' + t + 's', ['Each jump on the line is <b>' + t + '</b>.', 'Count the jumps: ' + skipHTML(t, k) + '.', 'The ? is at <b>' + m + '</b> after ' + k + ' jumps. ✅']),
+      truth: t * k, decode: function(){ return Math.round(V.decodeNumberLine(vis)); }
+    });
+  }
+  /* "Which number sentence matches the array?" (tier 1-2): options are statements, only ONE ordering ever shown */
+  function qArrayStmt(cfg){
+    let t, n, r, c;
+    do { t = pick(cfg.tables); n = range(cfg.n1); const rowsAreN = t > 8 ? true : chance(0.5); r = rowsAreN ? n : t; c = rowsAreN ? t : n; } while(r + c === P(r, c));
+    const p = P(r, c), vis = V.array(r, c);
+    const good = eqn(r, c, p);
+    const ds = [
+      { l: r + ' + ' + c + ' = ' + (r + c), why: 'That adds the rows and the dots in a row. An array is multiplying: ' + r + ' rows of ' + c + '.' },
+      { l: eqn(r, c, p + c), why: 'Count again: ' + r + ' × ' + c + ' is not ' + (p + c) + '. That is one row too many.' },
+      { l: eqn(r, c, p - c), why: 'Count again: ' + r + ' × ' + c + ' is not ' + (p - c) + '. That is one row too few.' },
+      { l: eqn(r, c, p + r), why: 'Count again: the array has ' + p + ' dots, not ' + (p + r) + '.' },
+      { l: eqn(r, c, p - r), why: 'Count again: the array has ' + p + ' dots, not ' + (p - r) + '.' }
+    ].filter(function(d){ return d.l !== good; }).map(function(d){ return opt(K.text(d.l), d.l, d.why); });
+    return mcq({
+      prompt: 'Which number sentence matches this array?', visual: vis, correct: opt(K.text(good), good), distractors: ds, keepOrder: true, count: 3,
+      hint: 'Count the rows, then the dots in one row. The sentence says rows × dots in a row = total.',
+      explain: ex('Matching the array', ['Count the rows: <b>' + r + '</b>. Count the dots in each row: <b>' + c + '</b>.', 'Count in ' + c + 's, ' + r + ' times: ' + skipHTML(c, r) + '.', 'The number sentence is <b>' + good + '</b>. ✅']),
+      truth: K.text(r + ' × ' + c + ' = ' + r * c),
+      decode: function(){ const d = V.decodeArray(vis); return K.text(d.rows + ' × ' + d.cols + ' = ' + d.total); }
+    });
+  }
+
+  /* ---------- TIER 2 formats: recall with misconception options ---------- */
+  function qRecall(cfg, rg, count){
+    const t = pick(cfg.tables), n = range(rg), o = pairOrder(t, n), a = o[0], b = o[1], p = P(a, b);
+    return mcqNum({
+      prompt: 'What is ' + a + ' × ' + b + '?', answer: p, wrong: factWrongs(a, b), nearby: [1, -1, 2, -2, 10, -10], valid: pos, count: count || 4,
+      hint: factHint(cfg, t, n), explain: factExplain(cfg, a, b, t, n), truth: a * b
+    });
+  }
+  function qWord(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t);
+    const prompt = chance(0.5) ? who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. How many ' + th[1] + ' altogether?' : 'There are ' + n + ' ' + th[0] + '. Each one has ' + t + ' ' + th[1] + '. How many ' + th[1] + ' in all?';
+    const st = ['There are <b>' + n + ' ' + th[0] + '</b>, each with <b>' + t + ' ' + th[1] + '</b>. That is ' + n + ' groups of ' + t + '.', 'Count in ' + t + 's, ' + n + ' times: ' + skipHTML(t, n) + '.'];
+    const tr = cfg.step ? cfg.step(t, n) : '';
+    if(tr) st.push(tr);
+    st.push(n + ' × ' + t + ' = <b>' + p + '</b> ' + th[1] + '. ✅');
+    return mcqNum({
+      prompt: prompt, answer: p, wrong: factWrongs(n, t), nearby: [1, -1, 2, -2, 10, -10], valid: pos, count: 4,
+      hint: 'Think “' + n + ' groups of ' + t + '”. Count in ' + t + 's, ' + n + ' times.' + (cfg.hintTip ? ' ' + cfg.hintTip : ''),
+      explain: ex('Equal groups', st), truth: t * n
+    });
+  }
+  function qSeqGap(cfg){
+    const t = pick(cfg.tables), start = randInt(1, 7), h = randInt(1, 3), terms = [];
+    for(let i = 0; i < 5; i++) terms.push(P(t, start + i));
+    const m = terms[h], prev = terms[h - 1], next = terms[h + 1];
+    const shown = terms.map(function(v, i){ return i === h ? '<span style="display:inline-block;min-width:46px;border-bottom:4px solid var(--vis-bad,#EB5757);color:var(--vis-bad,#EB5757)">?</span>' : String(v); }).join(', ');
+    return mcqNum({
+      prompt: 'Which number is missing from the counting pattern?', visual: seqBox(shown), answer: m,
+      wrong: [{ v: prev + 1, why: 'You counted on by 1. In this pattern each number goes up by ' + t + '.' }, { v: next, why: next + ' is already in the pattern, after the gap.' }, { v: prev, why: prev + ' is already in the pattern, before the gap.' }, { v: next - 1, why: 'You went back one from the next number. Go back ' + t + '.' }],
+      nearby: [1, -1, 2, -2], valid: pos, count: 4,
+      hint: 'Each number is ' + t + ' more than the one before. Add ' + t + ' to the number just before the gap.',
+      explain: ex('Counting in ' + t + 's', ['The pattern goes up by <b>' + t + '</b> each time.', prev + ' + ' + t + ' = <b>' + m + '</b>.', 'Check: ' + m + ' + ' + t + ' = ' + next + ', which matches the next number. ✅']),
+      truth: t * (start + h)
+    });
+  }
+  function qInTable(cfg, rg){
+    const t = pick(cfg.tables), k = randInt(rg[0], rg[1]), m = P(t, k);
+    const ds = [];
+    shuffle([1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 7, -7]).forEach(function(d){
+      const x = m + d;
+      if(x > 0 && x % t !== 0){ const lo = x - (x % t); ds.push(opt(K.num(x), String(x), x + ' is not in the ' + t + ' times table. Counting in ' + t + 's goes ' + lo + ', ' + (lo + t) + ': it jumps right over ' + x + '.')); }
+    });
+    return mcq({
+      prompt: 'Which of these numbers is in the ' + t + ' times table?', correct: opt(K.num(m), String(m)), distractors: ds, keepOrder: true, count: 4,
+      hint: 'Count in ' + t + 's and see which number you land on.' + (cfg.hintTip ? ' ' + cfg.hintTip : ''),
+      explain: ex('Counting in ' + t + 's', ['Count in ' + t + 's: ' + skipHTML(t, k) + '.', 'We land on <b>' + m + '</b> after ' + k + ' jumps, so ' + k + ' × ' + t + ' = ' + m + '.', 'The other numbers are skipped over. ✅']),
+      truth: K.num(t * k)
+    });
+  }
+  /* "Warm-up": two numbers, which is in the table (speed-friendly, 2 choices) */
+  function qEitherOr(cfg, rg){
+    const t = pick(cfg.tables), k = randInt(rg[0], rg[1]), m = P(t, k);
+    let x, tries = 0;
+    do { x = m + pick([1, -1, 2, -2, 3, -3]); tries++; } while((x <= 0 || x % t === 0) && tries < 40);
+    if(x <= 0 || x % t === 0) x = m + 1 + (t === 1 ? 1 : 0);
+    const lo = x - (x % t);
+    return mcq2({
+      prompt: 'Only one of these is in the ' + t + ' times table. Which one?', correct: opt(K.num(m), String(m)), other: opt(K.num(x), String(x), x + ' is not in the ' + t + ' times table. Counting in ' + t + 's goes ' + lo + ', ' + (lo + t) + '.'),
+      hint: 'Count in ' + t + 's. Which number do you say out loud?',
+      explain: ex('Is it in the table?', ['Count in ' + t + 's: ' + skipHTML(t, k) + '.', '<b>' + m + '</b> is on the list (' + k + ' × ' + t + ' = ' + m + ').', x + ' is not on the list. ✅']),
+      truth: K.num(k * t)
+    });
+  }
+
+  /* ---------- TIER 3 formats: typed answers, missing factors, division, reasoning ---------- */
+  function qMissing(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), p = P(t, n), left = chance(0.5);
+    const sentence = left ? '▢ × ' + t + ' = ' + p : t + ' × ▢ = ' + p;
+    return numeric({
+      prompt: 'What number goes in the box?  <b>' + sentence + '</b>', answer: n,
+      hint: 'Count in ' + t + 's until you reach ' + p + '. How many jumps did you make?',
+      explain: ex('Finding the missing factor', ['Count in ' + t + 's until you reach ' + p + ': ' + skipHTML(t, n) + '.', 'It takes <b>' + n + '</b> jumps of ' + t + ' to get to ' + p + '.', 'Check: ' + n + ' × ' + t + ' = ' + p + ' and ' + t + ' × ' + n + ' = ' + p + ', so the box is <b>' + n + '</b>. ✅']),
+      truth: p / t,
+      wrong: function(v){ return v === p ? p + ' is the whole answer. The question asks for the missing number in the box.' : v === p - t ? 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' : (v === n + 1 || v === n - 1) ? 'So close! Check it: ' + v + ' × ' + t + ' = ' + v * t + ', not ' + p + '.' : ''; }
+    });
+  }
+  function qDiv(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), p = P(t, n), form = randInt(0, 2), who = pick(NAMES), it = pick(SHARE_ITEMS);
+    let prompt;
+    if(form === 0) prompt = 'What is <b>' + p + ' ÷ ' + t + '</b>?';
+    else if(form === 1) prompt = p + ' ' + it + ' are shared equally between ' + t + ' friends. How many does each friend get?';
+    else prompt = who + ' puts ' + p + ' ' + it + ' into groups of ' + t + '. How many groups are there?';
+    return numeric({
+      prompt: prompt, answer: n,
+      hint: 'Think of the ' + t + ' times table backwards: ' + t + ' × what makes ' + p + '?',
+      explain: ex('Dividing by ' + t, ['Ask: <b>' + t + ' × ? = ' + p + '</b>. Count in ' + t + 's: ' + skipHTML(t, n) + '.', 'We reach ' + p + ' after <b>' + n + '</b> jumps, so ' + p + ' ÷ ' + t + ' = ' + n + '.', 'Check by multiplying: ' + n + ' × ' + t + ' = ' + p + '. ✅']),
+      truth: p / t,
+      wrong: function(v){ return v === p * t ? 'You multiplied. Dividing means sharing or grouping, so the answer is smaller than ' + p + '.' : v === p - t ? 'You subtracted ' + t + '. Dividing asks how many ' + t + 's fit into ' + p + '.' : (v === n + 1 || v === n - 1) ? 'So close! Check: ' + v + ' × ' + t + ' = ' + v * t + ', not ' + p + '.' : ''; }
+    });
+  }
+  function qNotIn(cfg, rg){
+    const t = pick(cfg.tables), ks = shuffle([2, 3, 4, 5, 6, 7, 8, 9, 10]).slice(0, 3);
+    let nm, tries = 0;
+    do { nm = P(t, pick(ks)) + pick([1, -1, 2, -2, 3, -3]); tries++; } while((nm <= 0 || nm % t === 0) && tries < 60);
+    if(nm <= 0 || nm % t === 0) nm = P(t, ks[0]) + 1;
+    const lo = nm - (nm % t);
+    const ds = ks.map(function(k){ return opt(K.num(P(t, k)), String(P(t, k)), P(t, k) + ' IS in the ' + t + ' times table (' + k + ' × ' + t + ' = ' + P(t, k) + '). Look for the one that is NOT.'); });
+    const vals = ks.map(function(k){ return t * k; }).concat([nm]);
+    return mcq({
+      prompt: 'Which of these is NOT in the ' + t + ' times table?', correct: opt(K.num(nm), String(nm)), distractors: ds, keepOrder: true, count: 4,
+      hint: 'Three of these are in the ' + t + ' times table. Count in ' + t + 's to check each one.',
+      explain: ex('Finding the odd one out', ['Counting in ' + t + 's goes ... ' + lo + ', ' + (lo + t) + ' ...', '<b>' + nm + '</b> is between ' + lo + ' and ' + (lo + t) + ', so it is skipped.', 'The other three numbers are all on the ' + t + 's list. ✅']),
+      truth: K.num(vals.filter(function(v){ return v % t !== 0; })[0])
+    });
+  }
+  function qWhichWrong(cfg, rg){
+    const t = pick(cfg.tables), ns = shuffle([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].filter(function(x){ return x >= 2 && x <= Math.max(rg[1], 6); })).slice(0, 4);
+    const items = ns.map(function(n){ const o = pairOrder(t, n); return { a: o[0], b: o[1], c: t * n }; });
+    const bad = items[0], ds0 = [t, -t, 1, -1, 2, -2, 10, -10];
+    let delta = pick(ds0), guard = 0;
+    while(bad.c + delta <= 0 && guard++ < 20) delta = pick(ds0);
+    bad.c += delta;
+    const label = function(it){ return eqn(it.a, it.b, it.c); };
+    const goodOpts = items.slice(1).map(function(it){ return opt(K.text(label(it)), label(it), 'That one is right: ' + label(it) + '. Look for the one that is wrong.'); });
+    const truthItem = items.filter(function(it){ return it.a * it.b !== it.c; })[0];
+    return mcq({
+      prompt: 'One of these facts is WRONG. Which one?', correct: opt(K.text(label(bad)), label(bad)), distractors: goodOpts, keepOrder: true, count: 4,
+      hint: 'Check each fact by counting in ' + t + 's. Which one does not match?',
+      explain: ex('Spotting the mistake', ['Check each one by counting in ' + t + 's.', 'The wrong one is <b>' + label(bad) + '</b>.', 'It should be ' + bad.a + ' × ' + bad.b + ' = <b>' + P(bad.a, bad.b) + '</b>. ✅']),
+      truth: K.text(eqn(truthItem.a, truthItem.b, truthItem.c))
+    });
+  }
+  function qChain(cfg, rg){
+    const t = pick(cfg.tables), n = randInt(Math.max(3, rg[0]), Math.max(4, rg[1] - 1)), up = chance(0.5), p = P(t, n);
+    const m = up ? n + 1 : n - 1, ans = up ? p + t : p - t;
+    const ws = up ? [{ v: p + 1, why: 'You added just 1. One more group of ' + t + ' means adding ' + t + '.' }, { v: p + n, why: 'You added ' + n + ', the other number. Add one more group: ' + t + '.' }, { v: p - t, why: 'That goes the wrong way. ' + m + ' groups is MORE than ' + n + ' groups.' }, { v: p + 2 * t, why: 'That is two groups more. You only need one more.' }]
+      : [{ v: p - 1, why: 'You took away just 1. One group fewer means taking away ' + t + '.' }, { v: p - n, why: 'You took away ' + n + ', the other number. Take away one group: ' + t + '.' }, { v: p + t, why: 'That goes the wrong way. ' + m + ' groups is FEWER than ' + n + ' groups.' }, { v: p - 2 * t, why: 'That is two groups fewer. You only need one fewer.' }];
+    return mcqNum({
+      prompt: 'You know that ' + t + ' × ' + n + ' = ' + p + '. Use it to work out ' + t + ' × ' + m + '.', answer: ans, wrong: ws, nearby: [1, -1, 2, -2], valid: pos, count: 4,
+      hint: m + ' groups is ' + (up ? 'one more' : 'one fewer') + ' group than ' + n + ' groups. How big is one group?',
+      explain: ex('Using a fact you know', [t + ' × ' + n + ' = ' + p + ' is ' + n + ' groups of ' + t + '.', 'For ' + t + ' × ' + m + ' we need ' + (up ? '<b>one more</b>' : '<b>one fewer</b>') + ' group of ' + t + '.', p + (up ? ' + ' : ' − ') + t + ' = <b>' + ans + '</b>. ✅']),
+      truth: t * m
+    });
+  }
+  function qPicture(cfg){
+    const t = pick(cfg.tables), n = randInt(2, 4), useGroups = t <= 8 && chance(0.5);
+    const mk = useGroups ? function(x, y){ return V.groups(x, y); } : function(x, y){ return V.array(x, y); };
+    const dec = useGroups ? function(h){ const d = V.decodeGroups(h); return d.groups + 'x' + d.per; } : function(h){ const d = V.decodeArray(h); return d.rows + 'x' + d.cols; };
+    const key = function(x, y){ return K.text(x + 'x' + y); };
+    const cands = [];
+    if(t !== n) cands.push([t, n, 'That shows ' + t + (useGroups ? ' groups of ' : ' rows of ') + n + ', so the numbers are swapped over.']);
+    cands.push([n + 1, t, 'That has one ' + (useGroups ? 'group' : 'row') + ' too many.']);
+    if(n > 1) cands.push([n - 1, t, 'That has one ' + (useGroups ? 'group' : 'row') + ' too few.']);
+    cands.push([n, t + 1, 'Each ' + (useGroups ? 'group' : 'row') + ' has one too many dots.']);
+    cands.push([n, t - 1, 'Each ' + (useGroups ? 'group' : 'row') + ' has one too few dots.']);
+    const ds = cands.map(function(c){ return opt(key(c[0], c[1]), mk(c[0], c[1]), c[2]); });
+    const q = mcq({
+      prompt: useGroups ? 'Which picture shows ' + n + ' groups of ' + t + ' dots?' : 'Which array shows ' + n + ' rows of ' + t + ' dots?', visual: '',
+      correct: opt(key(n, t), mk(n, t)), distractors: ds, keepOrder: true, count: 3,
+      hint: 'Check two things: ' + (useGroups ? 'how many groups there are, and how many dots are in each group.' : 'how many rows there are, and how many dots are in each row.'),
+      explain: ex('Finding the picture', [n + (useGroups ? ' groups' : ' rows') + ' of ' + t + ' dots means ' + n + ' × ' + t + '.', 'Count the ' + (useGroups ? 'groups' : 'rows') + ' in each picture, then the dots in each one.', 'Only one picture matches: ' + n + ' × ' + t + ' = <b>' + P(n, t) + '</b> dots. ✅']),
+      truth: key(n, t)
+    });
+    q.optionsAreVisual = true;
+    q.decodeKey = function(){ for(let i = 0; i < q.options.length; i++){ const r = dec(q.options[i].label); if(K.text(r) !== q.options[i].key) return 'option ' + i + ' picture does not match its key'; } return q.options[q.correct].key; };
+    return q;
+  }
+  function qTwoStep(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
+    const ans = minus ? p - k : p + k;
+    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
+    return numeric({
+      prompt: prompt, answer: ans,
+      hint: 'Two steps. First find ' + n + ' groups of ' + t + '. Then ' + (minus ? 'take away ' : 'add ') + k + '.',
+      explain: ex('Two steps', ['Step 1: ' + n + ' × ' + t + ' — count in ' + t + 's: ' + skipHTML(t, n) + '.', 'Step 2: ' + p + (minus ? ' − ' : ' + ') + k + ' = <b>' + ans + '</b>.', 'So there are ' + ans + ' ' + th[1] + (minus ? ' left' : ' now') + '. ✅']),
+      truth: n * t + (minus ? -k : k),
+      wrong: function(v){ return v === p ? p + ' is only step 1. Now ' + (minus ? 'take away ' : 'add ') + k + '.' : v === (minus ? p + k : p - k) ? 'That goes the wrong way. ' + (minus ? 'Take away' : 'Add') + ' ' + k + ' to ' + p + '.' : ''; }
+    });
+  }
+  function weighted(list){ const out = []; list.forEach(function(e){ for(let i = 0; i < (e[1] || 1); i++) out.push(e[0]); }); return out; }
+  function qTypedFact(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), o = pairOrder(t, n), a = o[0], b = o[1], p = P(a, b);
+    return numeric({
+      prompt: 'Type the answer:  <b>' + a + ' × ' + b + ' = ?</b>', answer: p,
+      hint: factHint(cfg, t, n), explain: factExplain(cfg, a, b, t, n), truth: a * b,
+      wrong: function(v){ return v === a + b ? 'You added ' + a + ' + ' + b + '. Multiplying means ' + a + ' groups of ' + b + '.' : v === p + t ? 'That is one group too many.' : v === p - t ? 'That is one group too few.' : ''; }
+    });
+  }
+  /* assemble the three tiers from the shared formats + the skill's own special-trick questions */
+  function buildGens(cfg){
+    const f = function(fn){ return function(){ return fn(); }; };
+    const L1 = weighted([
+      [f(function(){ return qArray(cfg); }), 2], [f(function(){ return qGroups(cfg); }), 2], [f(function(){ return qLine(cfg); }), 2], [f(function(){ return qArrayStmt(cfg); }), 1]
+    ]).concat(cfg.extra1 || []);
+    const L2 = weighted([
+      [f(function(){ return qRecall(cfg, cfg.n2, chance(0.3) ? 3 : 4); }), 4], [f(function(){ return qWord(cfg, cfg.n2); }), 2], [f(function(){ return qSeqGap(cfg); }), 1],
+      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1]
+    ]).concat(cfg.extra2 || []);
+    const L3 = weighted([
+      [f(function(){ return qMissing(cfg, cfg.n3); }), 3], [f(function(){ return qDiv(cfg, cfg.n3); }), 3], [f(function(){ return qTypedFact(cfg, cfg.n3); }), 2],
+      [f(function(){ return qNotIn(cfg, cfg.n3); }), 1], [f(function(){ return qWhichWrong(cfg, cfg.n3); }), 1], [f(function(){ return qChain(cfg, cfg.n3); }), 1],
+      [f(function(){ return qPicture(cfg); }), 1], [f(function(){ return qTwoStep(cfg, cfg.n3); }), 1]
+    ]).concat(cfg.extra3 || []);
+    return { 1: function(){ return pick(L1)(); }, 2: function(){ return pick(L2)(); }, 3: function(){ return pick(L3)(); } };
+  }
+
+  /* ---- skill-specific questions ---- */
+  /* 6 is double 3: use a 3 times table fact (or halve a 6 fact) */
+  function q6Double(){
+    const n = randInt(2, 12), three = P(3, n), six = P(6, n), up = chance(0.65);
+    if(up) return mcqNum({
+      prompt: '3 × ' + n + ' = ' + three + '. So 6 × ' + n + ' = ?', answer: six,
+      wrong: [{ v: three, why: three + ' is the answer for 3 groups. 6 is DOUBLE 3, so double ' + three + '.' }, { v: three + n, why: 'That is 4 × ' + n + '. 6 groups is double the 3 groups.' }, { v: three + 6, why: 'You added 6. Doubling means ' + three + ' + ' + three + '.' }, { v: six + n, why: 'That is 7 × ' + n + ': one group too many.' }],
+      nearby: [1, -1, 2, -2, 10, -10], valid: pos, count: 4,
+      hint: '6 is double 3, so 6 groups is double 3 groups. Double ' + three + '.',
+      explain: ex('Double the 3s', ['3 × ' + n + ' = ' + three + ' (3 groups of ' + n + ').', '6 groups is <b>double</b> that: ' + three + ' + ' + three + '.', three + ' + ' + three + ' = <b>' + six + '</b>, so 6 × ' + n + ' = ' + six + '. ✅']),
+      truth: 2 * (n * 3)
+    });
+    return mcqNum({
+      prompt: '6 × ' + n + ' = ' + six + '. Use <b>half</b> of it to work out 3 × ' + n + '.', answer: three,
+      wrong: [{ v: six, why: six + ' is the answer for 6 groups. 3 is HALF of 6, so halve ' + six + '.' }, { v: six - n, why: 'That is 5 × ' + n + '. Halve ' + six + ' instead.' }, { v: six - 3, why: 'You took away 3. Halving means splitting ' + six + ' into 2 equal parts.' }, { v: three + n, why: 'That is 4 × ' + n + '. Halve ' + six + '.' }],
+      nearby: [1, -1, 2, -2], valid: pos, count: 4,
+      hint: '3 is half of 6. Split ' + six + ' into two equal parts.',
+      explain: ex('Half of the 6s', ['6 × ' + n + ' = ' + six + '.', '3 is half of 6, so 3 × ' + n + ' is <b>half</b> of ' + six + '.', 'Half of ' + six + ' = <b>' + three + '</b>. ✅']),
+      truth: (n * 6) / 2
+    });
+  }
+  /* 9 is 10 take away 1 */
+  function q9Ten(){
+    const n = randInt(2, 12), ten = 10 * n, nine = P(9, n), sub = chance(0.55);
+    if(sub) return mcqNum({
+      prompt: '10 × ' + n + ' = ' + ten + '. So 9 × ' + n + ' = ' + ten + ' − ?', answer: n,
+      wrong: [{ v: 9, why: '9 is the table number. 9 groups is one group fewer than 10 groups, and each group is ' + n + '.' }, { v: 10, why: '10 would take away 10 groups… you only need to take away ONE group of ' + n + '.' }, { v: 1, why: 'You take away one GROUP, and one group is ' + n + ', not 1.' }, { v: ten, why: ten + ' is what you start with. Take away one group of ' + n + '.' }],
+      nearby: [1, -1, 2], valid: pos, count: 4,
+      hint: '9 groups is 10 groups take away one group. How big is one group?',
+      explain: ex('Ten take away one', ['10 × ' + n + ' = ' + ten + ' (10 groups of ' + n + ').', '9 groups is one group fewer, so take away <b>' + n + '</b>.', ten + ' − ' + n + ' = <b>' + nine + '</b>, so 9 × ' + n + ' = ' + nine + '. ✅']),
+      truth: ten - (9 * n)
+    });
+    return mcqNum({
+      prompt: 'What is <b>9 × ' + n + '</b>? Try: 10 × ' + n + ' = ' + ten + ', then take away ' + n + '.', answer: nine,
+      wrong: [{ v: ten, why: ten + ' is 10 × ' + n + '. Now take away ' + n + '.' }, { v: ten + n, why: 'You added ' + n + '. 9 is LESS than 10, so take away.' }, { v: ten - 1, why: 'You took away 1. Take away one whole group: ' + n + '.' }, { v: ten - 9, why: 'You took away 9. Take away ' + n + ' instead.' }],
+      nearby: [1, -1, 2, -2, 10, -10], valid: pos, count: 4,
+      hint: 'Take ' + n + ' away from ' + ten + '.',
+      explain: ex('Ten take away one', [ten + ' − ' + n + ' = <b>' + nine + '</b>.', 'Check the digits: ' + String(nine).split('').join(' + ') + ' = ' + digitSum(nine) + (nine < 100 ? ', which is 9 ✓' : '') + '.', '9 × ' + n + ' = ' + nine + '. ✅']),
+      truth: n * 10 - n
+    });
+  }
+  /* digits of a 9 times table answer (up to 90) add up to 9 */
+  function q9Digits(){
+    const k = randInt(2, 10), m = P(9, k), ds = [];
+    shuffle([1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 7, -7, 8, -8, 9, -9]).forEach(function(d){
+      const x = m + d;
+      if(x >= 12 && x <= 99 && x % 9 !== 0) ds.push(opt(K.num(x), String(x), 'The digits of ' + x + ' add up to ' + String(x).split('').join(' + ') + ' = ' + digitSum(x) + ', not 9. So ' + x + ' is not in the 9 times table.'));
+    });
+    return mcq({
+      prompt: 'Add up the digits. Which of these numbers is in the 9 times table?', correct: opt(K.num(m), String(m)), distractors: ds, keepOrder: true, count: 4,
+      hint: 'In the 9 times table, the two digits always add up to 9. Try each number.',
+      explain: ex('The digits make 9', ['The digits of <b>' + m + '</b> add up: ' + String(m).split('').join(' + ') + ' = <b>' + digitSum(m) + '</b>.', 'Every answer in the 9 times table up to 90 has digits that add up to 9.', 'Check: ' + k + ' × 9 = ' + m + '. ✅']),
+      truth: K.num(9 * k)
+    });
+  }
+  function q9TF(){
+    const n = randInt(3, 10), p = P(9, n), good = chance(0.4), claim = good ? p : p + pick([1, -1, 2, -2, 9, -9]), who = pick(NAMES);
+    const sums = String(claim).split('').join(' + ') + ' = ' + digitSum(claim);
+    return mcq2({
+      prompt: who + ' says 9 × ' + n + ' = ' + claim + '. Use the digit check. Is ' + who + ' right?',
+      correct: opt(K.bool(claim === 9 * n), claim === 9 * n ? 'Yes, that is right' : 'No, that is wrong'), other: opt(K.bool(claim !== 9 * n), claim === 9 * n ? 'No, that is wrong' : 'Yes, that is right', claim === 9 * n ? 'The digits of ' + claim + ' add up to ' + digitSum(claim) + ', so it passes the check.' : 'Try the digit check: ' + sums + '. In the 9 times table the digits add up to 9, so this does not pass.'),
+      hint: 'Add the digits of ' + claim + '. Do they make 9?',
+      explain: ex('Checking with digits', ['The digits of ' + claim + ' add up: ' + sums + '.', claim === 9 * n ? 'They make 9, and ' + claim + ' = 9 × ' + n + '.' : 'They do not make 9, so ' + claim + ' is not in the 9 times table.', claim === 9 * n ? 'So ' + who + ' is right. ✅' : 'The real answer is 9 × ' + n + ' = ' + p + ', so ' + who + ' is wrong. ✅']),
+      truth: K.bool(claim === 9 * n)
+    });
+  }
+  /* a number in the 6 times table is even AND in the 3 times table */
+  function q6Even(){
+    const k = randInt(3, 12), m = P(6, k), ds = [];
+    shuffle([3, -3, 9, -9, 15, -15, 1, -1, 2, -2, 4, -4, 6, -6]).forEach(function(d){
+      const x = m + d;
+      if(x > 6 && x <= 72 && x % 6 !== 0){
+        const odd = x % 2 === 1, in3 = x % 3 === 0;
+        ds.push(opt(K.num(x), String(x), odd ? x + ' is odd. Every number in the 6 times table is even.' : (in3 ? x + ' is not in the 6 times table.' : x + ' is even, but it is not in the 3 times table (' + String(x).split('').join(' + ') + ' = ' + digitSum(x) + '), so it cannot be in the 6 times table.')));
+      }
+    });
+    return mcq({
+      prompt: 'Which of these numbers is in the 6 times table?', correct: opt(K.num(m), String(m)), distractors: ds, keepOrder: false, count: 4,
+      hint: 'A number in the 6 times table is even AND in the 3 times table.',
+      explain: ex('Even and in the 3s', ['Numbers in the 6 times table are <b>even</b> and also in the <b>3 times table</b>.', '<b>' + m + '</b> is even, and its digits add up to ' + digitSum(m) + ', which is in the 3 times table.', 'Check: ' + k + ' × 6 = ' + m + '. ✅']),
+      truth: K.num(6 * k)
+    });
+  }
+
+  const cfg = {
+    tables: [6, 9], n1: [2, 6], n2: [2, 10], n3: [2, 12],
+    hintTip: 'Trick: 6s are double the 3s; 9s are 10s take away one.',
+    step: function(t, n){
+      if(t === 6) return 'Trick: 3 × ' + n + ' = ' + (3 * n) + ', and 6 is double 3, so double it: ' + (3 * n) + ' + ' + (3 * n) + ' = <b>' + (6 * n) + '</b>.';
+      const p = 9 * n;
+      return 'Trick: 10 × ' + n + ' = ' + (10 * n) + ', take away ' + n + ': ' + (10 * n) + ' − ' + n + ' = <b>' + p + '</b>.' + (p < 100 && p >= 10 ? ' Digit check: ' + String(p).split('').join(' + ') + ' = ' + digitSum(p) + ' ✓' : '');
+    },
+    extra2: [q6Double, q9Ten, q9Digits, q6Even],
+    extra3: [q6Double, q9Ten, q9TF, q9Digits, q6Even]
+  };
+
+  registerSkill({
+    id: 'multdiv-6-9', strand: 'multdiv', name: 'The 6 and 9 times tables', emoji: '6️⃣', year: 3, order: 345, prereq: ['multdiv-3'],
+    lesson: {
+      title: 'Using the 3s to find the 6s and 9s',
+      steps: [
+        { say: 'The <b>6 times table</b> counts in <b>6s</b>: 6, 12, 18, 24, 30. The frog has made <b>4 jumps</b> of 6 and lands on <b>24</b>. So <b>4 × 6 = 24</b>.', vis: { kind: 'numberLine', args: [{ min: 0, max: 36, minor: 6, major: 6, width: 348, marks: [{ value: 24, kind: 'dot' }] }] } },
+        { say: '<b>6 is double 3.</b> You know 3 × 4 = 12. Double it: 12 + 12 = 24. So <b>6 × 4 = 24</b>. The 6s are just the 3s, doubled!', vis: { kind: 'array', args: [6, 4] },
+          quiz: { prompt: '3 × 5 = 15. What is 6 × 5?', options: [{ label: '20', ok: false }, { label: '30', ok: true }, { label: '21', ok: false }], right: 'Yes! Double 15 is 30.', wrong: 'Double 15: 15 + 15 = 30.' } },
+        { say: 'The <b>9 times table</b>: <b>9 is 10 take away 1</b>. For 9 × 4, do 10 × 4 = 40 and take away one group of 4: 40 − 4 = <b>36</b>.', vis: { kind: 'groups', args: [4, 9] },
+          quiz: { prompt: '10 × 6 = 60. What is 9 × 6?', options: [{ label: '66', ok: false }, { label: '54', ok: true }, { label: '56', ok: false }], right: 'Yes! 60 − 6 = 54.', wrong: 'Take away one group of 6 from 60: 60 − 6 = 54.' } },
+        { say: 'Look at the 9s: 18, 27, 36, 45, 54. Add the <b>digits</b> of each: 1 + 8 = 9, 2 + 7 = 9, 3 + 6 = 9. The digits always add up to <b>9</b>!', vis: { kind: 'numberLine', args: [{ min: 0, max: 90, minor: 9, major: 9, width: 348, marks: [{ value: 54, kind: 'dot' }] }] },
+          quiz: { prompt: 'Which number is in the 9 times table?', options: [{ label: '64', ok: false }, { label: '63', ok: true }, { label: '65', ok: false }], right: 'Yes! 6 + 3 = 9, and 7 × 9 = 63.', wrong: 'Add the digits. 6 + 3 = 9, so 63 is in the 9 times table. 64 and 65 add up to 10 and 11.' } }
+      ]
+    },
+    trick: {
+      title: 'Double the 3s, and ten take away one',
+      say: 'For <b>6 ×</b>: find the 3s fact and <b>double</b> it. For <b>9 ×</b>: do <b>10 ×</b> and take away the number once. The answers to the 9s always have digits that add up to 9.',
+      vis: { kind: 'groups', args: [3, 9] },
+      example: '6 × 7 → 3 × 7 = 21 → double = <b>42</b> &nbsp;·&nbsp; 9 × 7 → 70 − 7 = <b>63</b> (6 + 3 = 9 ✓)'
     },
     gen: buildGens(cfg)
   });
@@ -16535,7 +17154,7 @@ function levelFromXp(xp){ let n = 1; while(xp >= xpForLevel(n + 1)) n++; return 
 function levelTitle(n){ return LEVEL_TITLES[Math.min(LEVEL_TITLES.length - 1, Math.floor((n - 1) / 2))]; }
 
 /* SCHOOL-ORDER:BEGIN (generated by tools/curriculum-export.js from curriculum/curriculum.json - do not edit) */
-const SCHOOL_SEQ = {"addsub-add-column":5,"addsub-difference":9,"addsub-mental-3d":2,"addsub-missing-inverse":9,"addsub-sub-column":9,"addsub-word":9,"data-bar-charts":14,"data-pictograms":14,"data-tally-tables":14,"data-two-step":14,"frac-add-sub":11,"frac-compare-order":11,"frac-equivalent":11,"frac-nonunit":11,"frac-number-line":11,"frac-of-quantity":11,"frac-read":11,"frac-tenths":11,"geo-2d-shapes":10,"geo-3d-shapes":10,"geo-angles":7,"geo-coordinates":20,"geo-lines":7,"geo-symmetry":20,"geo-turns":7,"logic-patterns":null,"logic-puzzles":null,"logic-sorting":null,"logic-strategies":null,"measure-capacity":13,"measure-length":6,"measure-mass":13,"measure-money":13,"measure-perimeter":6,"measure-units":13,"multdiv-2-5-10":3,"multdiv-2digit-partition":8.5,"multdiv-3":4,"multdiv-4":3,"multdiv-8":3,"multdiv-arrays-groups":8.5,"multdiv-bridge-tables":20,"multdiv-division-facts":8.5,"multdiv-word":8.5,"number-10-100-more-less":1,"number-compare-order":1,"number-count-steps":1,"number-line-3digit":1,"number-place-value":1,"number-round":20,"time-24h-ampm":12,"time-duration":12,"time-five-minutes":12,"time-minutes":12,"time-quarters":12,"time-roman":12};   // unit position in the school sequence; null = reasoning stream that runs alongside every unit
+const SCHOOL_SEQ = {"addsub-add-column":5,"addsub-difference":9,"addsub-mental-3d":2,"addsub-missing-inverse":9,"addsub-sub-column":9,"addsub-word":9,"data-bar-charts":14,"data-pictograms":14,"data-tally-tables":14,"data-two-step":14,"frac-add-sub":11,"frac-compare-order":11,"frac-equivalent":11,"frac-nonunit":11,"frac-number-line":11,"frac-of-quantity":11,"frac-read":11,"frac-tenths":11,"geo-2d-shapes":10,"geo-3d-shapes":10,"geo-angles":7,"geo-coordinates":20,"geo-lines":7,"geo-symmetry":20,"geo-turns":7,"logic-patterns":null,"logic-puzzles":null,"logic-sorting":null,"logic-strategies":null,"measure-capacity":13,"measure-length":6,"measure-mass":13,"measure-money":13,"measure-perimeter":6,"measure-units":13,"multdiv-2-5-10":3,"multdiv-2digit-partition":8.5,"multdiv-3":4,"multdiv-4":3,"multdiv-6-9":8,"multdiv-8":3,"multdiv-arrays-groups":8.5,"multdiv-bridge-tables":20,"multdiv-division-facts":8.5,"multdiv-remainders":8.5,"multdiv-word":8.5,"number-10-100-more-less":1,"number-compare-order":1,"number-count-steps":1,"number-line-3digit":1,"number-place-value":1,"number-round":20,"time-24h-ampm":12,"time-duration":12,"time-five-minutes":12,"time-minutes":12,"time-quarters":12,"time-roman":12};   // unit position in the school sequence; null = reasoning stream that runs alongside every unit
 /* SCHOOL-ORDER:END */
 
 /* ---------- planning ---------- */

@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "dbVersion": "2026.10-draft.1",
+ "dbVersion": "2026.10-draft.2",
  "status": "draft: every item pendiente de verificar against the official school documents (not available)",
  "generatedFrom": "tools/curriculum-test.js keeps this file in step with src/skills (ids, year, strand, prerequisites, visuals, question types)",
  "sources": {
@@ -1276,6 +1276,37 @@
    "placementSource": "inferred"
   },
   {
+   "id": "obj:multdiv-remainders",
+   "skillId": "multdiv-remainders",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u08b-mult-div-methods",
+   "objective": "Divide with remainders",
+   "prereq": [
+    "multdiv-division-facts"
+   ],
+   "methods": [
+    "grouping",
+    "array",
+    "number-line"
+   ],
+   "visuals": [
+    "groups",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
    "id": "obj:multdiv-word",
    "skillId": "multdiv-word",
    "status": "exists",
@@ -1409,6 +1440,39 @@
    "placementSource": "S1"
   },
   {
+   "id": "obj:multdiv-6-9",
+   "skillId": "multdiv-6-9",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u08-tables-3-6-9",
+   "objective": "Recall and use the 6 and 9 times tables using the 3-6-9 relationships",
+   "prereq": [
+    "multdiv-3"
+   ],
+   "methods": [
+    "number-line",
+    "array",
+    "grouping",
+    "doubling"
+   ],
+   "visuals": [
+    "array",
+    "groups",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
    "id": "obj:multdiv-8",
    "skillId": "multdiv-8",
    "status": "exists",
@@ -1471,7 +1535,8 @@
     "S1"
    ],
    "sourceStatus": "pendiente de verificar",
-   "placementSource": "S1"
+   "placementSource": "S1",
+   "note": "Still contains the 6 and 9 tables (kept as is); the Year 3 versions now live in multdiv-6-9"
   },
   {
    "id": "obj:multdiv-division-facts",
@@ -1893,28 +1958,6 @@
    "sourceStatus": "pendiente de verificar"
   },
   {
-   "id": "obj:div-remainders",
-   "skillId": null,
-   "plannedSkillId": "div-remainders",
-   "status": "missing",
-   "year": 3,
-   "strand": null,
-   "unit": "u08b-mult-div-methods",
-   "objective": "Divide with remainders",
-   "prereq": [
-    "multdiv-division-facts"
-   ],
-   "methods": [
-    "grouping",
-    "array",
-    "number-line"
-   ],
-   "source": [
-    "S1"
-   ],
-   "sourceStatus": "pendiente de verificar"
-  },
-  {
    "id": "obj:mult-formal-2x1",
    "skillId": null,
    "plannedSkillId": "mult-formal-2x1",
@@ -1935,30 +1978,6 @@
    ],
    "sourceStatus": "pendiente de verificar",
    "note": "Grid/area model already exists in multdiv-2digit-partition"
-  },
-  {
-   "id": "obj:tables-3-6-9",
-   "skillId": null,
-   "plannedSkillId": "tables-3-6-9",
-   "status": "missing",
-   "year": 3,
-   "strand": null,
-   "unit": "u08-tables-3-6-9",
-   "objective": "6 and 9 times tables using the 3-6-9 relationship",
-   "prereq": [
-    "multdiv-3",
-    "multdiv-8"
-   ],
-   "methods": [
-    "doubling",
-    "array",
-    "grouping"
-   ],
-   "source": [
-    "S1"
-   ],
-   "sourceStatus": "pendiente de verificar",
-   "note": "Existing multdiv-bridge-tables covers 6, 7, 9, 11, 12 as one Year 4 skill; plan: split 6 and 9 into a Year 3 skill"
   },
   {
    "id": "obj:place-value-counters",
