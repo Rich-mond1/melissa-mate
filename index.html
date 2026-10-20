@@ -16418,7 +16418,7 @@ function defaultState(){
     v: 4, name: 'Melissa', onboardingDone: false, theme: 'unicorn',
     prefs: { likes: [], dislikes: [], voice: false, sound: true },
     placement: { done: false, started: false, strandIdx: 0, asked: 0, misses: 0, queue: [], results: {} },
-    skills: {}, errors: {}, evidence: [],
+    skills: {}, errors: {}, evidence: [], diag: null,
     totalStars: 0, starBalance: 0, xp: 0, level: 1,
     stickers: [], packs: 0, tricks: [], badges: [],
     claims: [], rewards: DEFAULT_REWARDS.map(function(r){ return Object.assign({}, r); }), goalReward: null,
@@ -16475,6 +16475,7 @@ function mergeState(loaded){
   m.daily = Object.assign({}, d.daily, L.daily || {});
   m.skills = L.skills || {}; m.errors = L.errors || {};
   m.evidence = cleanEvidence(L.evidence);
+  m.diag = (L.diag && typeof L.diag === 'object' && !Array.isArray(L.diag) && L.diag.strands && L.diag.results) ? L.diag : null;
   const petV = function(v){ v = Number(v) | 0; return v >= 0 && v < PET_VARIANTS ? v : 0; };
   const num = function(x, dflt){ x = Number(x); return isFinite(x) ? x : (dflt || 0); };
   const objs = function(a){ return Array.isArray(a) ? a.filter(function(x){ return x && typeof x === 'object'; }) : []; };
@@ -16543,6 +16544,7 @@ function dueSkills(state, today){
 /* Which step is next for this skill? */
 function nextStepFor(state, sk){
   const st = skillState(state, sk.id);
+  if(st.likely && st.medal === 0 && !st.lessonDone) return 'testout';   // the diagnostic thinks she knows it: offer a quick check first
   if(!st.lessonDone && st.medal === 0) return 'learn';
   if(st.medal === 0) return 'guided';
   if(st.medal === 1) return 'practice';
@@ -16602,6 +16604,7 @@ function applySkillResult(state, skillId, kind, credits, today){
   today = today || todayStr();
   const st = skillState(state, skillId);
   const n = credits.length; const sum = credits.reduce(function(a, b){ return a + b; }, 0); const acc = n ? Math.round(sum / n * 1e6) / 1e6 : 0;
+  st.likely = false;
   const before = { medal: st.medal, box: st.box, wobbly: st.wobbly, goldFrom: st.goldFrom || null };
   st.seen += n; st.correct += credits.filter(function(c){ return c > 0; }).length; st.credit += sum; st.last = today;
   const bump = function(){ st.box = Math.min(6, st.box + 1); };
@@ -16663,7 +16666,7 @@ function placementRecord(state, skillId, credit){
   if(credit >= 1){ const st = skillState(state, skillId); st.medal = Math.max(st.medal, 1); st.box = Math.max(st.box, 1); st.placed = true; st.due = addDays(todayStr(), 1); P.misses = 0; }
   else { P.misses++; }
 }
-function placementDone(state){ return placementNextItem(state) === null; }
+function placementDone(state){ if(state.diag) return state.diag.done ? true : diagNextItem(state) === null; return placementNextItem(state) === null; }
 function placementSummary(state){
   const known = [], learn = [];
   strandsWithSkills().forEach(function(str){
@@ -16673,6 +16676,67 @@ function placementSummary(state){
     });
   });
   return { known: known, learn: learn };
+}
+
+/* ---------- adaptive diagnostic (Year 2 -> Year 3): short blocks, floor and ceiling by binary search per strand ----------
+   A block = 2 questions at tier 2 (a 3rd only if they split). Pass = 2 right (independent, no hints in a diagnostic). One question never earns bronze.
+   Per strand the skills are in teaching order; we search for the highest skill she passes. Untested skills below it are marked "likely" (no medal: a quick check is offered). */
+function diagBlocksFor(n){ return Math.min(4, Math.ceil(Math.log(n + 1) / Math.LN2)); }
+function diagStart(state){
+  const prev = state.diag && state.diag.runs ? state.diag.runs : 0;
+  state.diag = { v: 1, runs: prev + 1, startedOn: todayStr(), doneOn: null, done: false, cur: null, strands: {}, results: {} };
+  state.placement.started = true; state.placement.done = false;
+  return state.diag;
+}
+function diagActive(state){ return !!(state.diag && !state.diag.done); }
+function diagStrand(state, id){
+  const D = state.diag, n = skillsOfStrand(id).length;
+  if(!D.strands[id]) D.strands[id] = { lowPass: -1, highFail: n, blocks: 0, done: false };
+  return D.strands[id];
+}
+function diagStrandCheck(state, id){      // close the strand when the boundary is pinned down or its budget is spent
+  const st = diagStrand(state, id), list = skillsOfStrand(id);
+  if(st.highFail - st.lowPass <= 1 || st.blocks >= diagBlocksFor(list.length)){
+    st.done = true;
+    for(let i = 0; i <= st.lowPass - 1; i++){ const sk = list[i]; if(state.diag.results[sk.id]) continue; state.diag.results[sk.id] = { n: 0, ok: 0, pass: false, likely: true };
+      const ss = skillState(state, sk.id); if(ss.medal === 0 && !ss.lessonDone) ss.likely = true; }
+  }
+  return st.done;
+}
+function diagNextItem(state){
+  const D = state.diag; if(!D || D.done) return null;
+  if(D.cur){ const sk = SKILLS.filter(function(x){ return x.id === D.cur.skillId; })[0]; if(sk) return { strand: sk.strand, skill: sk }; D.cur = null; }
+  const order = placementOrder();
+  for(let i = 0; i < order.length; i++){
+    const id = order[i], list = skillsOfStrand(id), st = diagStrand(state, id);
+    if(st.done || diagStrandCheck(state, id)) continue;
+    const idx = Math.floor((st.lowPass + st.highFail) / 2);
+    D.cur = { skillId: list[idx].id, idx: idx, asked: 0, right: 0 };
+    return { strand: id, skill: list[idx] };
+  }
+  D.done = true; D.doneOn = todayStr(); state.placement.done = true;
+  return null;
+}
+/* Record one diagnostic answer. Returns {blockDone, pass} (pass only when blockDone). */
+function diagRecord(state, skillId, correct, today){
+  today = today || todayStr(); const D = state.diag, c = D && D.cur;
+  if(!c || c.skillId !== skillId) return { blockDone: false };
+  c.asked++; if(correct) c.right++;
+  let pass = null;
+  if(c.asked >= 2){ if(c.right === c.asked) pass = true; else if(c.right === 0) pass = false; else if(c.asked >= 3) pass = c.right >= 2; }
+  if(pass === null) return { blockDone: false };
+  const sk = SKILLS.filter(function(x){ return x.id === skillId; })[0], st = diagStrand(state, sk.strand);
+  D.results[skillId] = { n: c.asked, ok: c.right, pass: pass }; st.blocks++;
+  if(pass){ st.lowPass = Math.max(st.lowPass, c.idx);
+    const ss = skillState(state, skillId); ss.medal = Math.max(ss.medal, 1); ss.box = Math.max(ss.box, 1); ss.placed = true; ss.likely = false; if(!ss.due) ss.due = addDays(today, 1); }
+  else st.highFail = Math.min(st.highFail, c.idx);
+  D.cur = null; diagStrandCheck(state, sk.strand);
+  return { blockDone: true, pass: pass };
+}
+function diagSummary(state){
+  const D = state.diag || { results: {} }; let known = 0, likely = 0, learn = 0, tested = 0;
+  SKILLS.forEach(function(s){ const r = D.results[s.id]; if(!r) return; if(r.likely) likely++; else { tested++; if(r.pass) known++; else learn++; } });
+  return { known: known, likely: likely, learn: learn, tested: tested };
 }
 
 /* ---------- stickers (endless: creature × accessory × background × rarity) ---------- */
@@ -16834,7 +16898,7 @@ function topbar(title, back){
   return '<div class="topbar"><button class="icon-btn" data-act="go" data-to="' + (back || 'hub') + '" aria-label="Back">←</button><h2 class="white grow center">' + title + '</h2><span class="pill">⭐ ' + S.starBalance + '</span></div>';
 }
 function medalsHTML(n){ return '<span class="medals">' + [1, 2, 3].map(function(i){ return '<span class="medal' + (n >= i ? ' on' : '') + '">' + ['🥉', '🥈', '🥇'][i - 1] + '</span>'; }).join('') + '</span>'; }
-const STEP_LABEL = { learn: 'Learn it', guided: 'Guided', practice: 'Practice', challenge: 'Challenge', review: 'Review' };
+const STEP_LABEL = { learn: 'Learn it', guided: 'Guided', practice: 'Practice', challenge: 'Challenge', review: 'Review', testout: 'Quick check' };
 const KIND_ES = { guided: 'Guiada', practice: 'Práctica', challenge: 'Reto', review: 'Repaso', testout: 'Prueba', placement: 'Diagnóstico', legacy: 'Antigua' };
 
 /* ---------------- sticker drawing ---------------- */
@@ -17026,6 +17090,7 @@ function startSession(kind, skillId){
 }
 ACT.startReview = function(){ startSession('review', null); };
 ACT.placementGo = function(){
+  if(!diagActive(S) && !S.placement.started && !(S.diag && S.diag.done)) diagStart(S);   // new players and "repeat" use the adaptive diagnostic; a quest already under way keeps the old one
   if(placementDone(S)) return finishPlacement();
   S.placement.started = true; save();
   SESS = { kind: 'placement', items: [], idx: 0, credits: [], by: {}, seen: {} };
@@ -17044,10 +17109,10 @@ function genQ(skillId, tier){
 }
 function nextQuestion(){
   if(SESS.kind === 'placement'){
-    const it = placementNextItem(S);
+    const it = S.diag ? diagNextItem(S) : placementNextItem(S);
     if(!it) return finishPlacement();
     SESS.cur = it; SESS.q = genQ(it.skill.id, 2) || genQ(it.skill.id, 1);
-    if(!SESS.q){ placementRecord(S, it.skill.id, 0); return nextQuestion(); }
+    if(!SESS.q){ if(S.diag) diagRecord(S, it.skill.id, false); else placementRecord(S, it.skill.id, 0); return nextQuestion(); }
     return startQ(it.skill.id, 2);
   }
   if(SESS.idx >= SESS.items.length) return finishSession();
@@ -17170,7 +17235,7 @@ function endQuestion(credit, ok, skipped){
   (SESS.by[sk.id] = SESS.by[sk.id] || []).push(credit);
   SESS.phase = 'fb';
   if(SESS.kind === 'placement'){
-    placementRecord(S, sk.id, credit >= 1 ? 1 : 0); save();
+    if(S.diag) diagRecord(S, sk.id, credit >= 1); else placementRecord(S, sk.id, credit >= 1 ? 1 : 0); save();
     SESS.fbHTML = '<div class="feedback ' + (ok ? 'ok' : '') + '">' + (skipped ? 'No problem — I will teach you this one. 🌱' : (ok ? 'Got it! ✅' : 'Thanks! I will help you with this one. 🌱')) + '</div>';
     if(skipped){ ACT.qnext(); return; } render(); return;
   }
@@ -17196,6 +17261,7 @@ ACT.qnext = function(){
 /* ---------------- placement finish ---------------- */
 function finishPlacement(){
   S.placement.done = true; S.daily.warmup = false; save();
+  if(S.diag){ const d = diagSummary(S); return go('placementDone', { known: d.known, learn: Math.max(0, SKILLS.length - d.known) }); }
   const sum = placementSummary(S);
   go('placementDone', { known: sum.known.length, learn: sum.learn.length });
 }
@@ -17374,7 +17440,7 @@ ACT.voice = function(){ S.prefs.voice = !S.prefs.voice; save(); render(); };
 ACT.setFocus = function(d){ S.focus = d.id || null; save(); render(); };
 ACT.radd = function(){ S.rewards.push({ id: 'r' + Date.now(), emoji: '🎁', title: 'Nuevo premio', cost: 50 }); save(); render(); };
 ACT.rdel = function(d){ S.rewards.splice(+d.i, 1); save(); render(); };
-ACT.redoPlacement = function(){ if(!confirm('¿Repetir el diagnóstico? Se conservan medallas, estrellas y stickers.')) return; S.placement = defaultState().placement; save(); go('placementIntro'); };
+ACT.redoPlacement = function(){ if(!confirm('¿Repetir el diagnóstico? Se conservan medallas, estrellas y stickers.')) return; S.placement = defaultState().placement; diagStart(S); S.placement.started = false; save(); go('placementIntro'); };
 ACT.reset = function(){ if(!confirm('¿Borrar TODO el progreso? No se puede deshacer.')) return; if(!confirm('Seguro: se perderán estrellas, stickers y medallas.')) return; try { localStorage.removeItem(STATE_KEY); } catch(e){} S = defaultState(); save(); go('welcome'); };
 ACT.export = function(){
   const blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }); const a = document.createElement('a');

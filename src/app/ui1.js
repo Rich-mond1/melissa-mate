@@ -50,7 +50,7 @@ function topbar(title, back){
   return '<div class="topbar"><button class="icon-btn" data-act="go" data-to="' + (back || 'hub') + '" aria-label="Back">←</button><h2 class="white grow center">' + title + '</h2><span class="pill">⭐ ' + S.starBalance + '</span></div>';
 }
 function medalsHTML(n){ return '<span class="medals">' + [1, 2, 3].map(function(i){ return '<span class="medal' + (n >= i ? ' on' : '') + '">' + ['🥉', '🥈', '🥇'][i - 1] + '</span>'; }).join('') + '</span>'; }
-const STEP_LABEL = { learn: 'Learn it', guided: 'Guided', practice: 'Practice', challenge: 'Challenge', review: 'Review' };
+const STEP_LABEL = { learn: 'Learn it', guided: 'Guided', practice: 'Practice', challenge: 'Challenge', review: 'Review', testout: 'Quick check' };
 const KIND_ES = { guided: 'Guiada', practice: 'Práctica', challenge: 'Reto', review: 'Repaso', testout: 'Prueba', placement: 'Diagnóstico', legacy: 'Antigua' };
 
 /* ---------------- sticker drawing ---------------- */

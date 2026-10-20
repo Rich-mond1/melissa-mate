@@ -18,6 +18,7 @@ function startSession(kind, skillId){
 }
 ACT.startReview = function(){ startSession('review', null); };
 ACT.placementGo = function(){
+  if(!diagActive(S) && !S.placement.started && !(S.diag && S.diag.done)) diagStart(S);   // new players and "repeat" use the adaptive diagnostic; a quest already under way keeps the old one
   if(placementDone(S)) return finishPlacement();
   S.placement.started = true; save();
   SESS = { kind: 'placement', items: [], idx: 0, credits: [], by: {}, seen: {} };
@@ -36,10 +37,10 @@ function genQ(skillId, tier){
 }
 function nextQuestion(){
   if(SESS.kind === 'placement'){
-    const it = placementNextItem(S);
+    const it = S.diag ? diagNextItem(S) : placementNextItem(S);
     if(!it) return finishPlacement();
     SESS.cur = it; SESS.q = genQ(it.skill.id, 2) || genQ(it.skill.id, 1);
-    if(!SESS.q){ placementRecord(S, it.skill.id, 0); return nextQuestion(); }
+    if(!SESS.q){ if(S.diag) diagRecord(S, it.skill.id, false); else placementRecord(S, it.skill.id, 0); return nextQuestion(); }
     return startQ(it.skill.id, 2);
   }
   if(SESS.idx >= SESS.items.length) return finishSession();
@@ -162,7 +163,7 @@ function endQuestion(credit, ok, skipped){
   (SESS.by[sk.id] = SESS.by[sk.id] || []).push(credit);
   SESS.phase = 'fb';
   if(SESS.kind === 'placement'){
-    placementRecord(S, sk.id, credit >= 1 ? 1 : 0); save();
+    if(S.diag) diagRecord(S, sk.id, credit >= 1); else placementRecord(S, sk.id, credit >= 1 ? 1 : 0); save();
     SESS.fbHTML = '<div class="feedback ' + (ok ? 'ok' : '') + '">' + (skipped ? 'No problem — I will teach you this one. 🌱' : (ok ? 'Got it! ✅' : 'Thanks! I will help you with this one. 🌱')) + '</div>';
     if(skipped){ ACT.qnext(); return; } render(); return;
   }
@@ -188,6 +189,7 @@ ACT.qnext = function(){
 /* ---------------- placement finish ---------------- */
 function finishPlacement(){
   S.placement.done = true; S.daily.warmup = false; save();
+  if(S.diag){ const d = diagSummary(S); return go('placementDone', { known: d.known, learn: Math.max(0, SKILLS.length - d.known) }); }
   const sum = placementSummary(S);
   go('placementDone', { known: sum.known.length, learn: sum.learn.length });
 }
@@ -366,7 +368,7 @@ ACT.voice = function(){ S.prefs.voice = !S.prefs.voice; save(); render(); };
 ACT.setFocus = function(d){ S.focus = d.id || null; save(); render(); };
 ACT.radd = function(){ S.rewards.push({ id: 'r' + Date.now(), emoji: '🎁', title: 'Nuevo premio', cost: 50 }); save(); render(); };
 ACT.rdel = function(d){ S.rewards.splice(+d.i, 1); save(); render(); };
-ACT.redoPlacement = function(){ if(!confirm('¿Repetir el diagnóstico? Se conservan medallas, estrellas y stickers.')) return; S.placement = defaultState().placement; save(); go('placementIntro'); };
+ACT.redoPlacement = function(){ if(!confirm('¿Repetir el diagnóstico? Se conservan medallas, estrellas y stickers.')) return; S.placement = defaultState().placement; diagStart(S); S.placement.started = false; save(); go('placementIntro'); };
 ACT.reset = function(){ if(!confirm('¿Borrar TODO el progreso? No se puede deshacer.')) return; if(!confirm('Seguro: se perderán estrellas, stickers y medallas.')) return; try { localStorage.removeItem(STATE_KEY); } catch(e){} S = defaultState(); save(); go('welcome'); };
 ACT.export = function(){
   const blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }); const a = document.createElement('a');
