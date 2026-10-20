@@ -28,7 +28,24 @@ S = fresh(ID, { medal: 2, box: 2, seen: 20 }); E.applySkillResult(S, ID, 'challe
 const rec = E.recommend(S); ok(!rec || rec.skill.id !== ID, 'recommend must not offer a challenge again for a pending-gold skill');
 const realToday = E.todayStr(); S.skills[ID].goldFrom = E.addDays(realToday, -1); S.skills[ID].due = realToday;
 const items = E.buildItems(S, 'review').filter(i => i.skillId === ID); ok(items.length === 3 && items.every(i => i.tier === 3), 'gold review = 3 questions at tier 3, got ' + JSON.stringify(items));
-S.skills[ID].goldFrom = realToday; const items2 = E.buildItems(S, 'review').filter(i => i.skillId === ID); ok(items2.length <= 1, 'same-day review is a normal 1-question item');
+S.skills[ID].goldFrom = realToday; const items2 = E.buildItems(S, 'review').filter(i => i.skillId === ID); ok(items2.length === 2, 'same-day review of a pending skill is a normal 2-question item, got ' + items2.length);
+// 6b. reviews: 2 questions per ordinary skill, at most 3 skills
+S = E.mergeState({}); ['number-place-value', 'addsub-mental-3d', 'multdiv-2-5-10', 'time-quarters'].forEach(id => { S.skills[id] = { medal: 1, box: 1, seen: 5, correct: 5, credit: 5, lessonDone: true, last: null, due: E.addDays(realToday, -1), wobbly: false, placed: false }; });
+{ const it = E.buildItems(S, 'review'); ok(it.length === 6 && new Set(it.map(i => i.skillId)).size === 3, 'review = 3 skills x 2 questions, got ' + it.length); }
+// 6c. school order drives the recommendation
+{ const SS = () => { const x = E.mergeState({ onboardingDone: true }); x.placement.done = true; return x; }; const gold = (x, ids) => ids.forEach(id => { x.skills[id] = { medal: 3, box: 3, seen: 30, correct: 30, credit: 30, lessonDone: true, last: null, due: '2099-01-01', wobbly: false, placed: false }; });
+  let x = SS(); ok(E.recommend(x).skill.id === 'number-place-value', 'fresh player starts at place value, got ' + E.recommend(x).skill.id);
+  gold(x, ['number-place-value', 'number-compare-order', 'number-10-100-more-less', 'number-count-steps', 'number-line-3digit', 'addsub-mental-3d', 'multdiv-2-5-10', 'multdiv-4', 'multdiv-8', 'multdiv-3']);
+  ok(E.recommend(x).skill.id === 'addsub-add-column', 'after units 1-4 the school goes to column addition, got ' + E.recommend(x).skill.id);
+  x.focus = 'time'; ok(E.recommend(x).skill.strand === 'time', 'her chosen focus area is respected'); x.focus = null;
+  let bad2 = 0; for(let t = 0; t < 300; t++){ const y = SS(); E.SKILLS.forEach(s => { const r = Math.random(); if(r < 0.5) gold(y, [s.id]); else if(r < 0.65) y.skills[s.id] = { medal: 1, box: 1, seen: 5, correct: 5, credit: 5, lessonDone: true, last: null, due: null, wobbly: false, placed: false }; });
+    const rec2 = E.recommend(y); if(!rec2) continue; const open = E.SKILLS.filter(s => E.isUnlocked(y, s) && E.medalOf(y, s.id) < 3); const sq = id => E.SCHOOL_SEQ[id];
+    if(sq(rec2.skill.id) !== null && open.some(s => sq(s.id) !== null && sq(s.id) < sq(rec2.skill.id))) bad2++; }
+  ok(bad2 === 0, 'recommendation skipped an earlier school unit in ' + bad2 + ' random states');
+  const z = SS(); const log = (id, k) => z.sessionLog.push({ date: E.todayStr(), kind: k || 'practice', strand: E.SKILLS.find(s => s.id === id).strand, skill: id, correct: 4, total: 5, credit: 0.8, mood: null });
+  ok(E.recommend(z).skill.strand !== 'logic', 'stream not offered at the start'); for(let i = 0; i < 6; i++) log('number-place-value'); ok(E.recommend(z).skill.strand === 'logic', 'after 6 sessions a reasoning skill is offered');
+  log('logic-patterns'); ok(E.recommend(z).skill.strand !== 'logic', 'not offered again right after a reasoning session'); }
+
 // 7. evidence: record, cap, sanitise, old states
 S = E.mergeState({}); ok(Array.isArray(S.evidence) && S.evidence.length === 0, 'fresh state has evidence []'); ok(E.mergeState({ v: 4, skills: {}, totalStars: 5 }).evidence.length === 0, 'old v4 state without evidence loads');
 for(let i = 0; i < 1000; i++) E.recordEvidence(S, { d: D1, s: ID, k: 'practice', t: 2, c: 'f', h: false, r: 0, ms: 3000, w: '' });
