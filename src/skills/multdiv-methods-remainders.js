@@ -93,7 +93,7 @@
       if(c[0] >= 1){ const l = m.d + ' × ' + c[0] + ' = ' + m.d * c[0]; if(l !== good) ds.push(opt(K.text(l), l, c[1])); }
     });
     return mcq({
-      prompt: 'To work out <b>' + m.n + ' ÷ ' + m.d + '</b>, which fact is the <b>nearest</b> to ' + m.n + ' without going over?', correct: opt(K.text(good), good), distractors: ds, keepOrder: true, count: 4,
+      prompt: 'To work out <b>' + m.n + ' ÷ ' + m.d + '</b>, count in ' + m.d + 's. Which fact in the ' + m.d + ' times table is the <b>biggest one that is not more than</b> ' + m.n + '?', correct: opt(K.text(good), good), distractors: ds, keepOrder: true, count: 4,
       hint: 'All the facts are true. Pick the one that is closest to ' + m.n + ' but not bigger than ' + m.n + '.',
       explain: ex('Nearest fact', ['Count in ' + m.d + 's: ' + countIn(m.d, m.q) + ', then ' + m.d * (m.q + 1) + ' is too big.', 'The nearest fact without going over ' + m.n + ' is <b>' + good + '</b>.', m.n + ' − ' + m.d * m.q + ' = ' + m.r + ', so ' + m.n + ' ÷ ' + m.d + ' = ' + m.q + ' remainder ' + m.r + '. ✅']),
       truth: K.text(m.d + ' × ' + divmod(m.n, m.d).q + ' = ' + m.d * divmod(m.n, m.d).q)

@@ -300,7 +300,7 @@
   function qTripleDouble(){
     const n = randInt(2, 12), d = P(2, n), f = P(4, n), p = P(8, n);
     return mcqNum({
-      prompt: 'Double, double, double! ' + n + ' → ' + d + ' → ' + f + ' → ?  What number comes next?', answer: p,
+      prompt: 'Double, double, double! Keep doubling: ' + n + ' → ' + d + ' → ' + f + ' → ?  What number comes next?', answer: p,
       wrong: [{ v: f + 4, why: 'You added 4. Doubling means ' + f + ' + ' + f + '.' }, { v: f + 8, why: 'You added 8. Doubling means ' + f + ' + ' + f + '.' }, { v: f, why: 'That is the number you already have. Double it once more.' }, { v: f + d, why: 'That adds the wrong numbers. Double ' + f + ' means ' + f + ' + ' + f + '.' }],
       nearby: [1, -1, 2, -2, 8, -8], valid: pos, count: 4,
       hint: 'Doubling ' + f + ' means ' + f + ' + ' + f + '.',

@@ -39,7 +39,7 @@
   function qMakeTenGap(){
     const a = randInt(6, 9), b = randInt(11 - a + 1, 9) , need = 10 - a;
     return mcqNum({
-      prompt: 'To work out <b>' + a + ' + ' + b + '</b>, first make 10. How much do you add to ' + a + ' to make 10?', answer: need,
+      prompt: 'Let’s work out <b>' + a + ' + ' + b + '</b> in two easy steps: first fill up to a full ten (<b>' + a + ' + ? = 10</b>), then add what is left of ' + b + '. <b>Step 1:</b> what number goes in place of the ?', answer: need,
       wrong: [{ v: b, why: b + ' is the other number. First find how many to ADD to ' + a + ' to reach 10.' }, { v: 10, why: '10 is where you are heading. How many steps from ' + a + '?' }, { v: need + 1, why: 'Count on from ' + a + ': ' + (need + 1) + ' steps goes past 10.' }, { v: a, why: a + ' is the number you start with.' }],
       nearby: [1, -1, 2, 3, 4], valid: pos, count: 4, hint: 'Count on from ' + a + ' to 10.',
       explain: ex('Make ten', [a + ' + <b>' + need + '</b> = 10.', 'So split ' + b + ' into ' + need + ' and ' + (b - need) + '.', a + ' + ' + b + ' = 10 + ' + (b - need) + ' = <b>' + (a + b) + '</b>. ✅']), truth: countOn(a, 10)
@@ -48,7 +48,7 @@
   function qMakeTenSum(){
     const a = randInt(6, 9), b = randInt(11 - a + 1, 9), need = 10 - a, s = a + b;
     return mcqNum({
-      prompt: 'Make ten to work out <b>' + a + ' + ' + b + '</b>: ' + a + ' + ' + need + ' = 10, then add the rest of ' + b + '. What is ' + a + ' + ' + b + '?', answer: s,
+      prompt: 'Let’s work out <b>' + a + ' + ' + b + '</b> by making ten. Split ' + b + ' into ' + need + ' and ' + (b - need) + '. First <b>' + a + ' + ' + need + ' = 10</b>. Then <b>10 + ' + (b - need) + ' = ?</b> What is ' + a + ' + ' + b + '?', answer: s,
       wrong: [{ v: 10 + b, why: 'You added all of ' + b + ' to 10. Only ' + (b - need) + ' of it is left after making ten.' }, { v: s + 1, why: 'Close! Count again: 10 + ' + (b - need) + '.' }, { v: s - 1, why: 'Close! Count again: 10 + ' + (b - need) + '.' }, { v: 10 + need, why: 'You stopped too early. After making 10, add the rest: ' + (b - need) + '.' }],
       nearby: [1, -1, 2, -2], valid: pos, count: 4, hint: 'After making 10, how much of ' + b + ' is left to add?',
       explain: ex('Make ten', [a + ' + ' + need + ' = 10 (we used ' + need + ' of the ' + b + ').', b + ' − ' + need + ' = ' + (b - need) + ' is left.', '10 + ' + (b - need) + ' = <b>' + s + '</b>. ✅']), truth: (a + need) + (b - need)
