@@ -1,0 +1,936 @@
+{
+ "v": 4,
+ "name": "Melissa",
+ "onboardingDone": true,
+ "theme": "unicorn",
+ "prefs": {
+  "likes": [
+   "contar",
+   "formas"
+  ],
+  "dislikes": [
+   "multiplicar"
+  ],
+  "voice": false,
+  "sound": true
+ },
+ "placement": {
+  "done": true,
+  "started": true,
+  "strandIdx": 0,
+  "asked": 3,
+  "misses": 0,
+  "queue": [],
+  "results": {
+   "number-place-value": 1,
+   "time-quarters": 1,
+   "frac-read": 1
+  }
+ },
+ "skills": {
+  "addsub-add-column": {
+   "medal": 3,
+   "box": 2,
+   "seen": 16,
+   "correct": 15,
+   "credit": 13.799999999999999,
+   "lessonDone": true,
+   "last": "2026-10-17",
+   "due": "2026-10-19",
+   "wobbly": true,
+   "placed": false
+  },
+  "addsub-mental-3d": {
+   "medal": 2,
+   "box": 2,
+   "seen": 10,
+   "correct": 10,
+   "credit": 9.2,
+   "lessonDone": true,
+   "last": "2026-09-30",
+   "due": "2026-10-02",
+   "wobbly": false,
+   "placed": false
+  },
+  "addsub-sub-column": {
+   "medal": 1,
+   "box": 1,
+   "seen": 4,
+   "correct": 4,
+   "credit": 3.6,
+   "lessonDone": true,
+   "last": "2026-10-02",
+   "due": "2026-10-03",
+   "wobbly": false,
+   "placed": false
+  },
+  "data-bar-charts": {
+   "medal": 3,
+   "box": 3,
+   "seen": 15,
+   "correct": 15,
+   "credit": 13.799999999999999,
+   "lessonDone": true,
+   "last": "2026-10-05",
+   "due": "2026-10-09",
+   "wobbly": false,
+   "placed": false
+  },
+  "data-tally-tables": {
+   "medal": 2,
+   "box": 2,
+   "seen": 10,
+   "correct": 10,
+   "credit": 9.2,
+   "lessonDone": true,
+   "last": "2026-10-09",
+   "due": "2026-10-11",
+   "wobbly": false,
+   "placed": false
+  },
+  "frac-add-sub": {
+   "medal": 1,
+   "box": 1,
+   "seen": 4,
+   "correct": 4,
+   "credit": 3.6,
+   "lessonDone": true,
+   "last": "2026-10-12",
+   "due": "2026-10-13",
+   "wobbly": false,
+   "placed": false
+  },
+  "frac-equivalent": {
+   "medal": 3,
+   "box": 3,
+   "seen": 15,
+   "correct": 15,
+   "credit": 13.799999999999999,
+   "lessonDone": true,
+   "last": "2026-10-16",
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": false
+  },
+  "frac-number-line": {
+   "medal": 2,
+   "box": 1,
+   "seen": 11,
+   "correct": 10,
+   "credit": 9.2,
+   "lessonDone": true,
+   "last": "2026-10-17",
+   "due": "2026-10-18",
+   "wobbly": true,
+   "placed": false
+  },
+  "frac-read": {
+   "medal": 1,
+   "box": 1,
+   "seen": 4,
+   "correct": 4,
+   "credit": 3.6,
+   "lessonDone": true,
+   "last": "2026-09-30",
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "geo-2d-shapes": {
+   "medal": 3,
+   "box": 3,
+   "seen": 15,
+   "correct": 15,
+   "credit": 13.799999999999999,
+   "lessonDone": true,
+   "last": "2026-10-02",
+   "due": "2026-10-06",
+   "wobbly": false,
+   "placed": false
+  },
+  "geo-angles": {
+   "medal": 2,
+   "box": 2,
+   "seen": 10,
+   "correct": 10,
+   "credit": 9.2,
+   "lessonDone": true,
+   "last": "2026-10-05",
+   "due": "2026-10-07",
+   "wobbly": false,
+   "placed": false
+  },
+  "geo-lines": {
+   "medal": 1,
+   "box": 1,
+   "seen": 4,
+   "correct": 4,
+   "credit": 3.6,
+   "lessonDone": true,
+   "last": "2026-10-09",
+   "due": "2026-10-10",
+   "wobbly": false,
+   "placed": false
+  },
+  "geo-turns": {
+   "medal": 3,
+   "box": 3,
+   "seen": 15,
+   "correct": 15,
+   "credit": 13.799999999999999,
+   "lessonDone": true,
+   "last": "2026-10-12",
+   "due": "2026-10-16",
+   "wobbly": false,
+   "placed": false
+  },
+  "logic-puzzles": {
+   "medal": 2,
+   "box": 2,
+   "seen": 10,
+   "correct": 10,
+   "credit": 9.2,
+   "lessonDone": true,
+   "last": "2026-10-16",
+   "due": "2026-10-18",
+   "wobbly": false,
+   "placed": false
+  },
+  "logic-strategies": {
+   "medal": 1,
+   "box": 0,
+   "seen": 5,
+   "correct": 4,
+   "credit": 3.6,
+   "lessonDone": true,
+   "last": "2026-10-17",
+   "due": "2026-10-18",
+   "wobbly": true,
+   "placed": false
+  },
+  "measure-length": {
+   "medal": 3,
+   "box": 3,
+   "seen": 15,
+   "correct": 15,
+   "credit": 13.799999999999999,
+   "lessonDone": true,
+   "last": "2026-09-30",
+   "due": "2026-10-04",
+   "wobbly": false,
+   "placed": false
+  },
+  "measure-money": {
+   "medal": 2,
+   "box": 2,
+   "seen": 10,
+   "correct": 10,
+   "credit": 9.2,
+   "lessonDone": true,
+   "last": "2026-10-02",
+   "due": "2026-10-04",
+   "wobbly": false,
+   "placed": false
+  },
+  "measure-units": {
+   "medal": 1,
+   "box": 1,
+   "seen": 4,
+   "correct": 4,
+   "credit": 3.6,
+   "lessonDone": true,
+   "last": "2026-10-05",
+   "due": "2026-10-06",
+   "wobbly": false,
+   "placed": false
+  },
+  "multdiv-2digit-partition": {
+   "medal": 3,
+   "box": 3,
+   "seen": 15,
+   "correct": 15,
+   "credit": 13.799999999999999,
+   "lessonDone": true,
+   "last": "2026-10-09",
+   "due": "2026-10-13",
+   "wobbly": false,
+   "placed": false
+  },
+  "multdiv-2-5-10": {
+   "medal": 2,
+   "box": 2,
+   "seen": 10,
+   "correct": 10,
+   "credit": 9.2,
+   "lessonDone": true,
+   "last": "2026-10-12",
+   "due": "2026-10-14",
+   "wobbly": false,
+   "placed": false
+  },
+  "multdiv-3": {
+   "medal": 1,
+   "box": 1,
+   "seen": 4,
+   "correct": 4,
+   "credit": 3.6,
+   "lessonDone": true,
+   "last": "2026-10-16",
+   "due": "2026-10-17",
+   "wobbly": false,
+   "placed": false
+  },
+  "multdiv-4": {
+   "medal": 3,
+   "box": 2,
+   "seen": 16,
+   "correct": 15,
+   "credit": 13.799999999999999,
+   "lessonDone": true,
+   "last": "2026-10-17",
+   "due": "2026-10-19",
+   "wobbly": true,
+   "placed": false
+  },
+  "multdiv-bridge-tables": {
+   "medal": 2,
+   "box": 2,
+   "seen": 10,
+   "correct": 10,
+   "credit": 9.2,
+   "lessonDone": true,
+   "last": "2026-09-30",
+   "due": "2026-10-02",
+   "wobbly": false,
+   "placed": false
+  },
+  "number-10-100-more-less": {
+   "medal": 1,
+   "box": 1,
+   "seen": 4,
+   "correct": 4,
+   "credit": 3.6,
+   "lessonDone": true,
+   "last": "2026-10-02",
+   "due": "2026-10-03",
+   "wobbly": false,
+   "placed": false
+  },
+  "number-count-steps": {
+   "medal": 3,
+   "box": 3,
+   "seen": 15,
+   "correct": 15,
+   "credit": 13.799999999999999,
+   "lessonDone": true,
+   "last": "2026-10-05",
+   "due": "2026-10-09",
+   "wobbly": false,
+   "placed": false
+  },
+  "number-place-value": {
+   "medal": 2,
+   "box": 2,
+   "seen": 10,
+   "correct": 10,
+   "credit": 9.2,
+   "lessonDone": true,
+   "last": "2026-10-09",
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": true
+  },
+  "time-24h-ampm": {
+   "medal": 1,
+   "box": 1,
+   "seen": 4,
+   "correct": 4,
+   "credit": 3.6,
+   "lessonDone": true,
+   "last": "2026-10-12",
+   "due": "2026-10-13",
+   "wobbly": false,
+   "placed": false
+  },
+  "time-five-minutes": {
+   "medal": 3,
+   "box": 3,
+   "seen": 15,
+   "correct": 15,
+   "credit": 13.799999999999999,
+   "lessonDone": true,
+   "last": "2026-10-16",
+   "due": "2026-10-20",
+   "wobbly": false,
+   "placed": false
+  },
+  "time-quarters": {
+   "medal": 2,
+   "box": 1,
+   "seen": 11,
+   "correct": 10,
+   "credit": 9.2,
+   "lessonDone": true,
+   "last": "2026-10-17",
+   "due": "2026-10-20",
+   "wobbly": true,
+   "placed": true
+  }
+ },
+ "errors": {
+  "multdiv-3||You added instead of multiplying.": {
+   "skill": "multdiv-3",
+   "why": "You added instead of multiplying.",
+   "n": 2,
+   "last": "2026-10-09"
+  },
+  "addsub-sub-column||You took the smaller digit from the bigger one.": {
+   "skill": "addsub-sub-column",
+   "why": "You took the smaller digit from the bigger one.",
+   "n": 1,
+   "last": "2026-10-12"
+  }
+ },
+ "totalStars": 215,
+ "starBalance": 60,
+ "xp": 380,
+ "level": 4,
+ "stickers": [
+  {
+   "id": "pet:ginger:0",
+   "pet": "ginger",
+   "v": 0,
+   "base": "",
+   "acc": "",
+   "bg": 7,
+   "rarity": "legendary",
+   "n": 2,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "19.0.1.common",
+   "base": "🐬",
+   "acc": "",
+   "bg": 1,
+   "rarity": "common",
+   "n": 1,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "5.0.3.common",
+   "base": "🐻",
+   "acc": "",
+   "bg": 3,
+   "rarity": "common",
+   "n": 1,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "31.2.3.rare",
+   "base": "🦔",
+   "acc": "🎩",
+   "bg": 3,
+   "rarity": "rare",
+   "n": 1,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "26.4.6.rare",
+   "base": "🦜",
+   "acc": "🎀",
+   "bg": 6,
+   "rarity": "rare",
+   "n": 1,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "7.0.2.common",
+   "base": "🐨",
+   "acc": "",
+   "bg": 2,
+   "rarity": "common",
+   "n": 1,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "9.1.11.rare",
+   "base": "🦁",
+   "acc": "👑",
+   "bg": 11,
+   "rarity": "rare",
+   "n": 1,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "8.0.3.common",
+   "base": "🐯",
+   "acc": "",
+   "bg": 3,
+   "rarity": "common",
+   "n": 1,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "11.6.7.rare",
+   "base": "🐷",
+   "acc": "🌈",
+   "bg": 7,
+   "rarity": "rare",
+   "n": 1,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "24.3.1.epic",
+   "base": "🐞",
+   "acc": "🕶️",
+   "bg": 1,
+   "rarity": "epic",
+   "n": 1,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "pet:ginger:5",
+   "pet": "ginger",
+   "v": 5,
+   "base": "",
+   "acc": "",
+   "bg": 10,
+   "rarity": "legendary",
+   "n": 1,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "17.1.11.legendary",
+   "base": "🐢",
+   "acc": "👑",
+   "bg": 11,
+   "rarity": "legendary",
+   "n": 1,
+   "date": "2026-10-19"
+  },
+  {
+   "id": "5.12.6.common",
+   "base": "🐻",
+   "acc": "🧢",
+   "bg": 6,
+   "rarity": "common",
+   "n": 1,
+   "date": "2026-10-19"
+  }
+ ],
+ "packs": 2,
+ "tricks": [
+  "addsub-add-column",
+  "addsub-mental-3d",
+  "addsub-sub-column",
+  "data-bar-charts",
+  "data-tally-tables",
+  "frac-add-sub",
+  "frac-equivalent",
+  "frac-number-line",
+  "frac-read",
+  "geo-2d-shapes",
+  "geo-angles",
+  "geo-lines",
+  "geo-turns",
+  "logic-puzzles",
+  "logic-strategies",
+  "measure-length",
+  "measure-money",
+  "measure-units",
+  "multdiv-2digit-partition",
+  "multdiv-2-5-10",
+  "multdiv-3",
+  "multdiv-4",
+  "multdiv-bridge-tables",
+  "number-10-100-more-less",
+  "number-count-steps",
+  "number-place-value",
+  "time-24h-ampm",
+  "time-five-minutes",
+  "time-quarters"
+ ],
+ "badges": [
+  "first",
+  "streak3",
+  "stars100",
+  "medals5",
+  "medals20",
+  "medals50",
+  "gold1",
+  "tricks5",
+  "tricks15",
+  "stickers10",
+  "comeback",
+  "perfect"
+ ],
+ "claims": [
+  {
+   "id": "snack",
+   "title": "A healthy snack you choose",
+   "emoji": "🥨",
+   "cost": 30,
+   "date": "2026-10-10"
+  }
+ ],
+ "rewards": [
+  {
+   "id": "snack",
+   "emoji": "🥨",
+   "title": "A healthy snack you choose",
+   "cost": 30
+  },
+  {
+   "id": "icecream",
+   "emoji": "🍦",
+   "title": "An ice cream cone — you pick the flavour",
+   "cost": 60
+  },
+  {
+   "id": "tv",
+   "emoji": "📺",
+   "title": "You choose the TV show at dinner",
+   "cost": 80
+  },
+  {
+   "id": "popcorn",
+   "emoji": "🍿",
+   "title": "Popcorn night",
+   "cost": 110
+  },
+  {
+   "id": "movie",
+   "emoji": "🎬",
+   "title": "You choose the weekend movie",
+   "cost": 150
+  },
+  {
+   "id": "r1",
+   "emoji": "🎠",
+   "title": "Fairground trip",
+   "cost": 400
+  }
+ ],
+ "goalReward": "icecream",
+ "timer": {
+  "mode": "limit",
+  "minutes": 25,
+  "debtSeconds": 0,
+  "used": {
+   "date": "2026-10-16",
+   "sec": 540
+  }
+ },
+ "streak": {
+  "count": 5,
+  "lastPlayDate": "2026-10-16"
+ },
+ "sessionLog": [
+  {
+   "date": "2026-09-28",
+   "kind": "practice",
+   "strand": "addsub",
+   "skill": "addsub-add-column",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "happy"
+  },
+  {
+   "date": "2026-09-30",
+   "kind": "practice",
+   "strand": "addsub",
+   "skill": "addsub-mental-3d",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "ok"
+  },
+  {
+   "date": "2026-10-02",
+   "kind": "practice",
+   "strand": "addsub",
+   "skill": "addsub-sub-column",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "hard"
+  },
+  {
+   "date": "2026-10-05",
+   "kind": "practice",
+   "strand": "data",
+   "skill": "data-bar-charts",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "happy"
+  },
+  {
+   "date": "2026-10-09",
+   "kind": "practice",
+   "strand": "data",
+   "skill": "data-tally-tables",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "ok"
+  },
+  {
+   "date": "2026-10-12",
+   "kind": "practice",
+   "strand": "fractions",
+   "skill": "frac-add-sub",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "hard"
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "practice",
+   "strand": "fractions",
+   "skill": "frac-equivalent",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "happy"
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "practice",
+   "strand": "fractions",
+   "skill": "frac-number-line",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "ok"
+  },
+  {
+   "date": "2026-09-30",
+   "kind": "practice",
+   "strand": "fractions",
+   "skill": "frac-read",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "hard"
+  },
+  {
+   "date": "2026-10-02",
+   "kind": "practice",
+   "strand": "geometry",
+   "skill": "geo-2d-shapes",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "happy"
+  },
+  {
+   "date": "2026-10-05",
+   "kind": "practice",
+   "strand": "geometry",
+   "skill": "geo-angles",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "ok"
+  },
+  {
+   "date": "2026-10-09",
+   "kind": "practice",
+   "strand": "geometry",
+   "skill": "geo-lines",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "hard"
+  },
+  {
+   "date": "2026-10-12",
+   "kind": "practice",
+   "strand": "geometry",
+   "skill": "geo-turns",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "happy"
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "practice",
+   "strand": "logic",
+   "skill": "logic-puzzles",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "ok"
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "practice",
+   "strand": "logic",
+   "skill": "logic-strategies",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "hard"
+  },
+  {
+   "date": "2026-09-30",
+   "kind": "practice",
+   "strand": "measure",
+   "skill": "measure-length",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "happy"
+  },
+  {
+   "date": "2026-10-02",
+   "kind": "practice",
+   "strand": "measure",
+   "skill": "measure-money",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "ok"
+  },
+  {
+   "date": "2026-10-05",
+   "kind": "practice",
+   "strand": "measure",
+   "skill": "measure-units",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "hard"
+  },
+  {
+   "date": "2026-10-09",
+   "kind": "practice",
+   "strand": "multdiv",
+   "skill": "multdiv-2digit-partition",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "happy"
+  },
+  {
+   "date": "2026-10-12",
+   "kind": "practice",
+   "strand": "multdiv",
+   "skill": "multdiv-2-5-10",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "ok"
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "practice",
+   "strand": "multdiv",
+   "skill": "multdiv-3",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "hard"
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "practice",
+   "strand": "multdiv",
+   "skill": "multdiv-4",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "happy"
+  },
+  {
+   "date": "2026-09-30",
+   "kind": "practice",
+   "strand": "multdiv",
+   "skill": "multdiv-bridge-tables",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "ok"
+  },
+  {
+   "date": "2026-10-02",
+   "kind": "practice",
+   "strand": "number",
+   "skill": "number-10-100-more-less",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "hard"
+  },
+  {
+   "date": "2026-10-05",
+   "kind": "practice",
+   "strand": "number",
+   "skill": "number-count-steps",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "happy"
+  },
+  {
+   "date": "2026-10-09",
+   "kind": "practice",
+   "strand": "number",
+   "skill": "number-place-value",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "ok"
+  },
+  {
+   "date": "2026-10-12",
+   "kind": "practice",
+   "strand": "time",
+   "skill": "time-24h-ampm",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "hard"
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "practice",
+   "strand": "time",
+   "skill": "time-five-minutes",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "happy"
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "practice",
+   "strand": "time",
+   "skill": "time-quarters",
+   "correct": 5,
+   "total": 6,
+   "credit": 0.9,
+   "mood": "ok"
+  }
+ ],
+ "daily": {
+  "date": null,
+  "warmup": false,
+  "learn": false,
+  "boss": false,
+  "claimed": false,
+  "rounds": 0
+ },
+ "focus": "multdiv",
+ "legacy": {
+  "migratedFrom": 3,
+  "date": "2026-09-27"
+ },
+ "friend": "bimba",
+ "hadPerfect": true,
+ "comeback": true
+}

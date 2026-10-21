@@ -1,0 +1,2284 @@
+{
+ "schemaVersion": 1,
+ "dbVersion": "2026.10-draft.3",
+ "status": "draft: every item pendiente de verificar against the official school documents (not available)",
+ "generatedFrom": "tools/curriculum-test.js keeps this file in step with src/skills (ids, year, strand, prerequisites, visuals, question types)",
+ "sources": {
+  "S1": {
+   "name": "Summary of school documents (Calculation Policy, Core Knowledge Pathway, Curriculum Overview, Progression Maps Y2/Y3/Y4) read by web extraction",
+   "pages": null,
+   "status": "unverified: no page numbers, columns flattened, source typos"
+  },
+  "inferred": {
+   "name": "Author inference where the source does not give a position",
+   "status": "unverified"
+  }
+ },
+ "masteryModel": {
+  "current": {
+   "medals": "bronze via guided >=0.70; silver via practice >=0.80; gold via challenge >=0.80",
+   "creditPerQuestion": {
+    "firstTryNoHint": 1,
+    "hintOrRetry": 0.6,
+    "wrong": 0
+   },
+   "reviewDays": [
+    0,
+    1,
+    2,
+    4,
+    7,
+    14,
+    30
+   ]
+  },
+  "planned": {
+   "decision": "2026-10-20",
+   "gold": "requires a review passed on a later day (applies from Phase 3)",
+   "ordering": "recommend by school unit seq (this file), not by area rotation (applies from Phase 3)"
+  }
+ },
+ "courses": [
+  {
+   "id": "Y2",
+   "label": "Year 2 (base)"
+  },
+  {
+   "id": "Y3",
+   "label": "Year 3 (current)"
+  },
+  {
+   "id": "Y4",
+   "label": "Year 4 (bridge)"
+  }
+ ],
+ "units": [
+  {
+   "id": "u00-y2-base",
+   "seq": 0,
+   "year": 2,
+   "title": "Year 2 base: bonds, doubles and halves",
+   "seqSource": "S1",
+   "note": "Handoff: Y3 numbers expect bonds within 20, doubles/halves; Y2 calc policy: part-part-whole, make ten, doubling"
+  },
+  {
+   "id": "u01-place-value",
+   "seq": 1,
+   "year": 3,
+   "title": "Place value",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u02-mental-addsub",
+   "seq": 2,
+   "year": 3,
+   "title": "Mental addition and subtraction",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u03-tables-2-4-8",
+   "seq": 3,
+   "year": 3,
+   "title": "Times tables 2, 4 and 8",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u04-table-3",
+   "seq": 4,
+   "year": 3,
+   "title": "Times table 3",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u05-column-addition",
+   "seq": 5,
+   "year": 3,
+   "title": "Column addition",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u06-length-perimeter",
+   "seq": 6,
+   "year": 3,
+   "title": "Length and perimeter",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u07-angles",
+   "seq": 7,
+   "year": 3,
+   "title": "Angles, turns and lines",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u08-tables-3-6-9",
+   "seq": 8,
+   "year": 3,
+   "title": "3, 6 and 9 times tables (relationships)",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u08b-mult-div-methods",
+   "seq": 8.5,
+   "year": 3,
+   "title": "Multiplication and division methods",
+   "seqSource": "inferred",
+   "note": "Calc policy: grid to formal, division with remainders; position among units not stated in the source"
+  },
+  {
+   "id": "u09-column-subtraction",
+   "seq": 9,
+   "year": 3,
+   "title": "Column subtraction and problem solving",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u10-shapes",
+   "seq": 10,
+   "year": 3,
+   "title": "2D and 3D shapes",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u11-fractions",
+   "seq": 11,
+   "year": 3,
+   "title": "Fractions",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u12-time",
+   "seq": 12,
+   "year": 3,
+   "title": "Time",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u13-measures",
+   "seq": 13,
+   "year": 3,
+   "title": "Length, mass and capacity",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u14-statistics",
+   "seq": 14,
+   "year": 3,
+   "title": "Statistics",
+   "seqSource": "S1"
+  },
+  {
+   "id": "u20-y4-bridge",
+   "seq": 20,
+   "year": 4,
+   "title": "Year 4 bridge",
+   "seqSource": "S1",
+   "note": "Handoff: Y4 prep list"
+  },
+  {
+   "id": "u90-logic",
+   "seq": null,
+   "year": 3,
+   "title": "Reasoning and problem solving (runs alongside every unit)",
+   "seqSource": "inferred",
+   "note": "No fixed position in the school sequence"
+  }
+ ],
+ "objectives": [
+  {
+   "id": "obj:addsub-add-column",
+   "skillId": "addsub-add-column",
+   "status": "exists",
+   "year": 3,
+   "strand": "addsub",
+   "unit": "u05-column-addition",
+   "objective": "Add 3-digit numbers using column addition",
+   "prereq": [
+    "addsub-mental-3d"
+   ],
+   "methods": [
+    "column"
+   ],
+   "visuals": [
+    "html"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:addsub-difference",
+   "skillId": "addsub-difference",
+   "status": "exists",
+   "year": 3,
+   "strand": "addsub",
+   "unit": "u09-column-subtraction",
+   "objective": "Find the difference between two numbers",
+   "prereq": [
+    "addsub-sub-column"
+   ],
+   "methods": [
+    "number-line"
+   ],
+   "visuals": [
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:addsub-mental-3d",
+   "skillId": "addsub-mental-3d",
+   "status": "exists",
+   "year": 3,
+   "strand": "addsub",
+   "unit": "u02-mental-addsub",
+   "objective": "Add and subtract 1s, 10s and 100s mentally",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "base-ten",
+    "number-line"
+   ],
+   "visuals": [
+    "baseTen",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:addsub-missing-inverse",
+   "skillId": "addsub-missing-inverse",
+   "status": "exists",
+   "year": 3,
+   "strand": "addsub",
+   "unit": "u09-column-subtraction",
+   "objective": "Find missing numbers and check answers using the inverse and estimation",
+   "prereq": [
+    "addsub-difference"
+   ],
+   "methods": [
+    "bar-model",
+    "number-line",
+    "inverse",
+    "estimate"
+   ],
+   "visuals": [
+    "barModel",
+    "html",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:addsub-sub-column",
+   "skillId": "addsub-sub-column",
+   "status": "exists",
+   "year": 3,
+   "strand": "addsub",
+   "unit": "u09-column-subtraction",
+   "objective": "Subtract 3-digit numbers using column subtraction",
+   "prereq": [
+    "addsub-add-column"
+   ],
+   "methods": [
+    "column"
+   ],
+   "visuals": [
+    "html"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:addsub-word",
+   "skillId": "addsub-word",
+   "status": "exists",
+   "year": 3,
+   "strand": "addsub",
+   "unit": "u09-column-subtraction",
+   "objective": "Solve addition and subtraction word problems",
+   "prereq": [
+    "addsub-missing-inverse"
+   ],
+   "methods": [
+    "bar-model"
+   ],
+   "visuals": [
+    "barModel"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:data-bar-charts",
+   "skillId": "data-bar-charts",
+   "status": "exists",
+   "year": 3,
+   "strand": "data",
+   "unit": "u14-statistics",
+   "objective": "Read bar charts",
+   "prereq": [
+    "data-pictograms"
+   ],
+   "methods": [
+    "bar-chart"
+   ],
+   "visuals": [
+    "barChart"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:data-pictograms",
+   "skillId": "data-pictograms",
+   "status": "exists",
+   "year": 3,
+   "strand": "data",
+   "unit": "u14-statistics",
+   "objective": "Read pictograms",
+   "prereq": [
+    "data-tally-tables"
+   ],
+   "methods": [
+    "pictogram"
+   ],
+   "visuals": [
+    "pictogram"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:data-tally-tables",
+   "skillId": "data-tally-tables",
+   "status": "exists",
+   "year": 3,
+   "strand": "data",
+   "unit": "u14-statistics",
+   "objective": "Read and make tally charts and tables",
+   "prereq": [
+    "multdiv-2-5-10"
+   ],
+   "methods": [
+    "tally"
+   ],
+   "visuals": [
+    "html",
+    "tally"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:data-two-step",
+   "skillId": "data-two-step",
+   "status": "exists",
+   "year": 3,
+   "strand": "data",
+   "unit": "u14-statistics",
+   "objective": "Answer one- and two-step questions about charts",
+   "prereq": [
+    "data-bar-charts"
+   ],
+   "methods": [
+    "pictogram",
+    "bar-chart"
+   ],
+   "visuals": [
+    "barChart",
+    "pictogram"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:frac-add-sub",
+   "skillId": "frac-add-sub",
+   "status": "exists",
+   "year": 3,
+   "strand": "fractions",
+   "unit": "u11-fractions",
+   "objective": "Add and subtract fractions within one whole",
+   "prereq": [
+    "frac-nonunit",
+    "frac-tenths"
+   ],
+   "methods": [
+    "fraction-bar"
+   ],
+   "visuals": [
+    "fracMix"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:frac-compare-order",
+   "skillId": "frac-compare-order",
+   "status": "exists",
+   "year": 3,
+   "strand": "fractions",
+   "unit": "u11-fractions",
+   "objective": "Compare and order fractions",
+   "prereq": [
+    "frac-nonunit",
+    "frac-tenths"
+   ],
+   "methods": [
+    "fraction-bar"
+   ],
+   "visuals": [
+    "fracBars"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:frac-equivalent",
+   "skillId": "frac-equivalent",
+   "status": "exists",
+   "year": 3,
+   "strand": "fractions",
+   "unit": "u11-fractions",
+   "objective": "Recognise equivalent fractions",
+   "prereq": [
+    "frac-nonunit",
+    "frac-tenths"
+   ],
+   "methods": [
+    "fraction-wall"
+   ],
+   "visuals": [
+    "fracWall"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:frac-nonunit",
+   "skillId": "frac-nonunit",
+   "status": "exists",
+   "year": 3,
+   "strand": "fractions",
+   "unit": "u11-fractions",
+   "objective": "Recognise and show fractions with more than one part",
+   "prereq": [
+    "frac-read"
+   ],
+   "methods": [
+    "fraction-bar",
+    "fraction-circle",
+    "groups"
+   ],
+   "visuals": [
+    "fracSet",
+    "fractionBar",
+    "fractionCircle"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "shade"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:frac-number-line",
+   "skillId": "frac-number-line",
+   "status": "exists",
+   "year": 3,
+   "strand": "fractions",
+   "unit": "u11-fractions",
+   "objective": "Place fractions on a number line",
+   "prereq": [
+    "frac-nonunit"
+   ],
+   "methods": [
+    "number-line"
+   ],
+   "visuals": [
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:frac-of-quantity",
+   "skillId": "frac-of-quantity",
+   "status": "exists",
+   "year": 3,
+   "strand": "fractions",
+   "unit": "u11-fractions",
+   "objective": "Find fractions of amounts",
+   "prereq": [
+    "frac-nonunit",
+    "multdiv-2-5-10",
+    "multdiv-3",
+    "multdiv-4"
+   ],
+   "methods": [
+    "groups"
+   ],
+   "visuals": [
+    "fracGroups"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:frac-read",
+   "skillId": "frac-read",
+   "status": "exists",
+   "year": 3,
+   "strand": "fractions",
+   "unit": "u11-fractions",
+   "objective": "Recognise and show unit fractions",
+   "prereq": [],
+   "methods": [
+    "fraction-bar",
+    "fraction-circle"
+   ],
+   "visuals": [
+    "fractionBar",
+    "fractionCircle"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "shade"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:frac-tenths",
+   "skillId": "frac-tenths",
+   "status": "exists",
+   "year": 3,
+   "strand": "fractions",
+   "unit": "u11-fractions",
+   "objective": "Understand tenths",
+   "prereq": [
+    "frac-number-line",
+    "frac-of-quantity"
+   ],
+   "methods": [
+    "fraction-bar",
+    "number-line",
+    "groups"
+   ],
+   "visuals": [
+    "fractionBar",
+    "groups",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:geo-2d-shapes",
+   "skillId": "geo-2d-shapes",
+   "status": "exists",
+   "year": 3,
+   "strand": "geometry",
+   "unit": "u10-shapes",
+   "objective": "Describe 2D shapes by their sides and properties",
+   "prereq": [],
+   "methods": [
+    "diagram"
+   ],
+   "visuals": [
+    "geoShape"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:geo-3d-shapes",
+   "skillId": "geo-3d-shapes",
+   "status": "exists",
+   "year": 3,
+   "strand": "geometry",
+   "unit": "u10-shapes",
+   "objective": "Describe 3D shapes by faces, edges and vertices",
+   "prereq": [
+    "geo-2d-shapes"
+   ],
+   "methods": [
+    "diagram"
+   ],
+   "visuals": [
+    "geoShape3D"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:geo-angles",
+   "skillId": "geo-angles",
+   "status": "exists",
+   "year": 3,
+   "strand": "geometry",
+   "unit": "u07-angles",
+   "objective": "Recognise right angles and compare angles",
+   "prereq": [
+    "geo-2d-shapes"
+   ],
+   "methods": [
+    "diagram"
+   ],
+   "visuals": [
+    "angle",
+    "clock",
+    "shape2D"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:geo-coordinates",
+   "skillId": "geo-coordinates",
+   "status": "exists",
+   "year": 4,
+   "strand": "geometry",
+   "unit": "u20-y4-bridge",
+   "objective": "Read and plot coordinates on a grid",
+   "prereq": [
+    "geo-lines"
+   ],
+   "methods": [
+    "grid"
+   ],
+   "visuals": [
+    "grid"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:geo-lines",
+   "skillId": "geo-lines",
+   "status": "exists",
+   "year": 3,
+   "strand": "geometry",
+   "unit": "u07-angles",
+   "objective": "Identify parallel and perpendicular lines",
+   "prereq": [
+    "geo-2d-shapes"
+   ],
+   "methods": [
+    "diagram"
+   ],
+   "visuals": [
+    "linePair",
+    "oneLine",
+    "shape2D"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:geo-symmetry",
+   "skillId": "geo-symmetry",
+   "status": "exists",
+   "year": 4,
+   "strand": "geometry",
+   "unit": "u20-y4-bridge",
+   "objective": "Find lines of symmetry",
+   "prereq": [
+    "geo-2d-shapes"
+   ],
+   "methods": [
+    "diagram"
+   ],
+   "visuals": [
+    "symShape"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:geo-turns",
+   "skillId": "geo-turns",
+   "status": "exists",
+   "year": 3,
+   "strand": "geometry",
+   "unit": "u07-angles",
+   "objective": "Describe quarter, half and three-quarter turns and directions",
+   "prereq": [
+    "geo-angles"
+   ],
+   "methods": [
+    "compass-turn"
+   ],
+   "visuals": [
+    "turnCompass"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:logic-patterns",
+   "skillId": "logic-patterns",
+   "status": "exists",
+   "year": 3,
+   "strand": "logic",
+   "unit": "u90-logic",
+   "objective": "Find and continue patterns and rules",
+   "prereq": [],
+   "methods": [
+    "pattern"
+   ],
+   "visuals": [
+    "lgNums",
+    "lgRow",
+    "lgSticks"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:logic-puzzles",
+   "skillId": "logic-puzzles",
+   "status": "exists",
+   "year": 3,
+   "strand": "logic",
+   "unit": "u90-logic",
+   "objective": "Solve puzzles and brain teasers",
+   "prereq": [
+    "logic-patterns"
+   ],
+   "methods": [
+    "puzzle"
+   ],
+   "visuals": [
+    "lgClues",
+    "lgMagic",
+    "lgScales",
+    "lgSum"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:logic-sorting",
+   "skillId": "logic-sorting",
+   "status": "exists",
+   "year": 3,
+   "strand": "logic",
+   "unit": "u90-logic",
+   "objective": "Sort objects and find the odd one out",
+   "prereq": [
+    "logic-patterns",
+    "multdiv-2-5-10"
+   ],
+   "methods": [
+    "sorting-diagram"
+   ],
+   "visuals": [
+    "dots",
+    "lgCards",
+    "lgCarroll"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:logic-strategies",
+   "skillId": "logic-strategies",
+   "status": "exists",
+   "year": 3,
+   "strand": "logic",
+   "unit": "u90-logic",
+   "objective": "Choose a strategy to solve a problem",
+   "prereq": [
+    "logic-patterns"
+   ],
+   "methods": [
+    "bar-model",
+    "flow-chart"
+   ],
+   "visuals": [
+    "barModel",
+    "lgFlow",
+    "lgSets"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:measure-capacity",
+   "skillId": "measure-capacity",
+   "status": "exists",
+   "year": 3,
+   "strand": "measure",
+   "unit": "u13-measures",
+   "objective": "Measure and read capacity in millilitres and litres",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "measuring-jug"
+   ],
+   "visuals": [
+    "jug"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:measure-length",
+   "skillId": "measure-length",
+   "status": "exists",
+   "year": 3,
+   "strand": "measure",
+   "unit": "u06-length-perimeter",
+   "objective": "Measure lengths with a ruler",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "ruler"
+   ],
+   "visuals": [
+    "html",
+    "ruler"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:measure-mass",
+   "skillId": "measure-mass",
+   "status": "exists",
+   "year": 3,
+   "strand": "measure",
+   "unit": "u13-measures",
+   "objective": "Measure and read mass in grams and kilograms",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "scale-dial"
+   ],
+   "visuals": [
+    "dial"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:measure-money",
+   "skillId": "measure-money",
+   "status": "exists",
+   "year": 3,
+   "strand": "measure",
+   "unit": "u13-measures",
+   "objective": "Use coins and notes, pounds and pence, and find change",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "coins"
+   ],
+   "visuals": [
+    "coins"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "inferred"
+  },
+  {
+   "id": "obj:measure-perimeter",
+   "skillId": "measure-perimeter",
+   "status": "exists",
+   "year": 3,
+   "strand": "measure",
+   "unit": "u06-length-perimeter",
+   "objective": "Find the perimeter of shapes",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "diagram"
+   ],
+   "visuals": [
+    "perim"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:measure-units",
+   "skillId": "measure-units",
+   "status": "exists",
+   "year": 3,
+   "strand": "measure",
+   "unit": "u13-measures",
+   "objective": "Change between units of length, mass and capacity",
+   "prereq": [
+    "multdiv-2-5-10"
+   ],
+   "methods": [
+    "ruler",
+    "scale-dial",
+    "measuring-jug"
+   ],
+   "visuals": [
+    "dial",
+    "html",
+    "jug",
+    "ruler"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:multdiv-arrays-groups",
+   "skillId": "multdiv-arrays-groups",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u08b-mult-div-methods",
+   "objective": "Understand multiplication as equal groups and arrays",
+   "prereq": [
+    "multdiv-2-5-10"
+   ],
+   "methods": [
+    "array",
+    "grouping"
+   ],
+   "visuals": [
+    "array",
+    "groups"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "inferred"
+  },
+  {
+   "id": "obj:multdiv-formal-mult",
+   "skillId": "multdiv-formal-mult",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u08b-mult-div-methods",
+   "objective": "Multiply a 2-digit number by a 1-digit number using formal short multiplication (column), after the grid/area model",
+   "prereq": [
+    "multdiv-2digit-partition"
+   ],
+   "methods": [
+    "column",
+    "area-model"
+   ],
+   "visuals": [
+    "baseTen",
+    "html"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1",
+   "note": "Column pictures are HTML tables (kind html): the audit decodes their digits, not their geometry"
+  },
+  {
+   "id": "obj:multdiv-2digit-partition",
+   "skillId": "multdiv-2digit-partition",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u08b-mult-div-methods",
+   "objective": "Multiply a 2-digit number by a 1-digit number by partitioning (area model)",
+   "prereq": [
+    "multdiv-arrays-groups",
+    "number-place-value",
+    "multdiv-3",
+    "multdiv-4"
+   ],
+   "methods": [
+    "base-ten",
+    "area-model",
+    "partitioning"
+   ],
+   "visuals": [
+    "areaModel",
+    "baseTen"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "inferred"
+  },
+  {
+   "id": "obj:multdiv-remainders",
+   "skillId": "multdiv-remainders",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u08b-mult-div-methods",
+   "objective": "Divide with remainders",
+   "prereq": [
+    "multdiv-division-facts"
+   ],
+   "methods": [
+    "grouping",
+    "array",
+    "number-line"
+   ],
+   "visuals": [
+    "groups",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:multdiv-word",
+   "skillId": "multdiv-word",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u08b-mult-div-methods",
+   "objective": "Solve multiplication and division word problems",
+   "prereq": [
+    "multdiv-arrays-groups",
+    "multdiv-3",
+    "multdiv-4"
+   ],
+   "methods": [
+    "grouping",
+    "array",
+    "bar-model"
+   ],
+   "visuals": [
+    "array",
+    "barModel",
+    "dots",
+    "groups"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "inferred"
+  },
+  {
+   "id": "obj:multdiv-2-5-10",
+   "skillId": "multdiv-2-5-10",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u03-tables-2-4-8",
+   "objective": "Recall and use the 2, 5 and 10 times tables",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "number-line",
+    "array",
+    "grouping"
+   ],
+   "visuals": [
+    "array",
+    "groups",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:multdiv-3",
+   "skillId": "multdiv-3",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u04-table-3",
+   "objective": "Recall and use the 3 times table",
+   "prereq": [
+    "multdiv-2-5-10"
+   ],
+   "methods": [
+    "number-line",
+    "array",
+    "grouping",
+    "doubling"
+   ],
+   "visuals": [
+    "array",
+    "groups",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:multdiv-4",
+   "skillId": "multdiv-4",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u03-tables-2-4-8",
+   "objective": "Recall and use the 4 times table",
+   "prereq": [
+    "multdiv-2-5-10"
+   ],
+   "methods": [
+    "number-line",
+    "array",
+    "grouping",
+    "doubling"
+   ],
+   "visuals": [
+    "array",
+    "groups",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:multdiv-6-9",
+   "skillId": "multdiv-6-9",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u08-tables-3-6-9",
+   "objective": "Recall and use the 6 and 9 times tables using the 3-6-9 relationships",
+   "prereq": [
+    "multdiv-3"
+   ],
+   "methods": [
+    "number-line",
+    "array",
+    "grouping",
+    "doubling"
+   ],
+   "visuals": [
+    "array",
+    "groups",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:multdiv-8",
+   "skillId": "multdiv-8",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u03-tables-2-4-8",
+   "objective": "Recall and use the 8 times table",
+   "prereq": [
+    "multdiv-4"
+   ],
+   "methods": [
+    "number-line",
+    "array",
+    "grouping",
+    "doubling"
+   ],
+   "visuals": [
+    "array",
+    "groups",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:multdiv-bridge-tables",
+   "skillId": "multdiv-bridge-tables",
+   "status": "exists",
+   "year": 4,
+   "strand": "multdiv",
+   "unit": "u20-y4-bridge",
+   "objective": "Recall the 6, 7, 9, 11 and 12 times tables",
+   "prereq": [
+    "multdiv-3",
+    "multdiv-8"
+   ],
+   "methods": [
+    "array",
+    "grouping"
+   ],
+   "visuals": [
+    "array",
+    "fingers",
+    "groups"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1",
+   "note": "Still contains the 6 and 9 tables (kept as is); the Year 3 versions now live in multdiv-6-9"
+  },
+  {
+   "id": "obj:multdiv-division-facts",
+   "skillId": "multdiv-division-facts",
+   "status": "exists",
+   "year": 3,
+   "strand": "multdiv",
+   "unit": "u08b-mult-div-methods",
+   "objective": "Use multiplication facts to divide",
+   "prereq": [
+    "multdiv-2-5-10",
+    "multdiv-3",
+    "multdiv-4"
+   ],
+   "methods": [
+    "grouping",
+    "array",
+    "number-line",
+    "inverse"
+   ],
+   "visuals": [
+    "array",
+    "groups",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "inferred"
+  },
+  {
+   "id": "obj:number-10-100-more-less",
+   "skillId": "number-10-100-more-less",
+   "status": "exists",
+   "year": 3,
+   "strand": "number",
+   "unit": "u01-place-value",
+   "objective": "Find 10 or 100 more or less than a 3-digit number",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "base-ten",
+    "number-line"
+   ],
+   "visuals": [
+    "baseTen",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:number-compare-order",
+   "skillId": "number-compare-order",
+   "status": "exists",
+   "year": 3,
+   "strand": "number",
+   "unit": "u01-place-value",
+   "objective": "Compare and order numbers up to 1000",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "number-line",
+    "base-ten"
+   ],
+   "visuals": [
+    "baseTen",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:number-count-steps",
+   "skillId": "number-count-steps",
+   "status": "exists",
+   "year": 3,
+   "strand": "number",
+   "unit": "u01-place-value",
+   "objective": "Count on and back in equal steps",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "number-line"
+   ],
+   "visuals": [
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:number-line-3digit",
+   "skillId": "number-line-3digit",
+   "status": "exists",
+   "year": 3,
+   "strand": "number",
+   "unit": "u01-place-value",
+   "objective": "Place and read 3-digit numbers on number lines to 1000",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "number-line"
+   ],
+   "visuals": [
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:number-place-value",
+   "skillId": "number-place-value",
+   "status": "exists",
+   "year": 3,
+   "strand": "number",
+   "unit": "u01-place-value",
+   "objective": "Read, write and partition 3-digit numbers into hundreds, tens and ones",
+   "prereq": [],
+   "methods": [
+    "base-ten"
+   ],
+   "visuals": [
+    "baseTen"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:number-round",
+   "skillId": "number-round",
+   "status": "exists",
+   "year": 4,
+   "strand": "number",
+   "unit": "u20-y4-bridge",
+   "objective": "Round numbers to the nearest 10 and 100",
+   "prereq": [
+    "number-place-value"
+   ],
+   "methods": [
+    "number-line"
+   ],
+   "visuals": [
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:time-24h-ampm",
+   "skillId": "time-24h-ampm",
+   "status": "exists",
+   "year": 3,
+   "strand": "time",
+   "unit": "u12-time",
+   "objective": "Use am, pm and the 24-hour clock",
+   "prereq": [
+    "time-five-minutes"
+   ],
+   "methods": [
+    "digital-clock"
+   ],
+   "visuals": [
+    "digital"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:time-duration",
+   "skillId": "time-duration",
+   "status": "exists",
+   "year": 3,
+   "strand": "time",
+   "unit": "u12-time",
+   "objective": "Work out how long things take; read timetables",
+   "prereq": [
+    "time-five-minutes"
+   ],
+   "methods": [
+    "clock-face",
+    "number-line"
+   ],
+   "visuals": [
+    "clock",
+    "clockPair",
+    "html",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:time-five-minutes",
+   "skillId": "time-five-minutes",
+   "status": "exists",
+   "year": 3,
+   "strand": "time",
+   "unit": "u12-time",
+   "objective": "Tell the time to five minutes",
+   "prereq": [
+    "time-quarters"
+   ],
+   "methods": [
+    "clock-face"
+   ],
+   "visuals": [
+    "clock"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "setclock"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:time-minutes",
+   "skillId": "time-minutes",
+   "status": "exists",
+   "year": 3,
+   "strand": "time",
+   "unit": "u12-time",
+   "objective": "Tell the time to the minute",
+   "prereq": [
+    "time-five-minutes"
+   ],
+   "methods": [
+    "clock-face"
+   ],
+   "visuals": [
+    "clock"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:time-quarters",
+   "skillId": "time-quarters",
+   "status": "exists",
+   "year": 3,
+   "strand": "time",
+   "unit": "u12-time",
+   "objective": "Tell the time to o’clock, half past and quarter past/to",
+   "prereq": [],
+   "methods": [
+    "clock-face"
+   ],
+   "visuals": [
+    "clock"
+   ],
+   "questionTypes": [
+    "mcq",
+    "setclock"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:time-roman",
+   "skillId": "time-roman",
+   "status": "exists",
+   "year": 3,
+   "strand": "time",
+   "unit": "u12-time",
+   "objective": "Read the time on clocks with Roman numerals",
+   "prereq": [
+    "time-quarters",
+    "time-five-minutes"
+   ],
+   "methods": [
+    "clock-face"
+   ],
+   "visuals": [
+    "clock"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:addsub-bonds",
+   "skillId": "addsub-bonds",
+   "status": "exists",
+   "year": 2,
+   "strand": "addsub",
+   "unit": "u00-y2-base",
+   "objective": "Number bonds to 20 and 100; make ten",
+   "prereq": [],
+   "methods": [
+    "number-bonds",
+    "make-ten",
+    "part-whole"
+   ],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "barModel",
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:multdiv-doubles-halves",
+   "skillId": "multdiv-doubles-halves",
+   "status": "exists",
+   "year": 2,
+   "strand": "multdiv",
+   "unit": "u00-y2-base",
+   "objective": "Doubles and halves",
+   "prereq": [],
+   "methods": [
+    "doubling",
+    "halving"
+   ],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "baseTen",
+    "groups"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:number-pv-counters",
+   "skillId": "number-pv-counters",
+   "status": "exists",
+   "year": 3,
+   "strand": "number",
+   "unit": "u01-place-value",
+   "objective": "Place value counters as a verified picture",
+   "prereq": [],
+   "methods": [
+    "place-value-counters"
+   ],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "counters"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:multdiv-10-100",
+   "skillId": "multdiv-10-100",
+   "status": "exists",
+   "year": 4,
+   "strand": "multdiv",
+   "unit": "u20-y4-bridge",
+   "objective": "Multiply and divide by 10 and 100",
+   "prereq": [
+    "multdiv-2-5-10",
+    "number-place-value"
+   ],
+   "methods": [],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "baseTen"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:number-round-1000",
+   "skillId": "number-round-1000",
+   "status": "exists",
+   "year": 4,
+   "strand": "number",
+   "unit": "u20-y4-bridge",
+   "objective": "Round to the nearest 1000",
+   "prereq": [
+    "number-round"
+   ],
+   "methods": [],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:number-4-digit",
+   "skillId": "number-4-digit",
+   "status": "exists",
+   "year": 4,
+   "strand": "number",
+   "unit": "u20-y4-bridge",
+   "objective": "Read, write, compare and order 4-digit numbers",
+   "prereq": [
+    "number-place-value",
+    "number-compare-order"
+   ],
+   "methods": [],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "baseTen"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:number-negative",
+   "skillId": "number-negative",
+   "status": "exists",
+   "year": 4,
+   "strand": "number",
+   "unit": "u20-y4-bridge",
+   "objective": "Count through zero; negative numbers",
+   "prereq": [
+    "number-count-steps",
+    "number-compare-order"
+   ],
+   "methods": [],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "numberLine"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:number-decimals",
+   "skillId": "number-decimals",
+   "status": "exists",
+   "year": 4,
+   "strand": "number",
+   "unit": "u20-y4-bridge",
+   "objective": "Tenths and hundredths; decimals; money with decimals",
+   "prereq": [
+    "frac-tenths",
+    "number-place-value"
+   ],
+   "methods": [],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "hundred"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:measure-area",
+   "skillId": "measure-area",
+   "status": "exists",
+   "year": 4,
+   "strand": "measure",
+   "unit": "u20-y4-bridge",
+   "objective": "Find area by counting squares",
+   "prereq": [
+    "measure-perimeter",
+    "multdiv-arrays-groups"
+   ],
+   "methods": [],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "sqgrid"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:number-roman-100",
+   "skillId": "number-roman-100",
+   "status": "exists",
+   "year": 4,
+   "strand": "number",
+   "unit": "u20-y4-bridge",
+   "objective": "Roman numerals to C",
+   "prereq": [
+    "time-roman"
+   ],
+   "methods": [],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "html"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num",
+    "order"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:data-line-graphs",
+   "skillId": "data-line-graphs",
+   "status": "exists",
+   "year": 4,
+   "strand": "data",
+   "unit": "u20-y4-bridge",
+   "objective": "Read time graphs",
+   "prereq": [
+    "data-bar-charts"
+   ],
+   "methods": [],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "linegraph"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  },
+  {
+   "id": "obj:multdiv-mult-3d",
+   "skillId": "multdiv-mult-3d",
+   "status": "exists",
+   "year": 4,
+   "strand": "multdiv",
+   "unit": "u20-y4-bridge",
+   "objective": "Multiply 3-digit by 1-digit",
+   "prereq": [
+    "multdiv-formal-mult"
+   ],
+   "methods": [],
+   "source": [
+    "S1"
+   ],
+   "sourceStatus": "pendiente de verificar",
+   "visuals": [
+    "html"
+   ],
+   "questionTypes": [
+    "mcq",
+    "num"
+   ],
+   "hasTrick": true,
+   "placementSource": "S1"
+  }
+ ],
+ "knownOrderConflicts": [
+  "geo-angles<-geo-2d-shapes",
+  "geo-lines<-geo-2d-shapes"
+ ]
+}

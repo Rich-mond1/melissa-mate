@@ -4,10 +4,15 @@
 let S = defaultState();
 let scr = { name: 'boot', p: {} };
 let SESS = null;
+let MISSION = null;   // the 25-minute mission in progress (memory only: closing the app ends it)
 const $app = function(){ return document.getElementById('app'); };
 const esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
-function save(){ try { localStorage.setItem(STATE_KEY, JSON.stringify(S)); } catch(e){} }
+let SAVE_FAILED = false;   // warn once per failure streak, not on every tap
+function save(){
+  try { localStorage.setItem(STATE_KEY, JSON.stringify(S)); SAVE_FAILED = false; }
+  catch(e){ if(!SAVE_FAILED){ SAVE_FAILED = true; try { toast('⚠️ Progress can’t be saved on this device. Ask a grown-up!'); } catch(e2){} } }
+}
 function load(){ try { S = loadState(localStorage); } catch(e){ S = defaultState(); } ensureDaily(S); }
 
 function applyTheme(){
@@ -16,7 +21,6 @@ function applyTheme(){
 }
 function mascot(){ return friendImg(); }
 function friendImg(){ const k = PETS[S.friend] ? S.friend : 'ginger'; return '<img class="pet" alt="' + esc(PET_NAMES[k]) + '" src="' + PETS[k][0] + '">'; }
-function friendSays(txt){ return '<div class="center white"><div class="mascot pop big">' + friendImg() + '</div><div class="bubble">' + txt + '</div></div>'; }
 function speak(html, manual){
   if(!manual || !window.speechSynthesis) return;   // voice only when the child taps 🔊 (auto-speech can hang iOS Safari)
   try { if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(stripTags(html).replace(/\s+/g, ' ')); u.lang = 'en-GB'; u.rate = 0.92; speechSynthesis.speak(u); } catch(e){}
@@ -36,7 +40,7 @@ function confetti(n){
   }
 }
 let LAST_GO = 0;
-function go(name, p){ LAST_GO = Date.now(); if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
+function go(name, p){ LAST_GO = Date.now(); if(typeof ME !== 'undefined' && name !== 'me') ME.prev = null; if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
 let LAST_Q = null;   // re-drawing the SAME question (pick / hint / I-find-this-tricky) must not jump back to the top
 function R(html){ const a = $app(); const keep = scr.name === 'question' && typeof SESS !== 'undefined' && SESS && SESS.q && SESS.q === LAST_Q; const st = a.scrollTop;
   a.innerHTML = '<div class="wrap">' + html + '</div>'; a.scrollTop = keep ? st : 0; LAST_Q = (scr.name === 'question' && SESS) ? SESS.q : null; }
@@ -46,7 +50,7 @@ function topbar(title, back){
   return '<div class="topbar"><button class="icon-btn" data-act="go" data-to="' + (back || 'hub') + '" aria-label="Back">←</button><h2 class="white grow center">' + title + '</h2><span class="pill">⭐ ' + S.starBalance + '</span></div>';
 }
 function medalsHTML(n){ return '<span class="medals">' + [1, 2, 3].map(function(i){ return '<span class="medal' + (n >= i ? ' on' : '') + '">' + ['🥉', '🥈', '🥇'][i - 1] + '</span>'; }).join('') + '</span>'; }
-const STEP_LABEL = { learn: 'Learn it', guided: 'Guided', practice: 'Practice', challenge: 'Challenge', review: 'Review' };
+const STEP_LABEL = { learn: 'Learn it', guided: 'Guided', practice: 'Practice', challenge: 'Challenge', review: 'Review', testout: 'Quick check', think: 'Think hard' };
 const KIND_ES = { guided: 'Guiada', practice: 'Práctica', challenge: 'Reto', review: 'Repaso', testout: 'Prueba', placement: 'Diagnóstico', legacy: 'Antigua' };
 
 /* ---------------- sticker drawing ---------------- */
@@ -106,7 +110,9 @@ SCREENS.hub = function(){
   if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
   else {
     h += '<div class="gap"></div>';
-    if(rec) h += '<button class="btn block" data-act="playRec" style="font-size:20px">▶ ' + (rec.step === 'learn' ? 'Learn' : STEP_LABEL[rec.step]) + ': ' + esc(rec.skill.name) + '</button>';
+    if(MISSION) h += '<button class="btn block" data-act="missionNext" style="font-size:20px">🚀 Continue today’s mission</button><div class="gap"></div><button class="btn small block" style="background:#ffffffcc;color:var(--ink)" data-act="missionStop">End mission</button><div class="gap"></div>';
+    else if(rec) h += '<button class="btn block" data-act="mission" style="font-size:20px">🚀 Today’s mission · about 25 min</button><div class="gap"></div>';
+    if(rec) h += '<button class="btn block' + (MISSION ? ' small' : '') + '" data-act="playRec"' + (MISSION ? ' style="background:#ffffffcc;color:var(--ink)"' : ' style="font-size:20px;background:#ffffffcc;color:var(--ink)"') + '>▶ Quick round — ' + (rec.step === 'learn' ? 'Learn' : STEP_LABEL[rec.step]) + ': ' + esc(rec.skill.name) + (rec.backoffFrom ? ' (let’s strengthen this first)' : '') + '</button>';
     if(due.length) h += '<div class="gap"></div><button class="btn good block" data-act="startReview">🧠 Brain boost — ' + due.length + ' to remember</button>';
     h += '<div class="gap"></div><div class="card quest"><h3>📅 Today’s quest <span class="pill">' + dailyDone() + '/3</span></h3>' +
       '<div class="task' + (d.warmup ? ' done' : '') + '"><span class="chk">' + (d.warmup ? '✓' : '') + '</span>Play one round</div>' +
@@ -120,13 +126,13 @@ SCREENS.hub = function(){
     const p = strandProgress(S, str.id), n = skillsOfStrand(str.id).length;
     h += '<div class="region" data-act="strand" data-id="' + str.id + '"><div class="em" style="background:' + str.color + '22">' + str.icon + '</div><div class="grow"><b>' + str.name + '</b><div class="sub">' + n + ' skills</div></div><div class="ring" style="--p:' + p + '"><span>' + p + '%</span></div></div>';
   });
-  h += '<div class="menu-grid"><button data-act="go" data-to="stickers"><span class="em">🌈</span>Stickers' + (S.packs ? ' ✨' + S.packs : '') + '</button><button data-act="go" data-to="rewards"><span class="em">🎁</span>Prizes</button><button data-act="go" data-to="trophies"><span class="em">🏆</span>Trophies</button><button data-act="go" data-to="parentPin"><span class="em">👪</span>Grown-ups</button></div>';
+  h += '<div class="menu-grid"><button data-act="go" data-to="stickers"><span class="em">🌈</span>Stickers' + (S.packs ? ' ✨' + S.packs : '') + '</button><button data-act="go" data-to="me"><span class="em">🧑‍🎤</span>Me</button><button data-act="go" data-to="friends"><span class="em">🤝</span>Friends' + (S.met.length ? ' ' + S.met.length + '/' + FRIENDS.length : '') + '</button><button data-act="go" data-to="rewards"><span class="em">🎁</span>Prizes</button><button data-act="go" data-to="trophies"><span class="em">🏆</span>Trophies</button><button data-act="go" data-to="parentPin"><span class="em">👪</span>Grown-ups' + (parentMetrics(S, todayStr()).backup.overdue ? ' <span title="backup" style="color:#E8A33D">●</span>' : '') + '</button></div>';
   R(h);
 };
 ACT.go = function(d){ go(d.to); };
 ACT.strand = function(d){ go('strand', { id: d.id }); };
 ACT.playRec = function(){
-  const r = recommend(S); if(!r) return toast('You finished everything! 🎉');
+  const r = recommend(S); if(!r) return toast(goldWaiting(S).length ? 'Gold is waiting — come back tomorrow for a Brain boost! 🥇' : 'You finished everything! 🎉');
   openSkillStep(r.skill, r.step);
 };
 function openSkillStep(sk, step){
@@ -212,7 +218,7 @@ SCREENS.trick = function(p){
   const sk = skillById(p.id); const T = sk.trick;
   R('<div class="center white"><div class="mascot pop">🎩</div><h2>' + (p.after ? 'You unlocked a magic trick!' : 'Magic trick') + '</h2></div><div class="gap"></div>' +
     '<div class="card trickcard"><h3>' + esc(T.title) + '</h3>' + (T.vis ? '<div class="qvis">' + V.render(T.vis) + '</div>' : '') + '<div class="lesson-say">' + T.say + '</div><div class="gap"></div><div class="explain">' + T.example + '</div></div><div class="gap"></div>' +
-    (p.after ? '<button class="btn block" data-act="startSess" data-k="guided" data-id="' + sk.id + '">Try it now! 🌱</button><div class="gap"></div>' : '') +
+    (MISSION && MISSION.cur && MISSION.cur.kind === 'learn' && MISSION.cur.skillId === sk.id ? '<button class="btn block" data-act="missionLearnDone">Continue the mission 🚀</button><div class="gap"></div>' : (p.after ? '<button class="btn block" data-act="startSess" data-k="guided" data-id="' + sk.id + '">Try it now! 🌱</button><div class="gap"></div>' : '')) +
     '<button class="btn block small" style="background:#ffffffcc;color:var(--ink)" data-act="go" data-to="skill:' + sk.id + '">Back to ' + esc(sk.name) + '</button>');
   speak(T.title + '. ' + T.say);
 };

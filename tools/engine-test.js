@@ -2,10 +2,10 @@
 /* Simulates learners through the whole curriculum with the REAL engine: no dead ends, no unreachable skills,
    medals progress, spaced review works, placement terminates. */
 const fs = require('fs'), path = require('path'), vm = require('vm'); const root = path.join(__dirname, '..');
-const files = ['src/core.js', 'src/visuals.js', ...fs.readdirSync(path.join(root, 'src/skills')).filter(f => f.endsWith('.js')).sort().map(f => 'src/skills/' + f), 'src/app/engine.js'];
+const files = ['src/core.js', 'src/visuals.js', ...fs.readdirSync(path.join(root, 'src/skills')).filter(f => f.endsWith('.js')).sort().map(f => 'src/skills/' + f), 'src/app/avatar.js', 'src/app/engine.js'];
 const code = files.map(f => fs.readFileSync(path.join(root, f), 'utf8').replace(/^'use strict';/m, '').replace(/if\(typeof module !== 'undefined'\) module\.exports = \{[\s\S]*?\};?\n?/g, '')).join('\n;\n');
 const sb = { console, Math, JSON, Object, Array, String, Number, Set, Map, RegExp, Error, isFinite, parseFloat, parseInt, Date }; vm.createContext(sb);
-vm.runInContext(code + '\n;this.E = { PET_VARIANTS, mergeState, rollSticker, SKILLS, STRANDS, defaultState, skillsOfStrand, isUnlocked, recommend, buildItems, applySkillResult, placementNextItem, placementRecord, placementDone, dueSkills, addDays, todayStr, medalOf, totalMedals, openPack, setSeed, mergeState, migrateV3, rng };', sb);
+vm.runInContext(code + '\n;this.E = { goldWaiting, PET_VARIANTS, mergeState, rollSticker, SKILLS, STRANDS, defaultState, skillsOfStrand, isUnlocked, recommend, buildItems, applySkillResult, placementNextItem, placementRecord, placementDone, dueSkills, addDays, todayStr, medalOf, totalMedals, openPack, setSeed, mergeState, migrateV3, rng };', sb);
 const E = sb.E; let fails = 0; const bad = m => { fails++; console.log('✗ ' + m); };
 // pet stickers: 27 distinct, ids well-formed, legacy/garbage sanitised
 { const seenP = new Set(); let n = 0; for(let i = 0; i < 30000; i++){ const r = E.rollSticker([]); if(r.sticker.pet){ n++; seenP.add(r.sticker.id); if(!/^pet:(ginger|bimba|duck):[0-8]$/.test(r.sticker.id)) bad('bad pet id ' + r.sticker.id); } }
@@ -34,7 +34,7 @@ function learner(p, label){
       const by = {}; items.forEach(it => { (by[it.skillId] = by[it.skillId] || []).push(Math.random() < p ? 1 : (Math.random() < 0.5 ? 0.6 : 0)); });
       Object.keys(by).forEach(k => E.applySkillResult(S, k, kind, by[k], today)); steps++;
     }
-    if(!E.recommend(S) && E.dueSkills(S, today).length === 0) break;
+    if(!E.recommend(S) && E.dueSkills(S, today).length === 0 && E.goldWaiting(S).length === 0) break;   // gold now waits for a review on a later day
   }
   const gold = E.SKILLS.filter(s => E.medalOf(S, s.id) >= 3).length;
   console.log(label + ' p=' + p + ': finished day ' + day + ', gold ' + gold + '/' + E.SKILLS.length + ', medals ' + E.totalMedals(S));

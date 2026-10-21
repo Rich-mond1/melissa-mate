@@ -59,15 +59,100 @@ function defaultState(){
     v: 4, name: 'Melissa', onboardingDone: false, theme: 'unicorn',
     prefs: { likes: [], dislikes: [], voice: false, sound: true },
     placement: { done: false, started: false, strandIdx: 0, asked: 0, misses: 0, queue: [], results: {} },
-    skills: {}, errors: {},
+    skills: {}, errors: {}, evidence: [], diag: null,
     totalStars: 0, starBalance: 0, xp: 0, level: 1,
     stickers: [], packs: 0, tricks: [], badges: [],
     claims: [], rewards: DEFAULT_REWARDS.map(function(r){ return Object.assign({}, r); }), goalReward: null,
     timer: { mode: 'free', minutes: 20, debtSeconds: 0 },
     streak: { count: 0, lastPlayDate: null },
     sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 },
-    focus: null, legacy: null, friend: 'ginger'
+    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: []
   };
+}
+/* ---------- evidence (one dated record per answered question; capped so localStorage stays small) ---------- */
+const EVIDENCE_CAP = 800;
+function cleanEvidence(a){
+  if(!Array.isArray(a)) return [];
+  return a.filter(function(e){ return e && typeof e === 'object' && /^\d{4}-\d{2}-\d{2}$/.test(e.d) && typeof e.s === 'string' && (e.c === 'f' || e.c === 'a' || e.c === 'x'); })
+    .map(function(e){ return { d: e.d, s: e.s, k: String(e.k || ''), t: Math.min(3, Math.max(0, Number(e.t) | 0)), c: e.c, h: e.h ? 1 : 0, r: Math.min(2, Math.max(0, Number(e.r) | 0)), ms: Math.min(90000, Math.max(0, Number(e.ms) | 0)), w: String(e.w || '').slice(0, 80) }; })
+    .slice(-EVIDENCE_CAP);
+}
+/* c: 'f' right first time without help, 'a' right but with a hint or a second try, 'x' not right. w: why she went wrong (first wrong answer), if any. */
+function recordEvidence(state, e){
+  if(!Array.isArray(state.evidence)) state.evidence = [];
+  state.evidence.push({ d: e.d, s: e.s, k: String(e.k || ''), t: e.t | 0, c: e.c, h: e.h ? 1 : 0, r: Math.min(2, e.r | 0), ms: Math.min(90000, Math.max(0, e.ms | 0)), w: String(e.w || '').slice(0, 80) });
+  if(state.evidence.length > EVIDENCE_CAP) state.evidence.splice(0, state.evidence.length - (EVIDENCE_CAP - 100));
+}
+const LEVEL_NAMES = ['Not started', 'Learning', 'Practising', 'Secure', 'Mastered'];
+/* Five levels derived from medals + evidence. Secure needs silver AND recent independent answers; Mastered = gold (which needs a review passed on a later day). */
+function masteryLevel(state, id){
+  const st = state.skills[id]; if(!st || !(st.seen > 0 || st.medal > 0)) return 0;
+  if(st.medal >= 3) return 4;
+  if(st.medal === 2){
+    const ev = (state.evidence || []).filter(function(e){ return e.s === id && e.k !== 'placement'; }).slice(-10);
+    if(ev.length < 5) return 3;
+    return ev.filter(function(e){ return e.c === 'f'; }).length / ev.length >= 0.7 ? 3 : 2;
+  }
+  return st.medal === 1 ? 2 : 1;
+}
+/* The same mistake, same skill, 3+ times in the last 14 days. */
+function repeatedErrors(state, today, minN){
+  today = today || todayStr(); minN = minN || 3; const g = {};
+  (state.evidence || []).forEach(function(e){ if(!e.w || daysBetween(e.d, today) > 14 || daysBetween(e.d, today) < 0) return; const k = e.s + '||' + e.w; g[k] = g[k] || { skill: e.s, why: e.w, n: 0, last: e.d }; g[k].n++; if(e.d > g[k].last) g[k].last = e.d; });
+  return Object.keys(g).map(function(k){ return g[k]; }).filter(function(x){ return x.n >= minN; }).sort(function(a, b){ return b.n - a.n; });
+}
+function goldWaiting(state){ return SKILLS.filter(function(s){ const st = state.skills[s.id]; return st && st.goldFrom && st.medal === 2; }); }
+/* ---------- parent metrics: coverage, accuracy, fluency and mastery are four DIFFERENT things ---------- */
+const BACKUP_DAYS = 7;          // a reminder appears when the last backup is older than this and there is progress to lose
+function medianOf(a){ if(!a.length) return null; const b = a.slice().sort(function(x, y){ return x - y; }); const m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; }
+function evWindow(state, today, from, to){ return (state.evidence || []).filter(function(e){ const d = daysBetween(e.d, today); return e.k !== 'placement' && d >= from && d < to; }); }
+function accOf(list){
+  const n = list.length, f = list.filter(function(e){ return e.c === 'f'; }).length, a = list.filter(function(e){ return e.c === 'a'; }).length;
+  return { n: n, indep: n ? f / n : null, helped: n ? a / n : null, correct: n ? (f + a) / n : null };
+}
+function parentMetrics(state, today){
+  today = today || todayStr();
+  const lv = {}; [0, 1, 2, 3, 4].forEach(function(k){ lv[k] = 0; });
+  const byYear = {}, byStrand = [];
+  SKILLS.forEach(function(sk){ const L = masteryLevel(state, sk.id); lv[L]++; const y = byYear[sk.year] = byYear[sk.year] || { total: 0, tried: 0, bronze: 0, secure: 0 }; y.total++; if(L >= 1) y.tried++; if(medalOf(state, sk.id) >= 1) y.bronze++; if(L >= 3) y.secure++; });
+  strandsWithSkills().forEach(function(str){ const list = skillsOfStrand(str.id); byStrand.push({ id: str.id, total: list.length, bronze: list.filter(function(s){ return medalOf(state, s.id) >= 1; }).length, secure: list.filter(function(s){ return masteryLevel(state, s.id) >= 3; }).length }); });
+  const w1 = evWindow(state, today, 0, 7), w0 = evWindow(state, today, 7, 14), w14 = evWindow(state, today, 0, 14);
+  const okMs = w14.filter(function(e){ return e.c === 'f' && e.ms > 0; }).map(function(e){ return e.ms; });
+  const fluency = { n: okMs.length, medianSec: okMs.length ? Math.round(medianOf(okMs) / 100) / 10 : null, fastShare: okMs.length ? okMs.filter(function(x){ return x <= 15000; }).length / okMs.length : null };
+  const days = {}; w1.forEach(function(e){ days[e.d] = 1; });
+  const per = {}; w1.forEach(function(e){ (per[e.s] = per[e.s] || []).push(e); });
+  const skillsWeek = Object.keys(per).map(function(id){ const a = accOf(per[id]); return { id: id, n: a.n, indep: a.indep, correct: a.correct }; }).filter(function(x){ return x.n >= 4; });
+  const strong = skillsWeek.slice().sort(function(a, b){ return (b.indep - a.indep) || (b.n - a.n); }).slice(0, 3), weak = skillsWeek.slice().sort(function(a, b){ return (a.indep - b.indep) || (b.n - a.n); }).filter(function(x){ return x.indep < 0.7; }).slice(0, 3);
+  const minutes = Math.round(w1.reduce(function(a, e){ return a + Math.min(90000, e.ms || 0); }, 0) / 60000);
+  const wobbly = SKILLS.filter(function(s){ return state.skills[s.id] && state.skills[s.id].wobbly; }).map(function(s){ return s.id; });
+  const stuck = SKILLS.filter(function(s){ return struggling(state, s.id); }).map(function(s){ return s.id; });
+  const hasProgress = (state.evidence || []).length >= 30 || state.sessionLog.filter(function(l){ return l.kind !== 'legacy'; }).length >= 3;
+  const since = state.lastBackup ? daysBetween(state.lastBackup, today) : null;
+  return {
+    coverage: { total: SKILLS.length, tried: SKILLS.length - lv[0], bronze: SKILLS.filter(function(s){ return medalOf(state, s.id) >= 1; }).length, byYear: byYear, byStrand: byStrand },
+    levels: lv,
+    accuracy: { week: accOf(w1), prev: accOf(w0) },
+    fluency: fluency,
+    week: { days: Object.keys(days).length, questions: w1.length, minutes: minutes, strong: strong, weak: weak },
+    attention: { wobbly: wobbly, stuck: stuck, repeated: repeatedErrors(state, today), gold: goldWaiting(state).map(function(s){ return s.id; }) },
+    backup: { last: state.lastBackup || null, daysAgo: since, overdue: hasProgress && (since === null || since >= BACKUP_DAYS), hasProgress: hasProgress }
+  };
+}
+function pct0(x){ return x === null || x === undefined ? '—' : Math.round(x * 100) + '%'; }
+/* the weekly summary as plain Spanish text (copied or shared from the parent panel) */
+function summaryText(state, today){
+  today = today || todayStr(); const m = parentMetrics(state, today), nm = function(id){ const s = skillById(id); return s ? s.name : id; };
+  const L = ['Resumen semanal de Matemagics · ' + today, ''];
+  L.push('Actividad: ' + m.week.days + ' día(s), ' + m.week.questions + ' preguntas, unos ' + m.week.minutes + ' min.');
+  L.push('Acierto sin ayuda (a la primera y sin pista): ' + pct0(m.accuracy.week.indep) + (m.accuracy.prev.n ? ' (semana anterior ' + pct0(m.accuracy.prev.indep) + ')' : '') + '. Correctas contando las que necesitaron pista o segundo intento: ' + pct0(m.accuracy.week.correct) + '.');
+  if(m.fluency.n) L.push('Rapidez: mitad de las respuestas correctas en ' + m.fluency.medianSec + ' s o menos; ' + pct0(m.fluency.fastShare) + ' en 15 s o menos (incluye el tiempo de leer).');
+  L.push('Cobertura: ' + m.coverage.bronze + ' de ' + m.coverage.total + ' habilidades con al menos bronce. Dominio: ' + m.levels[3] + ' asentadas, ' + m.levels[4] + ' dominadas.');
+  if(m.week.strong.length) L.push('Mejor esta semana: ' + m.week.strong.map(function(x){ return nm(x.id) + ' (' + pct0(x.indep) + ')'; }).join(', ') + '.');
+  if(m.week.weak.length) L.push('A reforzar: ' + m.week.weak.map(function(x){ return nm(x.id) + ' (' + pct0(x.indep) + ')'; }).join(', ') + '.');
+  if(m.attention.repeated.length) L.push('Mismo error repetido: ' + m.attention.repeated.slice(0, 3).map(function(e){ return nm(e.skill) + ' — ' + e.why + ' (' + e.n + ' veces)'; }).join('; ') + '.');
+  if(m.attention.stuck.length) L.push('Atascada (dos sesiones seguidas bajas): ' + m.attention.stuck.map(nm).join(', ') + '. La app propone repasar el paso anterior.');
+  if(m.attention.gold.length) L.push('Oro pendiente de repaso: ' + m.attention.gold.map(nm).join(', ') + '.');
+  return L.join('\n');
 }
 function skillState(state, id){
   if(!state.skills[id]) state.skills[id] = { medal: 0, box: 0, seen: 0, correct: 0, credit: 0, lessonDone: false, last: null, due: null, wobbly: false, placed: false };
@@ -82,6 +167,10 @@ function mergeState(loaded){
   m.streak = Object.assign({}, d.streak, L.streak || {});
   m.daily = Object.assign({}, d.daily, L.daily || {});
   m.skills = L.skills || {}; m.errors = L.errors || {};
+  m.evidence = cleanEvidence(L.evidence);
+  m.owned = cleanOwned(L.owned); m.avatar = cleanAvatar(L.avatar, m.owned); m.met = cleanMet(L.met);
+  m.lastBackup = (typeof L.lastBackup === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(L.lastBackup)) ? L.lastBackup : null;
+  m.diag = (L.diag && typeof L.diag === 'object' && !Array.isArray(L.diag) && L.diag.strands && L.diag.results) ? L.diag : null;
   const petV = function(v){ v = Number(v) | 0; return v >= 0 && v < PET_VARIANTS ? v : 0; };
   const num = function(x, dflt){ x = Number(x); return isFinite(x) ? x : (dflt || 0); };
   const objs = function(a){ return Array.isArray(a) ? a.filter(function(x){ return x && typeof x === 'object'; }) : []; };
@@ -112,6 +201,8 @@ function migrateV3(old){
   m.onboardingDone = !!old.onboardingDone;       // she keeps her theme; placement still runs (new skill map)
   return m;
 }
+/* Which loader an imported file goes through (kept pure so the tests can exercise the real import path). */
+function importState(o){ return o.v === 4 ? mergeState(o) : (o.strands ? migrateV3(o) : mergeState(o)); }
 function loadState(storage){
   try {
     const raw = storage.getItem(STATE_KEY);
@@ -138,6 +229,10 @@ function xpForLevel(n){ return 60 * n * (n - 1) / 2 + 40 * (n - 1); }          /
 function levelFromXp(xp){ let n = 1; while(xp >= xpForLevel(n + 1)) n++; return n; }
 function levelTitle(n){ return LEVEL_TITLES[Math.min(LEVEL_TITLES.length - 1, Math.floor((n - 1) / 2))]; }
 
+/* SCHOOL-ORDER:BEGIN (generated by tools/curriculum-export.js from curriculum/curriculum.json - do not edit) */
+const SCHOOL_SEQ = {"addsub-add-column":5,"addsub-bonds":0,"addsub-difference":9,"addsub-mental-3d":2,"addsub-missing-inverse":9,"addsub-sub-column":9,"addsub-word":9,"data-bar-charts":14,"data-line-graphs":20,"data-pictograms":14,"data-tally-tables":14,"data-two-step":14,"frac-add-sub":11,"frac-compare-order":11,"frac-equivalent":11,"frac-nonunit":11,"frac-number-line":11,"frac-of-quantity":11,"frac-read":11,"frac-tenths":11,"geo-2d-shapes":10,"geo-3d-shapes":10,"geo-angles":7,"geo-coordinates":20,"geo-lines":7,"geo-symmetry":20,"geo-turns":7,"logic-patterns":null,"logic-puzzles":null,"logic-sorting":null,"logic-strategies":null,"measure-area":20,"measure-capacity":13,"measure-length":6,"measure-mass":13,"measure-money":13,"measure-perimeter":6,"measure-units":13,"multdiv-10-100":20,"multdiv-2-5-10":3,"multdiv-2digit-partition":8.5,"multdiv-3":4,"multdiv-4":3,"multdiv-6-9":8,"multdiv-8":3,"multdiv-arrays-groups":8.5,"multdiv-bridge-tables":20,"multdiv-division-facts":8.5,"multdiv-doubles-halves":0,"multdiv-formal-mult":8.5,"multdiv-mult-3d":20,"multdiv-remainders":8.5,"multdiv-word":8.5,"number-10-100-more-less":1,"number-4-digit":20,"number-compare-order":1,"number-count-steps":1,"number-decimals":20,"number-line-3digit":1,"number-negative":20,"number-place-value":1,"number-pv-counters":1,"number-roman-100":20,"number-round":20,"number-round-1000":20,"time-24h-ampm":12,"time-duration":12,"time-five-minutes":12,"time-minutes":12,"time-quarters":12,"time-roman":12};   // unit position in the school sequence; null = reasoning stream that runs alongside every unit
+/* SCHOOL-ORDER:END */
+
 /* ---------- planning ---------- */
 function dueSkills(state, today){
   today = today || todayStr(); const out = [];
@@ -148,45 +243,104 @@ function dueSkills(state, today){
 /* Which step is next for this skill? */
 function nextStepFor(state, sk){
   const st = skillState(state, sk.id);
+  if((st.likely || sk.year === 2) && !st.triedOut && st.medal === 0 && !st.lessonDone) return 'testout';   // the diagnostic thinks she knows it: offer a quick check first
   if(!st.lessonDone && st.medal === 0) return 'learn';
   if(st.medal === 0) return 'guided';
   if(st.medal === 1) return 'practice';
   if(st.medal === 2) return 'challenge';
   return 'review';
 }
+function openSkills(state){
+  return SKILLS.filter(function(s){ const st = state.skills[s.id]; return isUnlocked(state, s) && medalOf(state, s.id) < 3 && !(st && st.goldFrom); });
+}
+/* Recommendation follows the SCHOOL ORDER (unit position), then the lowest medal inside the unit, then the skill order.
+   Reasoning skills (seq null) run alongside: one in every 6 sessions. A skill still locked behind a prerequisite is never offered, so a prerequisite can outrank the school order. */
+const STREAM_EVERY = 6;
+/* ---------- adaptive rules ---------- */
+const BACKOFF_ACC = 0.5;        // two sessions in a row below this on one skill: go back to its weakest prerequisite
+const GATE_SILVER = 0.8;        // Year 4 content opens when this share of the Year 3 skills is at least silver (and none is wobbly)
+function struggling(state, id){
+  const log = state.sessionLog.filter(function(l){ return l.skill === id && ['guided', 'practice', 'challenge'].indexOf(l.kind) > -1; });
+  return log.length >= 2 && log.slice(-2).every(function(l){ return l.credit < BACKOFF_ACC; });
+}
+function weakestPrereq(state, sk){
+  const c = (sk.prereq || []).map(skillById).filter(function(p){ return p && isUnlocked(state, p) && medalOf(state, p.id) < 2 && !(state.skills[p.id] && state.skills[p.id].goldFrom); });
+  c.sort(function(a, b){ return (medalOf(state, a.id) - medalOf(state, b.id)) || (a.order - b.order); });
+  return c[0] || null;
+}
+function yearGateOpen(state){
+  const y3 = SKILLS.filter(function(s){ return s.year === 3; }); if(!y3.length) return true;
+  const silver = y3.filter(function(s){ return medalOf(state, s.id) >= 2; }).length;
+  return silver / y3.length >= GATE_SILVER && !y3.some(function(s){ return state.skills[s.id] && state.skills[s.id].wobbly; });
+}
+/* the ordered list of skills to work on (best first); the first entry already includes the "go back to a prerequisite" rule */
+function rankOpen(state){
+  let open = openSkills(state); if(!open.length) return [];
+  if(!yearGateOpen(state)){ const y3 = open.filter(function(s){ return s.year < 4; }); if(y3.length) open = y3; }   // depth before Year 4
+  if(state.focus){ const f = open.filter(function(s){ return s.strand === state.focus; }); if(f.length) open = f; }
+  const cmp = function(a, b){ return (SCHOOL_SEQ[a.id] - SCHOOL_SEQ[b.id]) || (medalOf(state, a.id) - medalOf(state, b.id)) || (a.order - b.order); };
+  const main = open.filter(function(s){ return SCHOOL_SEQ[s.id] !== null; }).sort(cmp);
+  const stream = open.filter(function(s){ return SCHOOL_SEQ[s.id] === null; }).sort(function(a, b){ return (medalOf(state, a.id) - medalOf(state, b.id)) || (a.order - b.order); });
+  let ranked = main.concat(stream);
+  if(main[0] && stream[0]){
+    const log = state.sessionLog.filter(function(l){ return ['guided', 'practice', 'challenge', 'testout'].indexOf(l.kind) > -1; }); let since = 0;
+    for(let i = log.length - 1; i >= 0; i--){ const sk = skillById(log[i].skill); if(sk && SCHOOL_SEQ[sk.id] === null) break; since++; }
+    if(since >= STREAM_EVERY) ranked = stream.concat(main);
+  }
+  const first = ranked[0], pre = struggling(state, first.id) ? weakestPrereq(state, first) : null;
+  if(pre){ ranked = [pre].concat(ranked.filter(function(s){ return s.id !== pre.id; })); ranked.backoffFrom = first.id; }
+  return ranked;
+}
 function recommend(state){
-  // prefer the strand she is weakest in (lowest progress) among strands that have an unlocked, unfinished skill; honour her chosen focus
-  const cand = [];
-  strandsWithSkills().forEach(function(str){
-    const list = skillsOfStrand(str.id);
-    const open = list.filter(function(s){ return isUnlocked(state, s) && medalOf(state, s.id) < 3; });
-    if(open.length){
-      // earliest by order with the lowest medal
-      open.sort(function(a, b){ return (medalOf(state, a.id) - medalOf(state, b.id)) || (a.order - b.order); });
-      cand.push({ strand: str.id, skill: open[0], progress: strandProgress(state, str.id) });
-    }
-  });
-  if(!cand.length) return null;
-  if(state.focus){ const f = cand.filter(function(c){ return c.strand === state.focus; })[0]; if(f) return { skill: f.skill, step: nextStepFor(state, f.skill) }; }
-  // weakest strand, but prefer one she has not touched today
-  const today = todayStr();
-  cand.sort(function(a, b){
-    const ta = state.sessionLog.some(function(l){ return l.date === today && l.strand === a.strand; }) ? 1 : 0;
-    const tb = state.sessionLog.some(function(l){ return l.date === today && l.strand === b.strand; }) ? 1 : 0;
-    return (ta - tb) || (a.progress - b.progress);
-  });
-  return { skill: cand[0].skill, step: nextStepFor(state, cand[0].skill) };
+  const r = rankOpen(state); if(!r.length) return null;
+  const out = { skill: r[0], step: nextStepFor(state, r[0]) };
+  if(r.backoffFrom) out.backoffFrom = r.backoffFrom;
+  return out;
 }
 
+/* ---------- the 25-minute mission (retrieval -> goal -> explanation -> practice -> reasoning -> feedback) ----------
+   The next stage is always decided from the CURRENT state, so a failed quick check or a lesson changes what comes next.
+   m = { elapsed: seconds so far, budget: seconds, done: [{kind, skillId, acc}] } */
+const MISSION_SECONDS = 25 * 60, MISSION_MAX_STAGES = 9;
+function nextMissionStage(state, m){
+  const budget = m.budget || MISSION_SECONDS, done = m.done || [];
+  if(done.length >= MISSION_MAX_STAGES) return null;
+  const warmed = done.some(function(d){ return d.kind === 'review'; });
+  if(!warmed && dueSkills(state).length) return { kind: 'review', skillId: null, label: 'Warm-up: remember' };
+  const blockDone = done.filter(function(d){ return d.kind !== 'review'; });
+  if(blockDone.length && m.elapsed >= budget) return null;
+  if(!blockDone.length && m.elapsed >= budget * 2) return null;
+  const last = blockDone[blockDone.length - 1];
+  if(last){
+    const sk = skillById(last.skillId);
+    if(last.kind === 'learn') { const st = nextStepFor(state, sk); if(st !== 'learn') return { kind: st, skillId: sk.id, label: STEP_NAME[st] }; }
+    if(last.kind === 'testout' && last.acc < 0.99){ const st = nextStepFor(state, sk); if(st !== 'testout') return { kind: st === 'learn' ? 'learn' : st, skillId: sk.id, label: STEP_NAME[st] }; }
+    if(['practice', 'challenge'].indexOf(last.kind) > -1 && last.acc >= 0.6 && !done.some(function(d){ return d.kind === 'think' && d.skillId === sk.id; })) return { kind: 'think', skillId: sk.id, label: 'Think hard' };
+  }
+  /* a new block: the best skill not worked on yet in this mission */
+  const used = {}; done.forEach(function(d){ if(d.skillId) used[d.skillId] = 1; });
+  const ranked = rankOpen(state).filter(function(s){ return !used[s.id]; });
+  for(let i = 0; i < ranked.length; i++){
+    const st = nextStepFor(state, ranked[i]);
+    if(st === 'review') continue;
+    return { kind: st, skillId: ranked[i].id, label: STEP_NAME[st] };
+  }
+  return null;
+}
+const STEP_NAME = { learn: 'Learn it', guided: 'Guided', practice: 'Practice', challenge: 'Challenge', testout: 'Quick check', think: 'Think hard', review: 'Review' };
+
 /* ---------- sessions ---------- */
-const SESSION_LEN = { guided: 4, practice: 6, challenge: 5, testout: 3 };
+const SESSION_LEN = { guided: 4, practice: 6, challenge: 5, testout: 3, think: 3 };
 function buildItems(state, kind, skillId){
   const items = [];
   if(kind === 'review'){
-    dueSkills(state).slice(0, 4).forEach(function(s){ const m = medalOf(state, s.id); items.push({ skillId: s.id, tier: m >= 3 ? 3 : 2 }); });
+    const today = todayStr();
+    dueSkills(state).slice(0, 3).forEach(function(s){ const m = medalOf(state, s.id), gf = state.skills[s.id].goldFrom;
+      if(gf && gf < today && m === 2){ for(let i = 0; i < 3; i++) items.push({ skillId: s.id, tier: 3 }); }   // the gold review: 3 questions at challenge level
+      else for(let i = 0; i < 2; i++) items.push({ skillId: s.id, tier: m >= 3 ? 3 : 2 }); });   // 2 questions per skill: one answer is too little evidence to move a review box
     return items;
   }
-  const tier = { guided: 1, practice: 2, challenge: 3, testout: 2 }[kind];
+  const tier = { guided: 1, practice: 2, challenge: 3, testout: 2, think: 3 }[kind];
   for(let i = 0; i < SESSION_LEN[kind]; i++) items.push({ skillId: skillId, tier: tier });
   return items;
 }
@@ -204,19 +358,22 @@ function applySkillResult(state, skillId, kind, credits, today){
   today = today || todayStr();
   const st = skillState(state, skillId);
   const n = credits.length; const sum = credits.reduce(function(a, b){ return a + b; }, 0); const acc = n ? Math.round(sum / n * 1e6) / 1e6 : 0;
-  const before = { medal: st.medal, box: st.box, wobbly: st.wobbly };
+  st.likely = false;
+  const before = { medal: st.medal, box: st.box, wobbly: st.wobbly, goldFrom: st.goldFrom || null };
   st.seen += n; st.correct += credits.filter(function(c){ return c > 0; }).length; st.credit += sum; st.last = today;
   const bump = function(){ st.box = Math.min(6, st.box + 1); };
   if(kind === 'guided'){ if(acc >= 0.7){ st.medal = Math.max(st.medal, 1); st.box = Math.max(st.box, 1); } }
   else if(kind === 'practice'){ if(acc >= 0.8 && st.medal >= 1){ st.medal = Math.max(st.medal, 2); bump(); } else if(acc >= 0.7 && st.medal === 0){ st.medal = 1; st.box = Math.max(st.box, 1); } }
-  else if(kind === 'challenge'){ if(acc >= 0.8 && st.medal >= 2){ st.medal = 3; bump(); } else if(acc >= 0.8 && st.medal === 1){ st.medal = 2; bump(); } }
-  else if(kind === 'testout'){ if(acc >= 0.99){ st.medal = Math.max(st.medal, 1); st.box = Math.max(st.box, 1); st.placed = true; } }
-  else if(kind === 'review'){ if(acc >= 0.8){ bump(); st.wobbly = false; } else if(acc < 0.5){ st.box = Math.max(0, st.box - 1); st.wobbly = true; } }
+  else if(kind === 'challenge'){ if(acc >= 0.8 && st.medal >= 3) bump(); else if(acc >= 0.8 && st.medal === 2){ st.goldFrom = st.goldFrom || today; bump(); } else if(acc >= 0.8 && st.medal === 1){ st.medal = 2; bump(); } }   // gold is NOT awarded here: it needs a review passed on a later day
+  else if(kind === 'testout'){ st.triedOut = true; if(acc >= 0.99){ st.medal = Math.max(st.medal, 1); st.box = Math.max(st.box, 1); st.placed = true; } }
+  else if(kind === 'review'){ if(acc >= 0.8){ bump(); st.wobbly = false; if(st.goldFrom && st.medal === 2 && st.goldFrom < today){ st.medal = 3; st.goldFrom = null; } } else if(acc < 0.5){ st.box = Math.max(0, st.box - 1); st.wobbly = true; } }
   if(kind !== 'review' && acc >= 0.8) st.wobbly = false;
-  if(kind !== 'review' && acc < 0.5 && st.medal >= 1) st.wobbly = true;
+  if(kind !== 'review' && kind !== 'think' && acc < 0.5 && st.medal >= 1) st.wobbly = true;   // a hard 'think' block never makes a skill wobbly
   // schedule next review
   if(st.medal >= 1) st.due = addDays(today, REVIEW_DAYS[Math.min(st.box, REVIEW_DAYS.length - 1)] || 1);
-  return { before: before, after: { medal: st.medal, box: st.box, wobbly: st.wobbly }, medalUp: st.medal > before.medal, wobblyCleared: before.wobbly && !st.wobbly, acc: acc };
+  if(st.goldFrom && st.medal === 2) st.due = addDays(today, 1);
+  if(st.medal >= 3) st.goldFrom = null;
+  return { before: before, after: { medal: st.medal, box: st.box, wobbly: st.wobbly }, medalUp: st.medal > before.medal, goldPending: !!st.goldFrom && !before.goldFrom, wobblyCleared: before.wobbly && !st.wobbly, acc: acc };
 }
 function recordError(state, skillId, why, today){
   if(!why) return;
@@ -263,7 +420,7 @@ function placementRecord(state, skillId, credit){
   if(credit >= 1){ const st = skillState(state, skillId); st.medal = Math.max(st.medal, 1); st.box = Math.max(st.box, 1); st.placed = true; st.due = addDays(todayStr(), 1); P.misses = 0; }
   else { P.misses++; }
 }
-function placementDone(state){ return placementNextItem(state) === null; }
+function placementDone(state){ if(state.diag) return state.diag.done ? true : diagNextItem(state) === null; return placementNextItem(state) === null; }
 function placementSummary(state){
   const known = [], learn = [];
   strandsWithSkills().forEach(function(str){
@@ -273,6 +430,67 @@ function placementSummary(state){
     });
   });
   return { known: known, learn: learn };
+}
+
+/* ---------- adaptive diagnostic (Year 2 -> Year 3): short blocks, floor and ceiling by binary search per strand ----------
+   A block = 2 questions at tier 2 (a 3rd only if they split). Pass = 2 right (independent, no hints in a diagnostic). One question never earns bronze.
+   Per strand the skills are in teaching order; we search for the highest skill she passes. Untested skills below it are marked "likely" (no medal: a quick check is offered). */
+function diagBlocksFor(n){ return Math.min(4, Math.ceil(Math.log(n + 1) / Math.LN2)); }
+function diagStart(state){
+  const prev = state.diag && state.diag.runs ? state.diag.runs : 0;
+  state.diag = { v: 1, runs: prev + 1, startedOn: todayStr(), doneOn: null, done: false, cur: null, strands: {}, results: {} };
+  state.placement.started = true; state.placement.done = false;
+  return state.diag;
+}
+function diagActive(state){ return !!(state.diag && !state.diag.done); }
+function diagStrand(state, id){
+  const D = state.diag, n = skillsOfStrand(id).length;
+  if(!D.strands[id]) D.strands[id] = { lowPass: -1, highFail: n, blocks: 0, done: false };
+  return D.strands[id];
+}
+function diagStrandCheck(state, id){      // close the strand when the boundary is pinned down or its budget is spent
+  const st = diagStrand(state, id), list = skillsOfStrand(id);
+  if(st.highFail - st.lowPass <= 1 || st.blocks >= diagBlocksFor(list.length)){
+    st.done = true;
+    for(let i = 0; i <= st.lowPass - 1; i++){ const sk = list[i]; if(state.diag.results[sk.id]) continue; state.diag.results[sk.id] = { n: 0, ok: 0, pass: false, likely: true };
+      const ss = skillState(state, sk.id); if(ss.medal === 0 && !ss.lessonDone) ss.likely = true; }
+  }
+  return st.done;
+}
+function diagNextItem(state){
+  const D = state.diag; if(!D || D.done) return null;
+  if(D.cur){ const sk = SKILLS.filter(function(x){ return x.id === D.cur.skillId; })[0]; if(sk) return { strand: sk.strand, skill: sk }; D.cur = null; }
+  const order = placementOrder();
+  for(let i = 0; i < order.length; i++){
+    const id = order[i], list = skillsOfStrand(id), st = diagStrand(state, id);
+    if(st.done || diagStrandCheck(state, id)) continue;
+    const idx = Math.floor((st.lowPass + st.highFail) / 2);
+    D.cur = { skillId: list[idx].id, idx: idx, asked: 0, right: 0 };
+    return { strand: id, skill: list[idx] };
+  }
+  D.done = true; D.doneOn = todayStr(); state.placement.done = true;
+  return null;
+}
+/* Record one diagnostic answer. Returns {blockDone, pass} (pass only when blockDone). */
+function diagRecord(state, skillId, correct, today){
+  today = today || todayStr(); const D = state.diag, c = D && D.cur;
+  if(!c || c.skillId !== skillId) return { blockDone: false };
+  c.asked++; if(correct) c.right++;
+  let pass = null;
+  if(c.asked >= 2){ if(c.right === c.asked) pass = true; else if(c.right === 0) pass = false; else if(c.asked >= 3) pass = c.right >= 2; }
+  if(pass === null) return { blockDone: false };
+  const sk = SKILLS.filter(function(x){ return x.id === skillId; })[0], st = diagStrand(state, sk.strand);
+  D.results[skillId] = { n: c.asked, ok: c.right, pass: pass }; st.blocks++;
+  if(pass){ st.lowPass = Math.max(st.lowPass, c.idx);
+    const ss = skillState(state, skillId); ss.medal = Math.max(ss.medal, 1); ss.box = Math.max(ss.box, 1); ss.placed = true; ss.likely = false; if(!ss.due) ss.due = addDays(today, 1); }
+  else st.highFail = Math.min(st.highFail, c.idx);
+  D.cur = null; diagStrandCheck(state, sk.strand);
+  return { blockDone: true, pass: pass };
+}
+function diagSummary(state){
+  const D = state.diag || { results: {} }; let known = 0, likely = 0, learn = 0, tested = 0;
+  SKILLS.forEach(function(s){ const r = D.results[s.id]; if(!r) return; if(r.likely) likely++; else { tested++; if(r.pass) known++; else learn++; } });
+  return { known: known, likely: likely, learn: learn, tested: tested };
 }
 
 /* ---------- stickers (endless: creature × accessory × background × rarity) ---------- */
@@ -341,4 +559,4 @@ function checkBadges(state){
   return fresh;
 }
 
-if(typeof module !== 'undefined') module.exports = { PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
+if(typeof module !== 'undefined') module.exports = { parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };

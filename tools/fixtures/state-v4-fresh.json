@@ -1,0 +1,86 @@
+{
+ "v": 4,
+ "name": "Melissa",
+ "onboardingDone": true,
+ "theme": "ocean",
+ "prefs": {
+  "likes": [],
+  "dislikes": [],
+  "voice": false,
+  "sound": true
+ },
+ "placement": {
+  "done": false,
+  "started": false,
+  "strandIdx": 0,
+  "asked": 0,
+  "misses": 0,
+  "queue": [],
+  "results": {}
+ },
+ "skills": {},
+ "errors": {},
+ "totalStars": 0,
+ "starBalance": 0,
+ "xp": 0,
+ "level": 1,
+ "stickers": [],
+ "packs": 0,
+ "tricks": [],
+ "badges": [],
+ "claims": [],
+ "rewards": [
+  {
+   "id": "snack",
+   "emoji": "🥨",
+   "title": "A healthy snack you choose",
+   "cost": 30
+  },
+  {
+   "id": "icecream",
+   "emoji": "🍦",
+   "title": "An ice cream cone — you pick the flavour",
+   "cost": 60
+  },
+  {
+   "id": "tv",
+   "emoji": "📺",
+   "title": "You choose the TV show at dinner",
+   "cost": 80
+  },
+  {
+   "id": "popcorn",
+   "emoji": "🍿",
+   "title": "Popcorn night",
+   "cost": 110
+  },
+  {
+   "id": "movie",
+   "emoji": "🎬",
+   "title": "You choose the weekend movie",
+   "cost": 150
+  }
+ ],
+ "goalReward": null,
+ "timer": {
+  "mode": "free",
+  "minutes": 20,
+  "debtSeconds": 0
+ },
+ "streak": {
+  "count": 0,
+  "lastPlayDate": null
+ },
+ "sessionLog": [],
+ "daily": {
+  "date": null,
+  "warmup": false,
+  "learn": false,
+  "boss": false,
+  "claimed": false,
+  "rounds": 0
+ },
+ "focus": null,
+ "legacy": null,
+ "friend": "ginger"
+}
