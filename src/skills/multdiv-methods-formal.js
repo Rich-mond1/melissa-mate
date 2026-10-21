@@ -177,7 +177,7 @@
   function qTwoStep(){
     const c = pick2(false, 7, true), th = pick(THINGS), who = pick(NAMES), k = randInt(2, 9), plus = chance(0.5);
     return numeric({
-      prompt: who + ' has ' + c.b + ' ' + th[0] + ' with ' + c.a + ' ' + th[1] + ' in each. ' + (plus ? k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?' : k + ' ' + th[1] + ' are used. How many ' + th[1] + ' are left?'), answer: c.a * c.b + (plus ? k : -k),
+      prompt: who + ' has ' + c.b + ' ' + th[0] + ' with ' + c.a + ' ' + th[1] + ' in each. ' + (plus ? (k === 1 ? '1 more ' + singular(th[1]) + ' arrives.' : k + ' more ' + th[1] + ' arrive.') + ' How many ' + th[1] + ' now?' : nnoun(k, th[1]) + ' ' + isAre(k) + ' used. How many ' + th[1] + ' are left?'), answer: c.a * c.b + (plus ? k : -k),
       hint: 'Two steps. First ' + c.a + ' × ' + c.b + ' in a column. Then ' + (plus ? 'add ' : 'take away ') + k + '.',
       explain: ex('Two steps', ['Step 1: ' + c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b> (ones ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + ', carry ' + c.m.c1 + ').', 'Step 2: ' + c.a * c.b + (plus ? ' + ' : ' − ') + k + ' = <b>' + (c.a * c.b + (plus ? k : -k)) + '</b>. ✅']),
       truth: c.a * c.b + (plus ? k : -k), wrong: function(v){ return v === c.a * c.b ? c.a * c.b + ' is only step 1. Now ' + (plus ? 'add ' : 'take away ') + k + '.' : ''; }

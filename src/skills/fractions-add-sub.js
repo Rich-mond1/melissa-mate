@@ -199,7 +199,7 @@
     return numeric({
       prompt: nm[0] + ' eats ' + F(a, d) + ' of a ' + food + ' and ' + nm[1] + ' eats ' + F(b, d) + '. How many ' + DN[d] + ' are LEFT?', answer: left,
       hint: 'Step 1: add what they ate. Step 2: take it away from the whole (' + d + '/' + d + ').',
-      explain: ex('Two steps', ['They ate ' + a + '/' + d + ' + ' + b + '/' + d + ' = <b>' + (a + b) + '/' + d + '</b>.', 'The whole ' + food + ' is ' + d + '/' + d + ', so ' + d + ' − ' + (a + b) + ' = <b>' + left + '</b>.', left + ' ' + DN[d] + ' are left. ✅']),
+      explain: ex('Two steps', ['They ate ' + a + '/' + d + ' + ' + b + '/' + d + ' = <b>' + (a + b) + '/' + d + '</b>.', 'The whole ' + food + ' is ' + d + '/' + d + ', so ' + d + ' − ' + (a + b) + ' = <b>' + left + '</b>.', nnoun(left, DN[d]) + ' ' + isAre(left) + ' left. ✅']),
       truth: d - (a + b),
       wrong: function(v){ return v === a + b ? 'That is how many they ATE. We want how many are left.' : ''; }
     });

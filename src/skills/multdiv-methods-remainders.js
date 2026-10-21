@@ -37,7 +37,7 @@
       wrong: [{ v: m.d, why: m.d + ' is how many fit in a full group. The left over ones are fewer than that.' }, { v: m.q, why: m.q + ' is the number of full groups, not the number left over.' }, { v: m.d - m.r, why: 'That is how many MORE you would need to fill another group. The question asks how many are left over.' }, { v: m.r + 1, why: 'Count again: ' + m.n + ' − ' + m.d * m.q + ' = ' + m.r + '.' }],
       nearby: [1, -1, 2], valid: pos, count: 3,
       hint: 'Count how many ' + it[0] + ' are in the full groups. Take that away from ' + m.n + '.',
-      explain: ex('Left over', ['The picture has ' + m.q + ' full groups of ' + m.d + ': ' + countIn(m.d, m.q) + ' ' + it[0] + '.', m.n + ' − ' + m.d * m.q + ' = <b>' + m.r + '</b>.', m.r + ' ' + it[0] + ' are left over. ✅']),
+      explain: ex('Left over', ['The picture has ' + m.q + ' full groups of ' + m.d + ': ' + countIn(m.d, m.q) + ' ' + it[0] + '.', m.n + ' − ' + m.d * m.q + ' = <b>' + m.r + '</b>.', nnoun(m.r, it[0]) + ' ' + isAre(m.r) + ' left over. ✅']),
       truth: m.n - V.decodeGroups(vis).total, decode: function(){ return m.n - V.decodeGroups(vis).total; }
     });
   }
@@ -46,7 +46,7 @@
     return mcq2({
       prompt: m.n + ' ' + it[0] + ' go into ' + it[1] + ' of ' + m.d + '. Will there be some left over?', correct: opt(K.bool(!exact), exact ? 'No, none left over' : 'Yes, some left over'), other: opt(K.bool(exact), exact ? 'Yes, some left over' : 'No, none left over', exact ? m.d + ' × ' + m.q + ' = ' + m.n + ' exactly, so nothing is left.' : 'Count in ' + m.d + 's: ' + countIn(m.d, m.q) + '. It skips over ' + m.n + ', so some are left over.'),
       hint: 'Count in ' + m.d + 's. Do you land exactly on ' + m.n + '?',
-      explain: ex('Exact or not?', ['Count in ' + m.d + 's: ' + countIn(m.d, m.q) + (exact ? '.' : ', then the next is ' + m.d * (m.q + 1) + '.'), exact ? 'We land exactly on <b>' + m.n + '</b>, so nothing is left over.' : 'We never land on ' + m.n + ', so <b>' + m.r + '</b> are left over.', exact ? m.n + ' ÷ ' + m.d + ' = ' + m.q + '. ✅' : m.n + ' ÷ ' + m.d + ' = ' + m.q + ' remainder ' + m.r + '. ✅']),
+      explain: ex('Exact or not?', ['Count in ' + m.d + 's: ' + countIn(m.d, m.q) + (exact ? '.' : ', then the next is ' + m.d * (m.q + 1) + '.'), exact ? 'We land exactly on <b>' + m.n + '</b>, so nothing is left over.' : 'We never land on ' + m.n + ', so <b>' + m.r + '</b> ' + isAre(m.r) + ' left over.', exact ? m.n + ' ÷ ' + m.d + ' = ' + m.q + '. ✅' : m.n + ' ÷ ' + m.d + ' = ' + m.q + ' remainder ' + m.r + '. ✅']),
       truth: K.bool(divmod(m.n, m.d).r !== 0)
     });
   }
@@ -125,7 +125,7 @@
       hint: 'First find how many full ones. Then think about the ones left over: they still need somewhere to go!',
       explain: ex('Do not forget the left over ones', ['Full ' + it[1] + ': ' + countIn(m.d, m.q) + ' → <b>' + m.q + '</b> full, with <b>' + m.r + '</b> left over.', 'The ' + m.r + ' left over still need a home, so we need <b>one more</b>.', m.q + ' + 1 = <b>' + (m.q + 1) + '</b> ' + it[1] + '. ✅']),
       truth: divmod(m.n, m.d).q + (divmod(m.n, m.d).r > 0 ? 1 : 0),
-      wrong: function(v){ return v === m.q ? m.q + ' leaves ' + m.r + ' ' + it[0] + ' with nowhere to go. Do they need another one?' : ''; }
+      wrong: function(v){ return v === m.q ? m.q + ' leaves ' + nnoun(m.r, it[0]) + ' with nowhere to go. Do they need another one?' : ''; }
     });
   }
   function qClaim(){

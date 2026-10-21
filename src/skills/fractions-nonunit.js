@@ -90,7 +90,7 @@
       hint: 'Count the WHITE ' + unit + ' for the top number. The bottom number is still ALL the ' + unit + '.',
       explain: ex('The white part', [
         'There are <b>' + d + '</b> ' + unit + ' altogether, so the bottom number is ' + d + '.',
-        '<b>' + n + '</b> are coloured, so ' + d + ' − ' + n + ' = <b>' + w + '</b> are NOT coloured.',
+        '<b>' + n + '</b> ' + isAre(n) + ' coloured, so ' + d + ' − ' + n + ' = <b>' + w + '</b> ' + isAre(w) + ' NOT coloured.',
         'The white part is <b>' + w + '/' + d + '</b>. ✅'
       ]),
       truth: fK(d * d - n * d, d * d),

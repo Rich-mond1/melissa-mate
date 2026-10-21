@@ -44,7 +44,7 @@
       prompt: 'Which number does the arrow point to?', visual: vis, answer: n,
       wrong: [{ v: n + 100, why: 'Count the small steps from ' + base + ': each one is 100.' }, { v: n - 100, why: 'Count the small steps from ' + base + ': each one is 100.' }, { v: base + (n - base) / 10, why: 'Each small step is 100, not 10.' }, { v: base + 1000 - (n - base), why: 'Count from the LEFT end (' + base + ').' }],
       nearby: [100, -100, 200], valid: function(v){ return v >= base && v <= base + 1000; }, count: 4, hint: 'The line starts at ' + base + ' and goes up in steps of 100.',
-      explain: ex('Reading the line', ['The left end is ' + base + ' and each small step is 100.', 'The arrow is ' + (n - base) / 100 + ' steps along.', base + ' + ' + (n - base) + ' = <b>' + n + '</b>. ✅']),
+      explain: ex('Reading the line', ['The left end is ' + base + ' and each small step is 100.', 'The arrow is ' + nnoun((n - base) / 100, 'steps') + ' along.', base + ' + ' + (n - base) + ' = <b>' + n + '</b>. ✅']),
       truth: n, decode: function(){ return Math.round(V.decodeNumberLine(vis)); }
     });
   }

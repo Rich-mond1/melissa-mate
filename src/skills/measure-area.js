@@ -86,7 +86,7 @@
       prompt: 'Each square is 1 square unit. What is the area of this shape?', visual: vis, answer: L.cells.length,
       wrong: [{ v: L.R * L.C, why: 'That counts the missing corner too. Only count the squares that are drawn.' }, { v: L.cells.length + L.cr * L.cc, why: 'You counted the missing corner as well.' }, { v: 2 * (L.R + L.C), why: 'That is not the area: count the squares inside the shape.' }],
       nearby: [1, -1, 2, -2], valid: function(v){ return v > 0; }, count: 4, hint: 'Count the squares row by row, or work out the big rectangle and take away the missing corner.',
-      explain: ex('Area of an L-shape', ['The big rectangle would be ' + L.R + ' × ' + L.C + ' = ' + L.R * L.C + ' squares.', 'The missing corner is ' + L.cr + ' × ' + L.cc + ' = ' + L.cr * L.cc + ' squares.', L.R * L.C + ' − ' + L.cr * L.cc + ' = <b>' + L.cells.length + '</b>. ✅']),
+      explain: ex('Area of an L-shape', ['The big rectangle would be ' + L.R + ' × ' + L.C + ' = ' + L.R * L.C + ' squares.', 'The missing corner is ' + L.cr + ' × ' + L.cc + ' = ' + nnoun(L.cr * L.cc, 'squares') + '.', L.R * L.C + ' − ' + L.cr * L.cc + ' = <b>' + L.cells.length + '</b>. ✅']),
       truth: L.R * L.C - L.cr * L.cc, decode: function(){ return sqDecode(vis).count; }
     });
   }

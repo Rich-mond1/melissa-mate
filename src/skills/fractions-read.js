@@ -98,7 +98,7 @@
           prompt: 'Which picture shows ' + n + '/' + d + '?', visual: '',
           correct: opt(fKey(n, d), V.fractionBar(n, d)), distractors: ds, count: 3,
           hint: 'The bottom number is how many equal parts the bar has. The top number is how many are coloured.',
-          explain: ex('Finding ' + n + '/' + d, ['<b>' + d + '</b> on the bottom means the bar has ' + d + ' equal parts.', '<b>' + n + '</b> on the top means ' + n + ' of them are coloured.', 'Only one bar has ' + d + ' parts with ' + n + ' coloured: that is <b>' + n + '/' + d + '</b>. ✅']),
+          explain: ex('Finding ' + n + '/' + d, ['<b>' + d + '</b> on the bottom means the bar has ' + d + ' equal parts.', '<b>' + n + '</b> on the top means ' + n + ' of them ' + isAre(n) + ' coloured.', 'Only one bar has ' + d + ' parts with ' + n + ' coloured: that is <b>' + n + '/' + d + '</b>. ✅']),
           truth: fKey(n, d)
         });
         q.optionsAreVisual = true;
