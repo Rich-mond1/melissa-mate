@@ -14,3 +14,9 @@ Automated tests cannot prove the iPad works (WebKit/iPad is not covered unless `
 10. **Today's mission** (hub): play it through; the stage screens, the lesson inside it and the end screen all respond to taps.
 11. **Me**: change hair, top and hat; try on something you cannot afford (it only previews, nothing is charged); buy something with ⭐ and see the balance drop. Close and reopen: the outfit is still worn.
 12. **Friends**: open a sticker pack; a new friend appears the first time. The Friends screen shows the pictures sharply (not blurry) and the hidden ones as ???.
+13. **Home screen**: her avatar and her mascot are at the top, and the row of lands shows both standing on today's land. Tap the avatar: Me opens. Tap the mascot: it changes to another one she owns.
+14. **Me → Pets / Pet hats / Pet style**: buy a new animal (it becomes her friend), put a hat and a bow tie on it; the clothes sit on the head and neck, not floating. The duck explains why it has no hat tab.
+15. **Me → Scenes / Wings / Props**: the picture scenes (castle, beach, space…) load behind her without delay; wings sit behind her and the wand/balloon in her hand.
+16. **Surprise box (🎁)** gives an item that is not a locked legendary. A legendary item shows 🏆 and how many gold medals it needs; there is no buy button for it.
+17. **Grown-ups → Estrellas y premios → Precio del vestuario (×1/×2/×3/×5)**: change it and check the prices in Me. Already bought items stay hers.
+18. **Quest that was half-done** (Melissa's case): open the app; the quest continues with adaptive questions, the lands she finished are marked, and her stars did not change.

@@ -20,7 +20,11 @@ function applyTheme(){
   r.setProperty('--bg1', t.c1); r.setProperty('--bg2', t.c2);
 }
 function mascot(){ return friendImg(); }
-function friendImg(){ const k = PETS[S.friend] ? S.friend : 'ginger'; return '<img class="pet" alt="' + esc(PET_NAMES[k]) + '" src="' + PETS[k][0] + '">'; }
+function mascotSrc(k){ return PETS[k] ? PETS[k][0] : (MASCOT_IMG[k] || PETS.ginger[0]); }
+/* a mascot picture with the clothes it wears drawn on top (see PET_ANCH in avatar.js) */
+function petPic(k, wears){ if(!PET_ANCH[k]) k = 'ginger'; return '<span class="pw"><img class="pet" alt="' + esc(PET_NAMES[k]) + '" src="' + mascotSrc(k) + '"><svg class="pacc" viewBox="-6 -12 112 112" aria-hidden="true">' + petAccSVG(k, wears) + '</svg></span>'; }
+function friendImg(){ const k = MASCOT_IDS.indexOf(S.friend) > -1 ? S.friend : 'ginger'; return petPic(k, petWears(S, k)); }
+function ownedMascots(){ return MASCOT_IDS.filter(function(k){ return avOwns(S, 'pet', k); }); }
 function speak(html, manual){
   if(!manual || !window.speechSynthesis) return;   // voice only when the child taps 🔊 (auto-speech can hang iOS Safari)
   try { if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(stripTags(html).replace(/\s+/g, ' ')); u.lang = 'en-GB'; u.rate = 0.92; speechSynthesis.speak(u); } catch(e){}
@@ -40,7 +44,7 @@ function confetti(n){
   }
 }
 let LAST_GO = 0;
-function go(name, p){ LAST_GO = Date.now(); if(typeof ME !== 'undefined' && name !== 'me') ME.prev = null; if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
+function go(name, p){ LAST_GO = Date.now(); if(typeof ME !== 'undefined' && name !== 'me'){ ME.prev = null; ME.won = null; } if(name.indexOf(':') > -1){ const a = name.split(':'); name = a[0]; p = { id: a[1] }; } stopSpeak(); scr = { name: name, p: p || {} }; render(); }
 let LAST_Q = null;   // re-drawing the SAME question (pick / hint / I-find-this-tricky) must not jump back to the top
 function R(html){ const a = $app(); const keep = scr.name === 'question' && typeof SESS !== 'undefined' && SESS && SESS.q && SESS.q === LAST_Q; const st = a.scrollTop;
   a.innerHTML = '<div class="wrap">' + html + '</div>'; a.scrollTop = keep ? st : 0; LAST_Q = (scr.name === 'question' && SESS) ? SESS.q : null; }
@@ -75,13 +79,13 @@ SCREENS.welcome = function(){
     '<div class="gap2"></div><div class="card"><h3>1. Pick your world</h3><div class="chips">' +
     Object.keys(THEMES).map(function(k){ return '<button class="chip' + (S.theme === k ? ' picked' : '') + '" data-act="theme" data-v="' + k + '">' + THEMES[k].emoji + ' ' + THEMES[k].label + '</button>'; }).join('') + '</div>' +
     '<h3>2. I like…</h3><div class="chips">' + LIKES.map(function(l){ return '<button class="chip' + (S.prefs.likes.indexOf(l.id) > -1 ? ' picked' : '') + '" data-act="pref" data-k="likes" data-v="' + l.id + '">' + l.emoji + ' ' + l.label + '</button>'; }).join('') + '</div>' +
-    '<h3>3. My maths friend</h3><div class="chips">' + PET_IDS.map(function(k){ return '<button class="chip' + (S.friend === k ? ' picked' : '') + '" data-act="friend" data-v="' + k + '">' + PET_NAMES[k] + '</button>'; }).join('') + '</div>' +
+    '<h3>3. My maths friend</h3><div class="chips">' + ownedMascots().map(function(k){ return '<button class="chip' + (S.friend === k ? ' picked' : '') + '" data-act="friend" data-v="' + k + '">' + PET_NAMES[k] + '</button>'; }).join('') + '</div>' +
     '<h3>4. I find these tricky</h3><div class="chips">' + DISLIKES.map(function(l){ return '<button class="chip' + (S.prefs.dislikes.indexOf(l.id) > -1 ? ' picked' : '') + '" data-act="pref" data-k="dislikes" data-v="' + l.id + '">' + l.emoji + ' ' + l.label + '</button>'; }).join('') + '</div>' +
     '<p class="muted">Nothing here is a test. It just helps your maths friend plan fun things for you.</p></div>' +
     '<div class="gap"></div><button class="btn block" data-act="startPlacement">Let’s go! 🚀</button>');
 };
-ACT.friend = function(d){ if(PETS[d.v]) S.friend = d.v; save(); render(); };
-ACT.cycleFriend = function(){ const i = PET_IDS.indexOf(S.friend); S.friend = PET_IDS[(i + 1) % PET_IDS.length]; save(); render(); toast('Hi! I am ' + PET_NAMES[S.friend] + ' 💜'); };
+ACT.friend = function(d){ if(MASCOT_IDS.indexOf(d.v) > -1 && avOwns(S, 'pet', d.v)) S.friend = d.v; save(); render(); };
+ACT.cycleFriend = function(){ const l = ownedMascots(), i = l.indexOf(S.friend); S.friend = l[(i + 1) % l.length]; save(); render(); toast('Hi! I am ' + PET_NAMES[S.friend] + ' 💜'); };
 ACT.theme = function(d){ S.theme = d.v; save(); applyTheme(); render(); };
 ACT.pref = function(d){ const a = S.prefs[d.k]; const i = a.indexOf(d.v); if(i > -1) a.splice(i, 1); else a.push(d.v); save(); render(); };
 ACT.startPlacement = function(){ S.onboardingDone = true; save(); go('placementIntro'); };
@@ -95,6 +99,24 @@ SCREENS.placementIntro = function(){
     (P.started ? '<div class="gap"></div><button class="btn small block" data-act="go" data-to="hub" style="background:#ffffff40;color:#fff">Later</button>' : ''));
 };
 
+/* ---------------- adventure path: the lands, with her and her mascot standing where she is ---------------- */
+function trailHere(){
+  if(S.diag && !S.diag.done && S.diag.cur){ const sk = skillById(S.diag.cur.skillId); if(sk) return sk.strand; }
+  if(!placementDone(S)){ const t = strandsWithSkills().filter(function(s){ const d = S.diag && S.diag.strands[s.id]; return !(d && d.done); })[0]; return t ? t.id : null; }
+  const rec = recommend(S); return rec ? rec.skill.strand : null;
+}
+function trailHTML(compact){
+  const here = trailHere(), list = strandsWithSkills(), quest = !placementDone(S);
+  let h = '<div class="trail' + (compact ? ' compact' : '') + '">';
+  list.forEach(function(st, i){
+    const dq = S.diag && S.diag.strands[st.id] && S.diag.strands[st.id].done, done = strandProgress(S, st.id) >= 100 || (quest && dq), cur = st.id === here;
+    const people = cur ? '<span class="tpeople' + (i === 0 ? ' first' : (i === list.length - 1 ? ' last' : '')) + '"><span class="tav">' + avatarSVG(S.avatar, { view: 'head' }) + '</span><span class="tpet">' + friendImg() + '</span></span>' : '';
+    const inner = people + '<span aria-hidden="true">' + st.icon + '</span>';
+    h += compact || quest ? '<div class="tnode' + (done ? ' done' : '') + (cur ? ' cur' : '') + '" title="' + esc(st.name) + '">' + inner + '</div>' : '<button class="tnode' + (done ? ' done' : '') + (cur ? ' cur' : '') + '" data-act="strand" data-id="' + st.id + '" aria-label="' + esc(st.name) + '">' + inner + '</button>';
+  });
+  return h + '</div>';
+}
+
 /* ---------------- hub ---------------- */
 function liveStreak(){ return (S.streak.lastPlayDate && daysBetween(S.streak.lastPlayDate, todayStr()) <= 1) ? S.streak.count : 0; }
 function dailyDone(){ const d = S.daily; return (d.warmup ? 1 : 0) + (d.learn ? 1 : 0) + (d.boss ? 1 : 0); }
@@ -105,8 +127,8 @@ SCREENS.hub = function(){
   const rec = recommend(S), due = dueSkills(S);
   const goal = S.goalReward ? S.rewards.filter(function(r){ return r.id === S.goalReward; })[0] : null;
   const d = S.daily;
-  let h = '<div class="hero"><div class="mascot" data-act="cycleFriend">' + mascot() + '</div><div class="grow"><b style="font-size:20px">' + nick() + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
-    '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + liveStreak() + '</div></div>';
+  let h = '<div class="hero"><div class="herome" data-act="go" data-to="me" role="button" aria-label="My avatar">' + avatarSVG(S.avatar, { view: 'head' }) + '</div><div class="mascot" data-act="cycleFriend">' + mascot() + '</div><div class="grow"><b style="font-size:18px">' + nick() + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
+    '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + liveStreak() + '</div></div>' + trailHTML(false);
   if(!S.welcomeGift) h += '<div class="card quest" style="margin-top:12px"><h3>🎁 A welcome gift for you!</h3><p class="muted">' + WELCOME_STARS + ' ⭐ to spend on clothes and hats for your avatar.</p><div class="gap"></div><button class="btn good block" data-act="claimWelcome">Open my gift</button></div>';
   if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map. Every land you finish gives you +' + LAND_STARS + ' ⭐ — and you can stop any time and carry on later.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
   else {

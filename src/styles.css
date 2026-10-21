@@ -154,8 +154,10 @@ h1,h2,h3,p{margin:0;}
 
 .quest .pill{background:#F2C94C; color:#3a2a00; margin-left:6px; padding:3px 10px; font-size:14px; vertical-align:middle;}
 
-.mascot .pet{width:72px; height:72px; object-fit:contain; display:block; margin:0 auto;}
-.mascot.big .pet{width:120px; height:120px;}
+.pw{position:relative; display:block; width:80px; height:80px; margin:0 auto;}
+.pw .pet{position:absolute; left:5.4%; top:10.7%; width:89.3%; height:89.3%; object-fit:contain; display:block;}
+.pacc{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible;}
+.mascot.big .pw{width:132px; height:132px;}
 .mascot[data-act]{cursor:pointer;}
 .sticker .pet{width:88%; height:88%; object-fit:contain; pointer-events:none;}
 .sticker.big .pet{width:92%; height:92%;}
@@ -179,3 +181,19 @@ h1,h2,h3,p{margin:0;}
 .fimg{width:100%; max-width:200px; aspect-ratio:1/1; object-fit:contain; border-radius:14px; background:#fff; display:block;} .fimg.big{max-width:230px;} .fimg.huge{max-width:340px; margin:0 auto;}
 .fimg.qmark{display:flex; align-items:center; justify-content:center; font-size:64px; background:#d9d2ec; color:#8b7fb3;} .fcard.locked{opacity:.85;}
 .friendcard h3{margin-top:6px;}
+
+/* hero: her avatar + mascot, and the adventure path */
+.hero .herome{width:58px; height:62px; flex:none; border-radius:50%; overflow:hidden; box-shadow:0 0 0 3px #ffffffaa; background:#fff2; cursor:pointer;}
+.hero .mascot .pw{width:62px; height:62px;}
+.trail{position:relative; display:flex; gap:4px; align-items:flex-end; padding:50px 2px 4px; margin-top:6px; background:#ffffff1f; border-radius:var(--radius); padding-left:10px; padding-right:10px;}
+.trail::before{content:''; position:absolute; left:20px; right:20px; bottom:22px; border-top:3px dashed #ffffff77;}
+.tnode{position:relative; flex:1; min-width:0; aspect-ratio:1/1; border-radius:50%; background:#ffffff40; display:flex; align-items:center; justify-content:center; font-size:18px; border:2px solid transparent; color:#fff; font-family:inherit; padding:0; line-height:1;}
+.tnode.done{background:#4CB89A;} .tnode.cur{background:#FFD23F; border-color:#fff; transform:scale(1.14); z-index:1;}
+.tpeople{position:absolute; bottom:100%; left:50%; transform:translateX(-50%); display:flex; align-items:flex-end; gap:2px; margin-bottom:3px; pointer-events:none;}
+.tpeople.first{left:0; transform:none;} .tpeople.last{left:auto; right:0; transform:none;}
+.tav{width:38px; height:40px; border-radius:50%; overflow:hidden; box-shadow:0 0 0 2px #fff; background:#fff3; display:block;}
+.tpet{display:block; width:38px; height:38px;} .tpet .pw{width:38px; height:38px;}
+.trail.compact{padding-top:46px; margin:0 0 10px;} .trail.compact .tnode{font-size:15px;}
+.avbig.petbig{aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;} .petbig .pw{width:80%; height:80%;}
+.avitem .th .pw{width:100%; height:100%;} .avitem.legend{border-style:dashed; border-color:#E8B63A99;}
+.card.win{border:3px solid #FFD23F;}

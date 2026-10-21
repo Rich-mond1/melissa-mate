@@ -66,7 +66,7 @@ function defaultState(){
     timer: { mode: 'free', minutes: 20, debtSeconds: 0 },
     streak: { count: 0, lastPlayDate: null },
     sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 },
-    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false
+    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false, petAcc: {}, shopMult: 1
   };
 }
 /* ---------- evidence (one dated record per answered question; capped so localStorage stays small) ---------- */
@@ -143,7 +143,7 @@ function parentMetrics(state, today){
 function starEconomy(state){
   const days = {}; (state.sessionLog || []).forEach(function(l){ if(l.kind !== 'legacy') days[l.date] = 1; });
   const active = Object.keys(days).length, earned = state.totalStars || 0, balance = state.starBalance || 0, spent = Math.max(0, earned - balance);
-  let cheapest = null; Object.keys(AV_ITEMS).forEach(function(slot){ AV_ITEMS[slot].forEach(function(r){ if(r[2] > 0 && !avOwns(state, slot, r[0]) && (cheapest === null || r[2] < cheapest)) cheapest = r[2]; }); });
+  let cheapest = null; Object.keys(AV_ITEMS).forEach(function(slot){ AV_ITEMS[slot].forEach(function(r){ if(r[2] > 0 && !avOwns(state, slot, r[0]) && !avLocked(state, slot, r[0])){ const pr = avPrice(state, slot, r[0]); if(cheapest === null || pr < cheapest) cheapest = pr; } }); });
   const perDay = active ? earned / active : null;
   const wait = (cheapest === null || balance >= cheapest) ? 0 : (perDay ? Math.ceil((cheapest - balance) / perDay) : null);
   return { earned: earned, spent: spent, balance: balance, activeDays: active, perDay: perDay === null ? null : Math.round(perDay * 10) / 10, owned: (state.owned || []).length, cheapest: cheapest, daysToCheapest: wait };
@@ -181,12 +181,13 @@ function mergeState(loaded){
   m.evidence = cleanEvidence(L.evidence);
   m.placement.paid = Math.max(0, Math.min(40, Number(m.placement.paid) | 0)); m.welcomeGift = !!L.welcomeGift;
   m.owned = cleanOwned(L.owned); m.avatar = cleanAvatar(L.avatar, m.owned); m.met = cleanMet(L.met);
+  m.petAcc = cleanPetAcc(L.petAcc, m.owned); m.shopMult = SHOP_MULTS.indexOf(Number(L.shopMult)) > -1 ? Number(L.shopMult) : 1;
   m.lastBackup = (typeof L.lastBackup === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(L.lastBackup)) ? L.lastBackup : null;
   m.diag = (L.diag && typeof L.diag === 'object' && !Array.isArray(L.diag) && L.diag.strands && L.diag.results) ? L.diag : null;
   const petV = function(v){ v = Number(v) | 0; return v >= 0 && v < PET_VARIANTS ? v : 0; };
   const num = function(x, dflt){ x = Number(x); return isFinite(x) ? x : (dflt || 0); };
   const objs = function(a){ return Array.isArray(a) ? a.filter(function(x){ return x && typeof x === 'object'; }) : []; };
-  m.friend = PET_IDS.indexOf(L.friend) > -1 ? L.friend : 'ginger';
+  m.friend = (MASCOT_IDS.indexOf(L.friend) > -1 && avOwns(m, 'pet', L.friend)) ? L.friend : 'ginger';
   m.stickers = objs(L.stickers).filter(function(s){ return typeof s.base === 'string'; }).map(function(s){ return { id: (PET_IDS.indexOf(s.pet) > -1 ? 'pet:' + s.pet + ':' + petV(s.v) : String(s.id)), pet: PET_IDS.indexOf(s.pet) > -1 ? s.pet : '', v: petV(s.v), base: String(s.base), acc: String(s.acc || ''), bg: num(s.bg) | 0, rarity: RARITIES.indexOf(s.rarity) > -1 ? s.rarity : 'common', n: Math.max(1, num(s.n, 1) | 0), date: s.date ? String(s.date) : null, legacy: !!s.legacy }; });
   m.tricks = Array.isArray(L.tricks) ? L.tricks.map(String) : []; m.badges = Array.isArray(L.badges) ? L.badges.map(String) : [];
   m.claims = objs(L.claims).map(function(c){ return { id: String(c.id || ''), title: String(c.title || ''), emoji: String(c.emoji || ''), cost: num(c.cost), date: c.date ? String(c.date) : '' }; });
@@ -195,6 +196,7 @@ function mergeState(loaded){
   m.level = Math.max(1, num(L.level, 1) | 0); m.streak.count = Math.max(0, num(m.streak.count) | 0);
   m.rewards = (Array.isArray(L.rewards) && L.rewards.filter(Boolean).length) ? L.rewards.filter(Boolean).map(function(r){ return { id: String(r.id), emoji: String(r.emoji || '🎁'), title: String(r.title || 'Prize'), cost: Math.max(1, parseInt(r.cost, 10) || 10) }; }) : d.rewards;
   m.v = 4;
+  if(m.placement.started && !m.placement.done && !m.diag) migrateQuestToDiag(m);   // a quest left half-done by the old version carries on as the adaptive diagnostic
   return m;
 }
 /* v3 -> v4: keep everything she earned. Old stickers become collectables; stars, prizes, timer, streak stay. */
@@ -468,6 +470,19 @@ function diagStart(state){
   state.placement.started = true; state.placement.done = false;
   return state.diag;
 }
+/* A quest left half-done by the old (fixed) version carries on as the adaptive diagnostic: finished lands stay finished (their medals and stars are already hers), the land in progress starts again. */
+function migrateQuestToDiag(state){
+  const P = state.placement, order = placementOrder(); placementNextItem(state);
+  const done = Math.min(P.strandIdx, order.length);
+  state.diag = { v: 1, runs: 1, startedOn: todayStr(), doneOn: null, done: false, cur: null, strands: {}, results: {} };
+  for(let i = 0; i < done; i++){
+    const id = order[i], list = skillsOfStrand(id); let low = -1;
+    list.forEach(function(sk, idx){ const c = P.results[sk.id]; if(c === undefined) return; state.diag.results[sk.id] = { n: 2, ok: c >= 1 ? 2 : 0, pass: c >= 1 }; if(c >= 1) low = Math.max(low, idx); });
+    state.diag.strands[id] = { lowPass: low, highFail: Math.min(list.length, low + 1), blocks: 1, done: false };
+    diagStrandCheck(state, id);
+  }
+  return state.diag;
+}
 function diagActive(state){ return !!(state.diag && !state.diag.done); }
 function diagStrand(state, id){
   const D = state.diag, n = skillsOfStrand(id).length;
@@ -585,4 +600,4 @@ function checkBadges(state){
   return fresh;
 }
 
-if(typeof module !== 'undefined') module.exports = { starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
+if(typeof module !== 'undefined') module.exports = { migrateQuestToDiag, starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };

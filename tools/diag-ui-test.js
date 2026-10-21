@@ -26,9 +26,9 @@ const path = require('path'); const B = require('./lib/browser'); let fails = 0,
   await open(); await p.evaluate(() => { ACT.startPlacement(); ACT.placementGo(); }); await p.waitForTimeout(300); await answer(true, 150); const m1 = await p.evaluate(() => totalMedals(S));
   await p.evaluate(() => { window.confirm = () => true; ACT.redoPlacement(); }); await p.waitForTimeout(200); await p.evaluate(() => ACT.placementGo()); await p.waitForTimeout(300); await answer(false, 150); await p.waitForTimeout(300);
   ok(await p.evaluate(() => S.diag.runs === 2 && S.diag.done) && await p.evaluate(() => totalMedals(S)) === m1, 'second run counted, medals unchanged (' + m1 + ')');
-  console.log('▶ an old quest already under way keeps the old flow');
+  console.log('▶ an old quest already under way carries on as the adaptive diagnostic');
   await open({ v: 4, onboardingDone: true, placement: { done: false, started: true, strandIdx: 1, asked: 1, misses: 0, queue: [], results: { 'number-place-value': 1 } }, skills: {} }); await p.evaluate(() => ACT.placementGo()); await p.waitForTimeout(300);
-  ok(await p.evaluate(() => !S.diag && scr.name === 'question'), 'old flow continues without creating a diagnostic');
+  ok(await p.evaluate(() => !!S.diag && !S.diag.done && scr.name === 'question' && S.diag.strands[strandsWithSkills()[0].id] && S.diag.strands[strandsWithSkills()[0].id].done), 'old quest migrated: first land stays finished, questions are adaptive');
   ok(errs.length === 0, 'page errors: ' + errs.join(' | ')); await b.close();
   console.log(fails ? '❌ DIAGNOSTIC UI TEST FAILED (' + fails + ' of ' + checks + ' checks)' : '✅ DIAGNOSTIC UI TEST PASSED (' + checks + ' checks)'); process.exit(fails ? 1 : 0);
 })().catch(e => { console.log('❌ DIAGNOSTIC UI TEST CRASHED: ' + e.message); process.exit(1); });
