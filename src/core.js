@@ -27,6 +27,10 @@ function sample(arr, n){ return shuffle(arr).slice(0, n); }
 /* ---------- Text helpers ---------- */
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function plural(n, one, many){ return n + ' ' + (n === 1 ? one : (many || one + 's')); }
+/* number + a noun given in its PLURAL form, agreeing with the number: nnoun(1, 'pencils') = '1 pencil', nnoun(3, 'pencils') = '3 pencils'. isAre(n) = 'is' | 'are'. */
+function singular(w){ w = String(w); if(/[^aeiou]ies$/.test(w)) return w.slice(0, -3) + 'y'; if(/(ches|shes|sses|xes)$/.test(w)) return w.slice(0, -2); return w.replace(/s$/, ''); }
+function nnoun(n, w){ return n + ' ' + (n === 1 ? singular(w) : w); }
+function isAre(n){ return n === 1 ? 'is' : 'are'; }
 function gcd(a, b){ return b === 0 ? a : gcd(b, a % b); }
 function stripTags(s){ return String(s).replace(/<\/span><span class="fd">/g, '/').replace(/<[^>]*>/g, '').replace(/&[a-z]+;/g, ' ').replace(/\s+/g, ' ').trim(); }
 function money(pence){ return pence >= 100 ? '£' + (pence / 100).toFixed(2) : pence + 'p'; }
@@ -250,7 +254,7 @@ function makeQuestion(skill, tier, onBad){
   return null;
 }
 
-if(typeof module !== 'undefined') module.exports = { fracHTML, setSeed, rng, randInt, pick, chance, shuffle, sample, pad2, plural, gcd, stripTags, money, numWord, ex, K,
+if(typeof module !== 'undefined') module.exports = { fracHTML, setSeed, rng, randInt, pick, chance, shuffle, sample, pad2, plural, singular, nnoun, isAre, gcd, stripTags, money, numWord, ex, K,
   SKILLS, registerSkill, skillById, opt, mcq, mcqNum, mcq2, numeric, shade, setclock, order, validateQuestion, makeQuestion };
 
 /* =====================================================================

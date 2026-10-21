@@ -12,6 +12,7 @@
 [data-act]{cursor:pointer;}
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{height:100%; margin:0; overscroll-behavior:none;}
+html{background-color:var(--bg2);}   /* iOS Safari: the strip under the body (home-bar area) shows the gradient's end colour, not white */
 body{
   font-family:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   color:var(--ink); background:linear-gradient(160deg,var(--bg1),var(--bg2)); background-attachment:fixed;
@@ -233,6 +234,10 @@ function sample(arr, n){ return shuffle(arr).slice(0, n); }
 /* ---------- Text helpers ---------- */
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
 function plural(n, one, many){ return n + ' ' + (n === 1 ? one : (many || one + 's')); }
+/* number + a noun given in its PLURAL form, agreeing with the number: nnoun(1, 'pencils') = '1 pencil', nnoun(3, 'pencils') = '3 pencils'. isAre(n) = 'is' | 'are'. */
+function singular(w){ w = String(w); if(/[^aeiou]ies$/.test(w)) return w.slice(0, -3) + 'y'; if(/(ches|shes|sses|xes)$/.test(w)) return w.slice(0, -2); return w.replace(/s$/, ''); }
+function nnoun(n, w){ return n + ' ' + (n === 1 ? singular(w) : w); }
+function isAre(n){ return n === 1 ? 'is' : 'are'; }
 function gcd(a, b){ return b === 0 ? a : gcd(b, a % b); }
 function stripTags(s){ return String(s).replace(/<\/span><span class="fd">/g, '/').replace(/<[^>]*>/g, '').replace(/&[a-z]+;/g, ' ').replace(/\s+/g, ' ').trim(); }
 function money(pence){ return pence >= 100 ? '£' + (pence / 100).toFixed(2) : pence + 'p'; }
@@ -1362,7 +1367,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qRecall(total){
     const a = randInt(1, total - 1), b = total - a, left = chance(0.5), who = pick(NAMES), it = pick(ITEMS);
     if(chance(0.35)) return mcqNum({
-      prompt: who + ' has ' + a + ' ' + it + ' and wants ' + total + '. How many more does ' + who + ' need?', answer: b,
+      prompt: who + ' has ' + nnoun(a, it) + ' and wants ' + total + '. How many more does ' + who + ' need?', answer: b,
       wrong: [{ v: a, why: a + ' is how many ' + who + ' already has.' }, { v: total, why: total + ' is the target, not the number still needed.' }, { v: b + 1, why: 'Check: ' + a + ' + ' + (b + 1) + ' = ' + (a + b + 1) + '.' }, { v: b - 1, why: 'Check: ' + a + ' + ' + (b - 1) + ' = ' + (a + b - 1) + '.' }],
       nearby: NEAR, valid: pos, count: 4, hint: 'Count on from ' + a + ' up to ' + total + '.',
       explain: ex('How many more?', [who + ' has ' + a + ' and needs ' + total + '.', 'Count on from ' + a + ' to ' + total + ': <b>' + b + '</b> more.', a + ' + ' + b + ' = ' + total + '. ✅']), truth: countOn(a, total)
@@ -3617,7 +3622,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return numeric({
       prompt: nm[0] + ' eats ' + F(a, d) + ' of a ' + food + ' and ' + nm[1] + ' eats ' + F(b, d) + '. How many ' + DN[d] + ' are LEFT?', answer: left,
       hint: 'Step 1: add what they ate. Step 2: take it away from the whole (' + d + '/' + d + ').',
-      explain: ex('Two steps', ['They ate ' + a + '/' + d + ' + ' + b + '/' + d + ' = <b>' + (a + b) + '/' + d + '</b>.', 'The whole ' + food + ' is ' + d + '/' + d + ', so ' + d + ' − ' + (a + b) + ' = <b>' + left + '</b>.', left + ' ' + DN[d] + ' are left. ✅']),
+      explain: ex('Two steps', ['They ate ' + a + '/' + d + ' + ' + b + '/' + d + ' = <b>' + (a + b) + '/' + d + '</b>.', 'The whole ' + food + ' is ' + d + '/' + d + ', so ' + d + ' − ' + (a + b) + ' = <b>' + left + '</b>.', nnoun(left, DN[d]) + ' ' + isAre(left) + ' left. ✅']),
       truth: d - (a + b),
       wrong: function(v){ return v === a + b ? 'That is how many they ATE. We want how many are left.' : ''; }
     });
@@ -4220,7 +4225,7 @@ if(typeof module !== 'undefined') module.exports = V;
       hint: 'Count the WHITE ' + unit + ' for the top number. The bottom number is still ALL the ' + unit + '.',
       explain: ex('The white part', [
         'There are <b>' + d + '</b> ' + unit + ' altogether, so the bottom number is ' + d + '.',
-        '<b>' + n + '</b> are coloured, so ' + d + ' − ' + n + ' = <b>' + w + '</b> are NOT coloured.',
+        '<b>' + n + '</b> ' + isAre(n) + ' coloured, so ' + d + ' − ' + n + ' = <b>' + w + '</b> ' + isAre(w) + ' NOT coloured.',
         'The white part is <b>' + w + '/' + d + '</b>. ✅'
       ]),
       truth: fK(d * d - n * d, d * d),
@@ -4792,7 +4797,7 @@ if(typeof module !== 'undefined') module.exports = V;
           prompt: 'Which picture shows ' + n + '/' + d + '?', visual: '',
           correct: opt(fKey(n, d), V.fractionBar(n, d)), distractors: ds, count: 3,
           hint: 'The bottom number is how many equal parts the bar has. The top number is how many are coloured.',
-          explain: ex('Finding ' + n + '/' + d, ['<b>' + d + '</b> on the bottom means the bar has ' + d + ' equal parts.', '<b>' + n + '</b> on the top means ' + n + ' of them are coloured.', 'Only one bar has ' + d + ' parts with ' + n + ' coloured: that is <b>' + n + '/' + d + '</b>. ✅']),
+          explain: ex('Finding ' + n + '/' + d, ['<b>' + d + '</b> on the bottom means the bar has ' + d + ' equal parts.', '<b>' + n + '</b> on the top means ' + n + ' of them ' + isAre(n) + ' coloured.', 'Only one bar has ' + d + ' parts with ' + n + ' coloured: that is <b>' + n + '/' + d + '</b>. ✅']),
           truth: fKey(n, d)
         });
         q.optionsAreVisual = true;
@@ -8723,7 +8728,7 @@ if(typeof module !== 'undefined') module.exports = V;
       prompt: 'Each square is 1 square unit. What is the area of this shape?', visual: vis, answer: L.cells.length,
       wrong: [{ v: L.R * L.C, why: 'That counts the missing corner too. Only count the squares that are drawn.' }, { v: L.cells.length + L.cr * L.cc, why: 'You counted the missing corner as well.' }, { v: 2 * (L.R + L.C), why: 'That is not the area: count the squares inside the shape.' }],
       nearby: [1, -1, 2, -2], valid: function(v){ return v > 0; }, count: 4, hint: 'Count the squares row by row, or work out the big rectangle and take away the missing corner.',
-      explain: ex('Area of an L-shape', ['The big rectangle would be ' + L.R + ' × ' + L.C + ' = ' + L.R * L.C + ' squares.', 'The missing corner is ' + L.cr + ' × ' + L.cc + ' = ' + L.cr * L.cc + ' squares.', L.R * L.C + ' − ' + L.cr * L.cc + ' = <b>' + L.cells.length + '</b>. ✅']),
+      explain: ex('Area of an L-shape', ['The big rectangle would be ' + L.R + ' × ' + L.C + ' = ' + L.R * L.C + ' squares.', 'The missing corner is ' + L.cr + ' × ' + L.cc + ' = ' + nnoun(L.cr * L.cc, 'squares') + '.', L.R * L.C + ' − ' + L.cr * L.cc + ' = <b>' + L.cells.length + '</b>. ✅']),
       truth: L.R * L.C - L.cr * L.cc, decode: function(){ return sqDecode(vis).count; }
     });
   }
@@ -11505,7 +11510,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qTwoStep(){
     const c = pick2(false, 7, true), th = pick(THINGS), who = pick(NAMES), k = randInt(2, 9), plus = chance(0.5);
     return numeric({
-      prompt: who + ' has ' + c.b + ' ' + th[0] + ' with ' + c.a + ' ' + th[1] + ' in each. ' + (plus ? k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?' : k + ' ' + th[1] + ' are used. How many ' + th[1] + ' are left?'), answer: c.a * c.b + (plus ? k : -k),
+      prompt: who + ' has ' + c.b + ' ' + th[0] + ' with ' + c.a + ' ' + th[1] + ' in each. ' + (plus ? (k === 1 ? '1 more ' + singular(th[1]) + ' arrives.' : k + ' more ' + th[1] + ' arrive.') + ' How many ' + th[1] + ' now?' : nnoun(k, th[1]) + ' ' + isAre(k) + ' used. How many ' + th[1] + ' are left?'), answer: c.a * c.b + (plus ? k : -k),
       hint: 'Two steps. First ' + c.a + ' × ' + c.b + ' in a column. Then ' + (plus ? 'add ' : 'take away ') + k + '.',
       explain: ex('Two steps', ['Step 1: ' + c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b> (ones ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + ', carry ' + c.m.c1 + ').', 'Step 2: ' + c.a * c.b + (plus ? ' + ' : ' − ') + k + ' = <b>' + (c.a * c.b + (plus ? k : -k)) + '</b>. ✅']),
       truth: c.a * c.b + (plus ? k : -k), wrong: function(v){ return v === c.a * c.b ? c.a * c.b + ' is only step 1. Now ' + (plus ? 'add ' : 'take away ') + k + '.' : ''; }
@@ -11906,7 +11911,7 @@ if(typeof module !== 'undefined') module.exports = V;
       wrong: [{ v: m.d, why: m.d + ' is how many fit in a full group. The left over ones are fewer than that.' }, { v: m.q, why: m.q + ' is the number of full groups, not the number left over.' }, { v: m.d - m.r, why: 'That is how many MORE you would need to fill another group. The question asks how many are left over.' }, { v: m.r + 1, why: 'Count again: ' + m.n + ' − ' + m.d * m.q + ' = ' + m.r + '.' }],
       nearby: [1, -1, 2], valid: pos, count: 3,
       hint: 'Count how many ' + it[0] + ' are in the full groups. Take that away from ' + m.n + '.',
-      explain: ex('Left over', ['The picture has ' + m.q + ' full groups of ' + m.d + ': ' + countIn(m.d, m.q) + ' ' + it[0] + '.', m.n + ' − ' + m.d * m.q + ' = <b>' + m.r + '</b>.', m.r + ' ' + it[0] + ' are left over. ✅']),
+      explain: ex('Left over', ['The picture has ' + m.q + ' full groups of ' + m.d + ': ' + countIn(m.d, m.q) + ' ' + it[0] + '.', m.n + ' − ' + m.d * m.q + ' = <b>' + m.r + '</b>.', nnoun(m.r, it[0]) + ' ' + isAre(m.r) + ' left over. ✅']),
       truth: m.n - V.decodeGroups(vis).total, decode: function(){ return m.n - V.decodeGroups(vis).total; }
     });
   }
@@ -11915,7 +11920,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return mcq2({
       prompt: m.n + ' ' + it[0] + ' go into ' + it[1] + ' of ' + m.d + '. Will there be some left over?', correct: opt(K.bool(!exact), exact ? 'No, none left over' : 'Yes, some left over'), other: opt(K.bool(exact), exact ? 'Yes, some left over' : 'No, none left over', exact ? m.d + ' × ' + m.q + ' = ' + m.n + ' exactly, so nothing is left.' : 'Count in ' + m.d + 's: ' + countIn(m.d, m.q) + '. It skips over ' + m.n + ', so some are left over.'),
       hint: 'Count in ' + m.d + 's. Do you land exactly on ' + m.n + '?',
-      explain: ex('Exact or not?', ['Count in ' + m.d + 's: ' + countIn(m.d, m.q) + (exact ? '.' : ', then the next is ' + m.d * (m.q + 1) + '.'), exact ? 'We land exactly on <b>' + m.n + '</b>, so nothing is left over.' : 'We never land on ' + m.n + ', so <b>' + m.r + '</b> are left over.', exact ? m.n + ' ÷ ' + m.d + ' = ' + m.q + '. ✅' : m.n + ' ÷ ' + m.d + ' = ' + m.q + ' remainder ' + m.r + '. ✅']),
+      explain: ex('Exact or not?', ['Count in ' + m.d + 's: ' + countIn(m.d, m.q) + (exact ? '.' : ', then the next is ' + m.d * (m.q + 1) + '.'), exact ? 'We land exactly on <b>' + m.n + '</b>, so nothing is left over.' : 'We never land on ' + m.n + ', so <b>' + m.r + '</b> ' + isAre(m.r) + ' left over.', exact ? m.n + ' ÷ ' + m.d + ' = ' + m.q + '. ✅' : m.n + ' ÷ ' + m.d + ' = ' + m.q + ' remainder ' + m.r + '. ✅']),
       truth: K.bool(divmod(m.n, m.d).r !== 0)
     });
   }
@@ -11994,7 +11999,7 @@ if(typeof module !== 'undefined') module.exports = V;
       hint: 'First find how many full ones. Then think about the ones left over: they still need somewhere to go!',
       explain: ex('Do not forget the left over ones', ['Full ' + it[1] + ': ' + countIn(m.d, m.q) + ' → <b>' + m.q + '</b> full, with <b>' + m.r + '</b> left over.', 'The ' + m.r + ' left over still need a home, so we need <b>one more</b>.', m.q + ' + 1 = <b>' + (m.q + 1) + '</b> ' + it[1] + '. ✅']),
       truth: divmod(m.n, m.d).q + (divmod(m.n, m.d).r > 0 ? 1 : 0),
-      wrong: function(v){ return v === m.q ? m.q + ' leaves ' + m.r + ' ' + it[0] + ' with nowhere to go. Do they need another one?' : ''; }
+      wrong: function(v){ return v === m.q ? m.q + ' leaves ' + nnoun(m.r, it[0]) + ' with nowhere to go. Do they need another one?' : ''; }
     });
   }
   function qClaim(){
@@ -12566,7 +12571,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qTwoStep(){
     const c = pickAny(7), th = pick(THINGS), who = pick(NAMES), k = randInt(2, 9), plus = chance(0.5);
     return numeric({
-      prompt: who + ' has ' + c.b + ' ' + th[0] + ' with ' + c.a + ' ' + th[1] + ' in each. ' + (plus ? k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?' : k + ' ' + th[1] + ' are used. How many ' + th[1] + ' are left?'), answer: c.a * c.b + (plus ? k : -k),
+      prompt: who + ' has ' + c.b + ' ' + th[0] + ' with ' + c.a + ' ' + th[1] + ' in each. ' + (plus ? (k === 1 ? '1 more ' + singular(th[1]) + ' arrives.' : k + ' more ' + th[1] + ' arrive.') + ' How many ' + th[1] + ' now?' : nnoun(k, th[1]) + ' ' + isAre(k) + ' used. How many ' + th[1] + ' are left?'), answer: c.a * c.b + (plus ? k : -k),
       hint: 'Two steps. First ' + c.a + ' × ' + c.b + ' in a column. Then ' + (plus ? 'add ' : 'take away ') + k + '.', explain: ex('Two steps', ['Step 1: ' + c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>.', 'Step 2: ' + c.a * c.b + (plus ? ' + ' : ' − ') + k + ' = <b>' + (c.a * c.b + (plus ? k : -k)) + '</b>. ✅']),
       truth: times(c.a, c.b) + (plus ? k : -k), wrong: function(v){ return v === c.a * c.b ? c.a * c.b + ' is only step 1. Now ' + (plus ? 'add ' : 'take away ') + k + '.' : ''; }
     });
@@ -12853,7 +12858,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qTwoStep(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
-    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
+    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' ' + isAre(k) + ' taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + (k === 1 ? 'is' : 'are') + ' added. How many ' + th[1] + ' now?');
     return numeric({
       prompt: prompt, answer: ans,
       hint: 'Two steps. First find ' + n + ' groups of ' + t + '. Then ' + (minus ? 'take away ' : 'add ') + k + '.',
@@ -13230,7 +13235,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qTwoStep(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
-    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
+    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' ' + isAre(k) + ' taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + (k === 1 ? 'is' : 'are') + ' added. How many ' + th[1] + ' now?');
     return numeric({
       prompt: prompt, answer: ans,
       hint: 'Two steps. First find ' + n + ' groups of ' + t + '. Then ' + (minus ? 'take away ' : 'add ') + k + '.',
@@ -13601,7 +13606,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qTwoStep(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
-    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
+    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' ' + isAre(k) + ' taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + (k === 1 ? 'is' : 'are') + ' added. How many ' + th[1] + ' now?');
     return numeric({
       prompt: prompt, answer: ans,
       hint: 'Two steps. First find ' + n + ' groups of ' + t + '. Then ' + (minus ? 'take away ' : 'add ') + k + '.',
@@ -13969,7 +13974,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qTwoStep(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
-    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
+    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' ' + isAre(k) + ' taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + (k === 1 ? 'is' : 'are') + ' added. How many ' + th[1] + ' now?');
     return numeric({
       prompt: prompt, answer: ans,
       hint: 'Two steps. First find ' + n + ' groups of ' + t + '. Then ' + (minus ? 'take away ' : 'add ') + k + '.',
@@ -14388,7 +14393,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qTwoStep(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
-    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
+    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' ' + isAre(k) + ' taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + (k === 1 ? 'is' : 'are') + ' added. How many ' + th[1] + ' now?');
     return numeric({
       prompt: prompt, answer: ans,
       hint: 'Two steps. First find ' + n + ' groups of ' + t + '. Then ' + (minus ? 'take away ' : 'add ') + k + '.',
@@ -14761,7 +14766,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qTwoStep(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
-    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
+    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' ' + isAre(k) + ' taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + (k === 1 ? 'is' : 'are') + ' added. How many ' + th[1] + ' now?');
     return numeric({
       prompt: prompt, answer: ans,
       hint: 'Two steps. First find ' + n + ' groups of ' + t + '. Then ' + (minus ? 'take away ' : 'add ') + k + '.',
@@ -15171,7 +15176,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qTwoStep(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), th = pick(THINGS), who = pick(NAMES), p = P(n, t), minus = chance(0.5), k = randInt(1, Math.min(9, p - 2));
     const ans = minus ? p - k : p + k;
-    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' are taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + th[1] + ' arrive. How many ' + th[1] + ' now?');
+    const prompt = who + ' has ' + n + ' ' + th[0] + ' with ' + t + ' ' + th[1] + ' in each. ' + (minus ? 'Then ' + k + ' ' + isAre(k) + ' taken away. How many ' + th[1] + ' are left?' : 'Then ' + k + ' more ' + (k === 1 ? 'is' : 'are') + ' added. How many ' + th[1] + ' now?');
     return numeric({
       prompt: prompt, answer: ans,
       hint: 'Two steps. First find ' + n + ' groups of ' + t + '. Then ' + (minus ? 'take away ' : 'add ') + k + '.',
@@ -15358,7 +15363,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const d = pick(DIVS), n = randInt(2, 12), p = P(d, n), who = pick(NAMES), it = pick(SHARE_ITEMS), share = chance(0.5), two = chance(0.4), k = randInt(1, 6);
     if(two){
       return numeric({
-        prompt: who + ' has ' + p + ' ' + it + '. ' + (share ? who + ' shares them equally between ' + d + ' friends.' : who + ' puts them in bags of ' + d + '.') + ' Then ' + k + ' ' + (share ? 'more are added to each friend’s pile' : 'more bags are added') + '. How many ' + (share ? it + ' does each friend have now' : 'bags are there now') + '?', answer: n + k,
+        prompt: who + ' has ' + p + ' ' + it + '. ' + (share ? who + ' shares them equally between ' + d + ' friends.' : who + ' puts them in bags of ' + d + '.') + ' Then ' + k + ' more ' + (share ? isAre(k) + ' added to each friend’s pile' : (k === 1 ? 'bag is' : 'bags are') + ' added') + '. How many ' + (share ? it + ' does each friend have now' : 'bags are there now') + '?', answer: n + k,
         hint: 'Two steps. First work out ' + p + ' ÷ ' + d + '. Then add ' + k + '.',
         explain: ex('Two steps', ['Step 1: ' + p + ' ÷ ' + d + ' = <b>' + n + '</b> (' + d + ' × ' + n + ' = ' + p + ').', 'Step 2: ' + n + ' + ' + k + ' = <b>' + (n + k) + '</b>.', 'So the answer is ' + (n + k) + '. ✅']),
         truth: p / d + k, wrong: function(v){ return v === n ? n + ' is only step 1. Now add ' + k + '.' : ''; }
@@ -15645,7 +15650,7 @@ if(typeof module !== 'undefined') module.exports = V;
       prompt: 'Which number does the arrow point to?', visual: vis, answer: n,
       wrong: [{ v: n + 100, why: 'Count the small steps from ' + base + ': each one is 100.' }, { v: n - 100, why: 'Count the small steps from ' + base + ': each one is 100.' }, { v: base + (n - base) / 10, why: 'Each small step is 100, not 10.' }, { v: base + 1000 - (n - base), why: 'Count from the LEFT end (' + base + ').' }],
       nearby: [100, -100, 200], valid: function(v){ return v >= base && v <= base + 1000; }, count: 4, hint: 'The line starts at ' + base + ' and goes up in steps of 100.',
-      explain: ex('Reading the line', ['The left end is ' + base + ' and each small step is 100.', 'The arrow is ' + (n - base) / 100 + ' steps along.', base + ' + ' + (n - base) + ' = <b>' + n + '</b>. ✅']),
+      explain: ex('Reading the line', ['The left end is ' + base + ' and each small step is 100.', 'The arrow is ' + nnoun((n - base) / 100, 'steps') + ' along.', base + ' + ' + (n - base) + ' = <b>' + n + '</b>. ✅']),
       truth: n, decode: function(){ return Math.round(V.decodeNumberLine(vis)); }
     });
   }
@@ -16317,14 +16322,14 @@ if(typeof module !== 'undefined') module.exports = V;
     return mcqNum({ prompt: 'Which decimal does the red dot show?', visual: vis, answer: t * 10, fmt: dec,
       wrong: [{ v: t, why: 'The dot is at ' + t + ' tenths = ' + dec(t * 10) + ', not ' + dec(t) + ' (that is ' + t + ' hundredths).' }, { v: (10 - t) * 10, why: 'Count the steps from 0, not from 1.' }, { v: t * 10 + 10, why: 'Count the steps from 0 again.' }, { v: t * 10 - 10 > 0 ? t * 10 - 10 : t * 10 + 20, why: 'Count the steps from 0 again.' }],
       nearby: [10, -10, 5], valid: function(v){ return v > 0 && v <= 120; }, count: 4, hint: 'There are 10 equal steps from 0 to 1. Each step is 0.1.',
-      explain: ex('Tenths on a line', ['0 to 1 is split into 10 equal steps. Each step is 0.1.', 'The dot is ' + t + ' steps along: <b>' + dec(t * 10) + '</b>. ✅']), truth: t * 10, decode: function(){ return Math.round(V.decodeNumberLine(vis) * 100); } });
+      explain: ex('Tenths on a line', ['0 to 1 is split into 10 equal steps. Each step is 0.1.', 'The dot is ' + nnoun(t, 'steps') + ' along: <b>' + dec(t * 10) + '</b>. ✅']), truth: t * 10, decode: function(){ return Math.round(V.decodeNumberLine(vis) * 100); } });
   }
   function qMoney(){
     const p = randInt(105, 899), pounds = Math.floor(p / 100), pence = p % 100;
     return mcqNum({ prompt: '<b>' + p + 'p</b> is how many pounds? (£1 = 100p)', answer: p, fmt: function(v){ return '£' + (Math.floor(v / 100)) + '.' + (v % 100 < 10 ? '0' : '') + (v % 100); },
       wrong: [{ v: pounds * 100 + (pence < 10 ? pence * 10 : Math.floor(pence / 10)), why: 'Pence need two digits after the point: ' + pence + 'p is £0.' + (pence < 10 ? '0' : '') + pence + '.' }, { v: pence * 100 + pounds, why: 'Pounds come before the point, pence after.' }, { v: p + 100, why: 'Divide the pence by 100 to get pounds.' }, { v: p - 100, why: 'Divide the pence by 100 to get pounds.' }],
       nearby: [1, -1, 10, -10], valid: function(v){ return v > 100; }, count: 4, hint: '100p make £1. The pounds go before the point, the leftover pence after it.',
-      explain: ex('Pence to pounds', [p + 'p = ' + pounds + ' pounds and ' + pence + ' pence.', 'As pounds: <b>£' + pounds + '.' + (pence < 10 ? '0' : '') + pence + '</b>. ✅']), truth: pounds * 100 + pence });
+      explain: ex('Pence to pounds', [p + 'p = ' + nnoun(pounds, 'pounds') + ' and ' + pence + ' pence.', 'As pounds: <b>£' + pounds + '.' + (pence < 10 ? '0' : '') + pence + '</b>. ✅']), truth: pounds * 100 + pence });
   }
   /* ---- tier 3: typed ---- */
   function qHundredthsTyped(){
@@ -16988,7 +16993,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return mcqNum({ prompt: 'How many <b>' + nm + '</b> counters are on the chart?', visual: vis, answer: ans,
       wrong: [{ v: [h, t, o][(k + 1) % 3], why: 'That is the number in a different column. Look at the ' + COL[k].name + ' column.' }, { v: ans * COL[k].val, why: 'That is the VALUE of those counters. The question asks how many counters.' }, { v: h + t + o, why: 'That is every counter. Count only the ' + nm + ' column.' }],
       nearby: [1, -1, 2], valid: function(v){ return v > 0; }, count: 3, hint: 'Look at the ' + COL[k].name + ' column only and count its counters.',
-      explain: ex('Counting one column', ['The ' + COL[k].name + ' column has <b>' + ans + '</b> counters. ✅']), truth: countIn(vis, COL[k].cls), decode: function(){ return countIn(vis, COL[k].cls); } });
+      explain: ex('Counting one column', ['The ' + COL[k].name + ' column has <b>' + ans + '</b> ' + (ans === 1 ? 'counter' : 'counters') + '. ✅']), truth: countIn(vis, COL[k].cls), decode: function(){ return countIn(vis, COL[k].cls); } });
   }
   function qValueColumn(){
     const h = randInt(1, 5), t = randInt(1, 5), o = randInt(1, 5), vis = render(h, t, o), k = randInt(0, 1), ans = [h, t, o][k] * COL[k].val;

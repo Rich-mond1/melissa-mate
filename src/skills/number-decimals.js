@@ -58,14 +58,14 @@
     return mcqNum({ prompt: 'Which decimal does the red dot show?', visual: vis, answer: t * 10, fmt: dec,
       wrong: [{ v: t, why: 'The dot is at ' + t + ' tenths = ' + dec(t * 10) + ', not ' + dec(t) + ' (that is ' + t + ' hundredths).' }, { v: (10 - t) * 10, why: 'Count the steps from 0, not from 1.' }, { v: t * 10 + 10, why: 'Count the steps from 0 again.' }, { v: t * 10 - 10 > 0 ? t * 10 - 10 : t * 10 + 20, why: 'Count the steps from 0 again.' }],
       nearby: [10, -10, 5], valid: function(v){ return v > 0 && v <= 120; }, count: 4, hint: 'There are 10 equal steps from 0 to 1. Each step is 0.1.',
-      explain: ex('Tenths on a line', ['0 to 1 is split into 10 equal steps. Each step is 0.1.', 'The dot is ' + t + ' steps along: <b>' + dec(t * 10) + '</b>. ✅']), truth: t * 10, decode: function(){ return Math.round(V.decodeNumberLine(vis) * 100); } });
+      explain: ex('Tenths on a line', ['0 to 1 is split into 10 equal steps. Each step is 0.1.', 'The dot is ' + nnoun(t, 'steps') + ' along: <b>' + dec(t * 10) + '</b>. ✅']), truth: t * 10, decode: function(){ return Math.round(V.decodeNumberLine(vis) * 100); } });
   }
   function qMoney(){
     const p = randInt(105, 899), pounds = Math.floor(p / 100), pence = p % 100;
     return mcqNum({ prompt: '<b>' + p + 'p</b> is how many pounds? (£1 = 100p)', answer: p, fmt: function(v){ return '£' + (Math.floor(v / 100)) + '.' + (v % 100 < 10 ? '0' : '') + (v % 100); },
       wrong: [{ v: pounds * 100 + (pence < 10 ? pence * 10 : Math.floor(pence / 10)), why: 'Pence need two digits after the point: ' + pence + 'p is £0.' + (pence < 10 ? '0' : '') + pence + '.' }, { v: pence * 100 + pounds, why: 'Pounds come before the point, pence after.' }, { v: p + 100, why: 'Divide the pence by 100 to get pounds.' }, { v: p - 100, why: 'Divide the pence by 100 to get pounds.' }],
       nearby: [1, -1, 10, -10], valid: function(v){ return v > 100; }, count: 4, hint: '100p make £1. The pounds go before the point, the leftover pence after it.',
-      explain: ex('Pence to pounds', [p + 'p = ' + pounds + ' pounds and ' + pence + ' pence.', 'As pounds: <b>£' + pounds + '.' + (pence < 10 ? '0' : '') + pence + '</b>. ✅']), truth: pounds * 100 + pence });
+      explain: ex('Pence to pounds', [p + 'p = ' + nnoun(pounds, 'pounds') + ' and ' + pence + ' pence.', 'As pounds: <b>£' + pounds + '.' + (pence < 10 ? '0' : '') + pence + '</b>. ✅']), truth: pounds * 100 + pence });
   }
   /* ---- tier 3: typed ---- */
   function qHundredthsTyped(){

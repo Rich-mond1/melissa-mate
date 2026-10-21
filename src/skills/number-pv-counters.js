@@ -35,7 +35,7 @@
     return mcqNum({ prompt: 'How many <b>' + nm + '</b> counters are on the chart?', visual: vis, answer: ans,
       wrong: [{ v: [h, t, o][(k + 1) % 3], why: 'That is the number in a different column. Look at the ' + COL[k].name + ' column.' }, { v: ans * COL[k].val, why: 'That is the VALUE of those counters. The question asks how many counters.' }, { v: h + t + o, why: 'That is every counter. Count only the ' + nm + ' column.' }],
       nearby: [1, -1, 2], valid: function(v){ return v > 0; }, count: 3, hint: 'Look at the ' + COL[k].name + ' column only and count its counters.',
-      explain: ex('Counting one column', ['The ' + COL[k].name + ' column has <b>' + ans + '</b> counters. ✅']), truth: countIn(vis, COL[k].cls), decode: function(){ return countIn(vis, COL[k].cls); } });
+      explain: ex('Counting one column', ['The ' + COL[k].name + ' column has <b>' + ans + '</b> ' + (ans === 1 ? 'counter' : 'counters') + '. ✅']), truth: countIn(vis, COL[k].cls), decode: function(){ return countIn(vis, COL[k].cls); } });
   }
   function qValueColumn(){
     const h = randInt(1, 5), t = randInt(1, 5), o = randInt(1, 5), vis = render(h, t, o), k = randInt(0, 1), ans = [h, t, o][k] * COL[k].val;

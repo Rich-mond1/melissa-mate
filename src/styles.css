@@ -7,6 +7,7 @@
 [data-act]{cursor:pointer;}
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{height:100%; margin:0; overscroll-behavior:none;}
+html{background-color:var(--bg2);}   /* iOS Safari: the strip under the body (home-bar area) shows the gradient's end colour, not white */
 body{
   font-family:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   color:var(--ink); background:linear-gradient(160deg,var(--bg1),var(--bg2)); background-attachment:fixed;

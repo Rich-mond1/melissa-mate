@@ -23,7 +23,7 @@
   function qRecall(total){
     const a = randInt(1, total - 1), b = total - a, left = chance(0.5), who = pick(NAMES), it = pick(ITEMS);
     if(chance(0.35)) return mcqNum({
-      prompt: who + ' has ' + a + ' ' + it + ' and wants ' + total + '. How many more does ' + who + ' need?', answer: b,
+      prompt: who + ' has ' + nnoun(a, it) + ' and wants ' + total + '. How many more does ' + who + ' need?', answer: b,
       wrong: [{ v: a, why: a + ' is how many ' + who + ' already has.' }, { v: total, why: total + ' is the target, not the number still needed.' }, { v: b + 1, why: 'Check: ' + a + ' + ' + (b + 1) + ' = ' + (a + b + 1) + '.' }, { v: b - 1, why: 'Check: ' + a + ' + ' + (b - 1) + ' = ' + (a + b - 1) + '.' }],
       nearby: NEAR, valid: pos, count: 4, hint: 'Count on from ' + a + ' up to ' + total + '.',
       explain: ex('How many more?', [who + ' has ' + a + ' and needs ' + total + '.', 'Count on from ' + a + ' to ' + total + ': <b>' + b + '</b> more.', a + ' + ' + b + ' = ' + total + '. ✅']), truth: countOn(a, total)

@@ -12,7 +12,7 @@ const CHECK = function(){
   const area = r => Math.max(0, r.width) * Math.max(0, r.height);
   const lum = c => { const m = c.match(/[\d.]+/g).map(Number); const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]); };
   const alpha = c => { const m = c.match(/[\d.]+/g); return m.length > 3 ? +m[3] : 1; };
-  const bgOf = el => { for(let e = el; e && e.nodeType === 1; e = e.parentNode){ const cs = getComputedStyle(e); const b = cs.backgroundColor; if(b && alpha(b) > 0.5) return b; } return 'rgb(255,255,255)'; };
+  const bgOf = el => { for(let e = el; e && e.nodeType === 1 && e !== document.documentElement; e = e.parentNode){ const cs = getComputedStyle(e); const b = cs.backgroundColor;   /* html only carries the end colour of the page gradient (iOS strip fix): not a card background */ if(b && alpha(b) > 0.5) return b; } return 'rgb(255,255,255)'; };
   const contrast = (a, b) => { const l1 = lum(a), l2 = lum(b); return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05); };
   const vis = card.querySelector('.qvis') || document.createElement('div');
   // 1. content wider than the card / clipped visual
@@ -105,7 +105,7 @@ const CHECK = function(){
         const r0 = el.getBoundingClientRect(); if(!r0.width || !r0.height) return; const host = el.closest ? el.closest('svg') : null; const r = (host && host !== el && getComputedStyle(host).overflow !== 'visible') ? host.getBoundingClientRect() : r0; /* inside an <svg> the outer svg clips (overflow hidden), so judge the svg box */ if(r.right > vw + 1.5 || r.left < -1.5) out.push('OFF-SCREEN ' + el.tagName + ' ' + (el.textContent || '').trim().slice(0, 16));
         if(el.closest('svg') || ![...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) return;
         const cs = getComputedStyle(el); if(cs.visibility === 'hidden' || +cs.opacity === 0) return; if(!/[A-Za-z0-9]/.test(el.textContent)) return;
-        let bg = null, op = 1; for(let e = el; e && e.nodeType === 1; e = e.parentElement){ const s = getComputedStyle(e); op *= +s.opacity; if(alpha(s.backgroundColor) > 0.75){ bg = s.backgroundColor; break; } }
+        let bg = null, op = 1; for(let e = el; e && e.nodeType === 1 && e !== document.documentElement; e = e.parentElement){ const s = getComputedStyle(e); op *= +s.opacity; if(alpha(s.backgroundColor) > 0.75){ bg = s.backgroundColor; break; } }
         const col = cs.color; if(!bg){ for(let e = el; e && e !== app; e = e.parentElement){ if(getComputedStyle(e).backgroundImage !== 'none') return; } bg = 'rgb(110,70,130)'; if(cr(col, bg) < 2.0) out.push('LOW-CONTRAST "' + el.textContent.trim().slice(0, 18) + '" ' + col + ' on gradient'); return; }
         if(cr(col, bg) < 2.2) out.push('LOW-CONTRAST "' + el.textContent.trim().slice(0, 18) + '" ' + col + ' on ' + bg);
       });
