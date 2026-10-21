@@ -250,7 +250,7 @@
         hint: 'Count how many shapes are in ONE repeat. Then jump along in whole repeats and count on the rest.',
         explain: ex('The ' + N + 'th shape', [
           'One repeat has <b>' + L + '</b> shapes: ' + unitText(unit) + '.',
-          N + ' = ' + Math.floor((N - 1) / L) + ' whole repeat' + (Math.floor((N - 1) / L) === 1 ? '' : 's') + ' (that is ' + Math.floor((N - 1) / L) * L + ' shapes) and ' + (((N - 1) % L) + 1) + ' more.',
+          'Shape ' + N + ' is ' + Math.floor((N - 1) / L) + ' whole repeat' + (Math.floor((N - 1) / L) === 1 ? '' : 's') + ' (that is ' + Math.floor((N - 1) / L) * L + ' shapes) and ' + (((N - 1) % L) + 1) + ' more.',
           'The ' + (((N - 1) % L) + 1) + (((N - 1) % L) + 1 === 1 ? 'st' : ((N - 1) % L) + 1 === 2 ? 'nd' : ((N - 1) % L) + 1 === 3 ? 'rd' : 'th') + ' shape of the repeat is <b>' + truthName + '</b>. ✅'
         ]),
         truth: K.text(truthName)

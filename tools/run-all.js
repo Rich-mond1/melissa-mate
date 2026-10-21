@@ -15,6 +15,8 @@ const steps = [
   ['diag', 'node tools/diag-test.js'],
   ['curric', 'node tools/curriculum-test.js'],
   ['clarity', 'node tools/clarity-scan.js --n ' + (FULL ? 600 : 250)],
+  ['textmath', 'node tools/text-math-check.js --n ' + (FULL ? 600 : 250)],
+  ['textlint', 'node tools/text-lint.js'],
   ['grammar', 'node tools/grammar-scan.js --n ' + (FULL ? 800 : 300)],
   ['e2e', 'node tools/e2e.js --per ' + (FULL ? 6 : 2)],
   ['layout', 'node tools/layout-audit.js --n ' + (FULL ? 20 : 4) + ' --widths 360,390,430'],

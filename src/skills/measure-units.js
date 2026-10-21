@@ -162,7 +162,7 @@
       prompt: 'Which is ' + w[pickWord] + ': ' + A + ' or ' + B + '?',
       correct: opt(K.text(target), target),
       other: opt(K.text(other), other, 'Change them to the same unit first: ' + A + ' = ' + aSmall + ' ' + c.small + ', and ' + B + ' stays ' + m + ' ' + c.small + '. Do not just compare ' + n + ' and ' + m + '.'),
-      hint: 'You cannot compare a ' + c.big + ' number with a ' + c.small + ' number. Change one to the other unit first.',
+      hint: 'You cannot compare numbers in different units (' + c.big + ' and ' + c.small + '). Change one to the other unit first.',
       explain: ex('Comparing different units', ['Change ' + A + ' into ' + c.small + ': ' + n + ' × ' + c.f + ' = <b>' + aSmall + ' ' + c.small + '</b>.', 'Compare ' + aSmall + ' ' + c.small + ' with ' + m + ' ' + c.small + '. ' + (aSmall > m ? aSmall + ' is bigger.' : m + ' is bigger.'), 'The ' + w[pickWord] + ' one is <b>' + target + '</b>. ✅']),
       truth: K.text([[times(n, c.f), A], [m, B]].sort(function(x, y){ return pickWord === 0 ? y[0] - x[0] : x[0] - y[0]; })[0][1])
     });
@@ -238,7 +238,7 @@
       prompt: 'Put these in order, starting with the ' + word + '.',
       items: sorted.map(function(i){ return { key: 'v' + i.v, label: i.label }; }),
       hint: 'Change every amount into ' + c.small + ' first (' + fact(c) + '). Then the biggest number is the biggest amount.',
-      explain: ex('Ordering mixed units', ['Change all to ' + c.small + ': ' + sorted.filter(function(i){ return i.label !== i.v + ' ' + c.small; }).map(function(i){ return i.label + ' = ' + i.v + ' ' + c.small; }).join('; ') + '.', 'Now put the numbers in order: ' + sorted.map(function(i){ return i.v; }).join(' &lt; ') + '.', 'The order is <b>' + sorted.map(function(i){ return i.label; }).join(', ') + '</b>. ✅']),
+      explain: ex('Ordering mixed units', [(function(){ const ch = sorted.filter(function(i){ return i.label !== i.v + ' ' + c.small; }); return ch.length ? 'Change all to ' + c.small + ': ' + ch.map(function(i){ return i.label + ' = ' + i.v + ' ' + c.small; }).join('; ') + '.' : 'Every amount is already in ' + c.small + ', so there is nothing to change.'; })(), 'Now put the numbers in order: ' + sorted.map(function(i){ return i.v; }).join(' &lt; ') + '.', 'The order is <b>' + sorted.map(function(i){ return i.label; }).join(', ') + '</b>. ✅']),
       truth: 'o:' + items.slice().sort(function(a, b){ return a.v - b.v; }).map(function(i){ return 'v' + i.v; }).join('|')
     });
     return q;

@@ -126,7 +126,7 @@
     lesson: {
       title: 'Building numbers with blocks',
       steps: [
-        { say: 'Let’s build numbers! A big <b>blue square</b> is <b>100</b> (one hundred). A <b>purple stick</b> is <b>10</b> (one ten). A <b>yellow cube</b> is <b>1</b> (one one).', vis: { kind: 'baseTen', args: [1, 1, 1] } },
+        { say: 'Let’s build numbers! A big <b>blue square</b> is <b>100</b> (one hundred). A <b>purple stick</b> is <b>10</b> (one ten). A <b>yellow cube</b> is <b>1</b> (just one).', vis: { kind: 'baseTen', args: [1, 1, 1] } },
         { say: 'Here are <b>2</b> hundreds, <b>4</b> tens and <b>3</b> ones. 200 + 40 + 3 = <b>243</b>. The digits sit in columns: hundreds, tens, ones.', vis: { kind: 'baseTen', args: [2, 4, 3] } },
         { say: 'A digit’s <b>value</b> depends on its column. In <b>374</b> the 7 is in the tens column, so it means <b>7 tens = 70</b>, not just 7.', vis: { kind: 'baseTen', args: [3, 7, 4] },
           quiz: { prompt: 'What is the value of the 7 in 374?', options: [{ label: '7', ok: false }, { label: '70', ok: true }, { label: '700', ok: false }], right: 'Yes! 7 tens is 70.', wrong: 'The 7 is in the TENS column. 7 tens = 70.' } },

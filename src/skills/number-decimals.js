@@ -71,7 +71,7 @@
   function qHundredthsTyped(){
     const n = randInt(11, 99);
     return numeric({ prompt: 'How many <b>hundredths</b> are in <b>' + dec(n) + '</b>? Type the number.', answer: n, hint: dec(n) + ' = ' + n + '⁄100.',
-      explain: ex('Counting hundredths', [dec(n) + ' = ' + Math.floor(n / 10) + ' tenths and ' + (n % 10) + ' hundredths.', 'One tenth is 10 hundredths, so that is <b>' + n + '</b> hundredths. ✅']), truth: Math.floor(n / 10) * 10 + n % 10 });
+      explain: ex('Counting hundredths', [dec(n) + ' = ' + Math.floor(n / 10) + (Math.floor(n / 10) === 1 ? ' tenth' : ' tenths') + ' and ' + (n % 10) + (n % 10 === 1 ? ' hundredth.' : ' hundredths.'), 'One tenth is 10 hundredths, so that is <b>' + n + '</b> hundredths. ✅']), truth: Math.floor(n / 10) * 10 + n % 10 });
   }
   function qTenthMore(){
     const t = randInt(1, 8), more = chance(0.5), n = t * 10 + (chance(0.5) ? randInt(1, 9) : 0), ans = more ? n + 10 : n - 10;

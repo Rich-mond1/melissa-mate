@@ -285,7 +285,7 @@
       prompt: 'Which box does the new number go in?', visual: vis,
       correct: opt('|' + home[0], cap(R[home[0]].label)), other: opt('|' + cols.filter(function(c){ return c !== home[0]; })[0], cap(R[cols.filter(function(c){ return c !== home[0]; })[0]].label), failWhy(x, cols.filter(function(c){ return c !== home[0]; })[0]) + ' ' + R[home[0]].how),
       hint: R[cols[0]].how,
-      explain: ex('Sorting ' + x, [R[cols[0]].how, asks(x, cols[0]), 'So ' + x + ' goes in the <b>' + cap(R[home[0]].label) + '</b> box. ✅']),
+      explain: ex('Sorting ' + x, [R[cols[0]].how, asks(x, cols[0]), 'So ' + x + ' goes in the <b>“' + cap(R[home[0]].label) + '”</b> box. ✅']),
       truth: '|' + (R[cols[0]].fn(x) ? cols[0] : cols[1]),
       decode: function(){ const p = parseCarroll(vis), hit = p.cells.filter(function(cl){ return inCell(cl, p.card); }); return hit.length === 1 ? '|' + hit[0].c : 'none'; }
     });

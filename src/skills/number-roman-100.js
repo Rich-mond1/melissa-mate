@@ -36,7 +36,7 @@
     return mcq({
       prompt: 'Which Roman numeral is the number <b>' + n + '</b>?', correct: opt(rk(r), r), distractors: cands, keepOrder: true, count: 4,
       hint: 'Build it from I = 1, V = 5, X = 10, L = 50, C = 100. Use IV, IX, XL, XC for 4, 9, 40, 90.',
-      explain: ex('Writing a Roman numeral', [(function(){ const t = Math.floor(n / 10) * 10, o = n % 10; return n + ' = ' + (t ? t + ' + ' : '') + o + ' → ' + (t ? toRoman(t) + ' and ' : '') + (o ? toRoman(o) : ''); })() + '.', 'Together: <b>' + r + '</b>. ✅']), truth: rk(toRomanTable(n))
+      explain: ex('Writing a Roman numeral', [(function(){ const t = Math.floor(n / 10) * 10, o = n % 10; if (!o) return n + ' = ' + t + ' → ' + toRoman(t); if (!t) return n + ' → ' + toRoman(o); return n + ' = ' + t + ' + ' + o + ' → ' + toRoman(t) + ' and ' + toRoman(o); })() + '.', 'Together: <b>' + r + '</b>. ✅']), truth: rk(toRomanTable(n))
     });
   }
   function qTypedToNum(){

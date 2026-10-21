@@ -508,7 +508,7 @@ function onImport(file){
 ACT.undoImport = function(){
   let raw = null; try { raw = localStorage.getItem(PREV_KEY); } catch(e){}
   if(!raw) return toast('No hay nada que deshacer');
-  if(!confirm('Volver al progreso anterior a la última importación o borrado?')) return;
+  if(!confirm('¿Volver al progreso anterior a la última importación o borrado?')) return;
   try { const cur = JSON.stringify(S); S = mergeState(JSON.parse(raw)); save(); localStorage.setItem(PREV_KEY, cur); toast('Progreso anterior recuperado'); go('parent'); } catch(e){ toast('No se pudo recuperar'); }
 };
 

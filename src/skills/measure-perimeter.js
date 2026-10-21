@@ -238,7 +238,7 @@
       nearby: [s, -s, 2, -2],
       valid: function(v){ return v > 0; },
       hint: 'Count the sides first. Then there are that many lots of ' + s + ' cm.',
-      explain: ex('Equal sides', ['A ' + SHAPE_NAME[n] + ' has <b>' + n + ' sides</b>, each ' + s + ' cm.', n + ' × ' + s + (n <= 6 ? ' = ' + add(Array(n).fill(s)) : '') + ' = ?', 'The perimeter is <b>' + P + ' cm</b>. ✅']),
+      explain: ex('Equal sides', [(/^[aeiou]/.test(SHAPE_NAME[n]) ? 'An ' : 'A ') + SHAPE_NAME[n] + ' has <b>' + n + ' sides</b>, each ' + s + ' cm.', n + ' × ' + s + (n <= 6 ? ' = ' + add(Array(n).fill(s)) : '') + ' = ?', 'The perimeter is <b>' + P + ' cm</b>. ✅']),
       truth: sum(Array(n).fill(s)), decode: function(){ return measured(vis); }
     });
   }
@@ -369,7 +369,7 @@
     return numeric({
       prompt: nm + ' sticks a ribbon along every side of this ' + SHAPE_NAME[n] + ' (all sides equal). How many cm of ribbon does ' + nm + ' need?', visual: vis, answer: P, unit: 'cm',
       hint: 'Count the sides, then multiply by the length of one side.',
-      explain: ex('Ribbon round a ' + SHAPE_NAME[n], ['A ' + SHAPE_NAME[n] + ' has <b>' + n + '</b> equal sides of ' + s + ' cm.', n + ' × ' + s + ' = ?', nm + ' needs <b>' + P + ' cm</b>. ✅']),
+      explain: ex('Ribbon round ' + (/^[aeiou]/.test(SHAPE_NAME[n]) ? 'an ' : 'a ') + SHAPE_NAME[n], [(/^[aeiou]/.test(SHAPE_NAME[n]) ? 'An ' : 'A ') + SHAPE_NAME[n] + ' has <b>' + n + '</b> equal sides of ' + s + ' cm.', n + ' × ' + s + ' = ?', nm + ' needs <b>' + P + ' cm</b>. ✅']),
       truth: sum(Array(n).fill(s)), decode: function(){ return measured(vis); },
       wrong: function(v){ return v === n + s ? 'You added the number of sides and the length. Multiply them.' : v === (n - 1) * s ? 'You missed one side.' : ''; }
     });

@@ -207,7 +207,7 @@
       hint: 'Each little mark is 10 g. Start at the last labelled number the needle passed, then count the little marks.',
       explain: ex('Between the labels', readSteps(val, sc).concat(['The scale shows <b>' + val + ' g</b>. ✅'])),
       truth: lab + ticks * 10, decode: function(){ return dv(vis, 10); },
-      wrong: function(v){ return v === lab ? 'That is the last labelled number. The needle is ' + ticks + ' little marks further.' : v === lab + 100 ? 'The needle has not reached ' + (lab + 100) + ' yet.' : v === lab + ticks ? 'Each little mark is 10 g, not 1 g.' : v === lab + ticks * 5 ? 'Each little mark is 10 g, not 5 g.' : ''; }
+      wrong: function(v){ return v === lab ? 'That is the last labelled number. The needle is ' + (ticks === 1 ? '1 little mark' : ticks + ' little marks') + ' further.' : v === lab + 100 ? 'The needle has not reached ' + (lab + 100) + ' yet.' : v === lab + ticks ? 'Each little mark is 10 g, not 1 g.' : v === lab + ticks * 5 ? 'Each little mark is 10 g, not 5 g.' : ''; }
     });
   }
   function t3K(){

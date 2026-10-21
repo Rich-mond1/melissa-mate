@@ -186,7 +186,7 @@
           prompt: 'Which clock shows ' + dig(h, m) + '?', visual: '',
           correct: opt(K.time(h, m), V.smallClock(h, m)), distractors: wr, keepOrder: true, count: 3,
           hint: 'Find the minutes first: ' + (m % 5 === 0 ? 'count in 5s' : 'count in 5s then add the ticks') + '. Then check the short hand has just passed ' + h + '.',
-          explain: ex('Finding ' + dig(h, m), [dig(h, m) + ' means ' + plural(m, 'minute') + ' past ' + h + '.', 'The long hand: ' + countStr(m) + (m % 5 ? ', then ' + ticksStr(m) : '') + '.', 'The short hand has just passed ' + h + '. Only one clock matches: <b>' + dig(h, m) + '</b>. ✅']),
+          explain: ex('Finding ' + dig(h, m), [dig(h, m) + ' means ' + plural(m, 'minute') + ' past ' + h + '.', 'The long hand: ' + (countStr(m) ? countStr(m) + (m % 5 ? ', then ' + ticksStr(m) : '') : 'start at the 12, then ' + ticksStr(m)) + '.', 'The short hand has just passed ' + h + '. Only one clock matches: <b>' + dig(h, m) + '</b>. ✅']),
           truth: K.time(h, parseInt(dig(h, m).split(':')[1], 10))
         });
         return visualOpts(q);

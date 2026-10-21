@@ -70,7 +70,7 @@
       prompt: 'Type the missing number:  <b>' + (chance(0.5) ? a + ' + ▢ = 20' : '▢ + ' + a + ' = 20') + '</b>', answer: b,
       hint: 'Count on from ' + a + ' to 20, or use the bond to 10 first.',
       explain: ex('Bonds to 20', ['Count on from ' + a + ' to 20' + (a < 10 ? ': first to 10 (' + (10 - a) + '), then ' + 10 + ' more.' : ': first to the next ten if you like, then on to 20.'), 'That is <b>' + b + '</b> more.', 'Check: ' + a + ' + ' + b + ' = 20. ✅']), truth: countOn(a, 20),
-      wrong: function(v){ return v + a !== 20 ? 'Check by adding: ' + a + ' + ' + v + ' = ' + (a + v) + ', not 20.' : ''; }
+      wrong: function(v){ return v + a !== 20 ? 'Check by adding: ' + a + ' + ' + (v < 0 ? '(' + v + ')' : v) + ' = ' + (a + v) + ', not 20.' : ''; }
     });
   }
   function qTens100(){
@@ -79,7 +79,7 @@
       prompt: 'Type the missing number:  <b>' + a + ' + ▢ = 100</b>', answer: b,
       hint: 'Think of tens: ' + a / 10 + ' tens and how many more tens make 10 tens?',
       explain: ex('Bonds to 100 (tens)', [a / 10 + ' tens + ' + b / 10 + ' tens = 10 tens.', '10 tens is <b>100</b>, so the missing number is <b>' + b + '</b>.', a + ' + ' + b + ' = 100. ✅']), truth: countOn(a, 100),
-      wrong: function(v){ return v + a !== 100 ? 'Check by adding: ' + a + ' + ' + v + ' = ' + (a + v) + ', not 100.' : ''; }
+      wrong: function(v){ return v + a !== 100 ? 'Check by adding: ' + a + ' + ' + (v < 0 ? '(' + v + ')' : v) + ' = ' + (a + v) + ', not 100.' : ''; }
     });
   }
   function qTyped100(){
@@ -89,7 +89,7 @@
       prompt: 'Type the missing number:  <b>' + a + ' + ▢ = 100</b>', answer: b,
       hint: 'First make the next ten, then count the tens to 100.',
       explain: ex('Bonds to 100', [a + ' + ' + (10 - ones) + ' = ' + (a + 10 - ones) + ' (the next ten).', (a + 10 - ones) + ' + ' + (100 - a - 10 + ones) + ' = 100.', (10 - ones) + ' + ' + (100 - a - 10 + ones) + ' = <b>' + b + '</b>. ✅']), truth: countOn(a, 100),
-      wrong: function(v){ return v === 100 - a + 10 ? 'Check: ' + a + ' + ' + v + ' = ' + (a + v) + '. That is 10 too many.' : v + a !== 100 ? 'Check by adding: ' + a + ' + ' + v + ' = ' + (a + v) + ', not 100.' : ''; }
+      wrong: function(v){ return v === 100 - a + 10 ? 'Check: ' + a + ' + ' + (v < 0 ? '(' + v + ')' : v) + ' = ' + (a + v) + '. That is 10 too many.' : v + a !== 100 ? 'Check by adding: ' + a + ' + ' + (v < 0 ? '(' + v + ')' : v) + ' = ' + (a + v) + ', not 100.' : ''; }
     });
   }
   function qPairs100(){
@@ -107,7 +107,7 @@
       prompt: left ? who + ' has 100 ' + it + ' and gives ' + a + ' away. How many ' + it + ' are left?' : who + ' has ' + a + ' ' + it + '. How many more does ' + who + ' need to have 100?', answer: b,
       hint: 'Count on from ' + a + ' to 100: ones to the next ten, then tens.',
       explain: ex('Bonds to 100 in a story', [left ? '100 − ' + a + ' is the same as: what do I add to ' + a + ' to make 100?' : 'We need what is missing from ' + a + ' to reach 100.', 'Next ten, then tens: <b>' + b + '</b>.', a + ' + ' + b + ' = 100. ✅']), truth: countOn(a, 100),
-      wrong: function(v){ return v === a ? a + ' is the number in the story. Find the bond to 100.' : v + a !== 100 ? 'Check by adding: ' + a + ' + ' + v + ' = ' + (a + v) + ', not 100.' : ''; }
+      wrong: function(v){ return v === a ? a + ' is the number in the story. Find the bond to 100.' : v + a !== 100 ? 'Check by adding: ' + a + ' + ' + (v < 0 ? '(' + v + ')' : v) + ' = ' + (a + v) + ', not 100.' : ''; }
     });
   }
 

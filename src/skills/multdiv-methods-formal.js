@@ -45,7 +45,7 @@
     const m = c.m, w = [], t = m.t, correct = c.a * c.b;
     if(m.c1){
       w.push({ v: 10 * (t * c.b) + m.ro, why: 'You forgot the carried ' + m.c1 + '. Add it to the tens: ' + t * c.b + ' + ' + m.c1 + ' = ' + m.pt + '.' });
-      w.push({ v: 10 * (t * c.b) + m.ro + m.c1, why: 'The carried ' + m.c1 + ' is worth ' + m.c1 + ' TENS, so it is added in the tens column, not the ones.' });
+      w.push({ v: 10 * (t * c.b) + m.ro + m.c1, why: 'The carried ' + m.c1 + ' is worth ' + m.c1 + (m.c1 === 1 ? ' TEN' : ' TENS') + ', so it is added in the tens column, not the ones.' });
       w.push({ v: Number(String(t * c.b) + String(m.po)), why: 'You wrote both products side by side. Write only the ones digit (' + m.ro + ') and carry the rest.' });
       w.push({ v: m.po, why: m.po + ' is only the ones: ' + m.o + ' × ' + c.b + '. The tens still need multiplying.' });
     } else {
@@ -149,7 +149,7 @@
       prompt: who + ' worked out ' + c.a + ' × ' + c.b + ' and got <b>' + bad + '</b>. ' + who + ' forgot to add the carry. What is the correct answer?', answer: c.a * c.b,
       hint: 'The ones product ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + ' carries ' + c.m.c1 + '. Add it to the tens step.',
       explain: ex('Putting the carry back', workings(c)), truth: c.a * c.b,
-      wrong: function(v){ return v === bad ? bad + ' is the answer without the carry. Add the carried ' + c.m.c1 + ' tens.' : ''; }
+      wrong: function(v){ return v === bad ? bad + ' is the answer without the carry. Add the carried ' + c.m.c1 + ' to the tens.' : ''; }
     });
   }
   function qMissingDigit(){
