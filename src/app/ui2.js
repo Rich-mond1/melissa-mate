@@ -70,6 +70,7 @@ SCREENS.question = function(){
   const q = SESS.q; const sk = skillById(SESS.skillId_); const placing = SESS.kind === 'placement'; const fb = SESS.phase === 'fb';
   let h = '<div class="topbar"><button class="icon-btn" data-act="quit">✕</button><h2 class="white grow center">' +
     (placing ? '🗺️ ' + esc(strandMeta(sk.strand).name) : esc(sk.emoji + ' ' + (SESS.kind === 'review' ? 'Brain boost' : sk.name))) + '</h2><span class="pill nobtn">' + (placing ? (function(){ const L = questLands(S); return 'Land ' + Math.min(L.total, L.done + 1) + '/' + L.total; })() : (SESS.idx + 1) + '/' + SESS.items.length) + '</span></div>' + sessionDots();
+  if(placing) h += trailHTML(true);
   h += '<div class="card qcard">' + (q.visual ? '<div class="qvis">' + q.visual + '</div>' : '') + '<div class="qprompt">' + q.prompt + '</div><button class="speak" data-act="sayq">🔊</button>';
   const lock = fb;
   if(q.type === 'mcq'){
@@ -415,7 +416,8 @@ SCREENS.parent = function(){
   { const e = m.stars; h += '<div class="card"><h3>⭐ Estrellas y premios</h3><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Ganadas / gastadas / disponibles</span><b>' + e.earned + ' / ' + e.spent + ' / ' + e.balance + '</b></div>' +
     '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Ritmo (por día de juego)</span><b>' + (e.perDay === null ? '—' : e.perDay + ' ⭐') + '</b></div>' +
     '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Prendas compradas</span><b>' + e.owned + '</b></div>' +
-    '<p class="muted" style="margin-top:6px">' + (e.cheapest === null ? 'Ya tiene todo el vestuario.' : (e.daysToCheapest === 0 ? 'Ya puede comprar la prenda más barata que le falta (' + e.cheapest + ' ⭐).' : (e.daysToCheapest === null ? 'Aún no hay ritmo para estimar.' : 'Con su ritmo, la prenda más barata que le falta (' + e.cheapest + ' ⭐) llega en unos ' + e.daysToCheapest + ' día(s) de juego.'))) + ' Si tarda demasiado se desmotiva; si compra todo en un día, no hay meta: si ves cualquiera de las dos, avísame y ajusto los precios.</p></div><div class="gap"></div>'; }
+    '<p class="muted" style="margin-top:6px">' + (e.cheapest === null ? 'Ya tiene todo el vestuario.' : (e.daysToCheapest === 0 ? 'Ya puede comprar la prenda más barata que le falta (' + e.cheapest + ' ⭐).' : (e.daysToCheapest === null ? 'Aún no hay ritmo para estimar.' : 'Con su ritmo, la prenda más barata que le falta (' + e.cheapest + ' ⭐) llega en unos ' + e.daysToCheapest + ' día(s) de juego.'))) + ' Si tarda demasiado se desmotiva; si compra todo en un día, no hay meta: ajusta el multiplicador de precios (solo afecta a lo que compre a partir de ahora).</p>' +
+    '<p style="margin-top:8px"><b>Precio del vestuario</b></p><div class="chips">' + SHOP_MULTS.map(function(x){ return '<button class="chip' + (shopMult(S) === x ? ' picked' : '') + '" data-act="shopMult" data-v="' + x + '">×' + x + '</button>'; }).join('') + '</div></div><div class="gap"></div>'; }
   h += '<div class="card"><h3>🏅 Dominio</h3><p class="muted" style="margin-bottom:6px">Asentada = plata con buen acierto sin ayuda. Dominada = oro tras un repaso otro día.</p>' + [4, 3, 2, 1, 0].map(function(k){ return row(LV[k], m.levels[k] + ' habilidades'); }).join('') + '</div><div class="gap"></div>';
   h += '<div class="card"><h3>¿Está aprendiendo de verdad?</h3>' +
     row('Repasos superados (días después)', revN ? pct(revC / revN) + ' de ' + revN : 'sin datos aún') +
@@ -449,6 +451,7 @@ ACT.plus10 = function(){ addUsed(-600); if(S.timer.used.sec < 0) S.timer.used.se
 ACT.setFocus = function(d){ S.focus = d.id || null; save(); render(); };
 ACT.radd = function(){ S.rewards.push({ id: 'r' + Date.now(), emoji: '🎁', title: 'Nuevo premio', cost: 50 }); save(); render(); };
 ACT.rdel = function(d){ S.rewards.splice(+d.i, 1); save(); render(); };
+ACT.shopMult = function(d){ const x = Number(d.v); if(SHOP_MULTS.indexOf(x) > -1){ S.shopMult = x; save(); render(); } };
 ACT.redoPlacement = function(){ if(!confirm('¿Repetir el diagnóstico? Se conservan medallas, estrellas y stickers.')) return; S.placement = defaultState().placement; diagStart(S); S.placement.started = false; save(); go('placementIntro'); };
 ACT.reset = function(){ const bk = parentMetrics(S, todayStr()).backup; if(!confirm('¿Borrar TODO el progreso (' + describeState(S) + ')? ' + (bk.last ? 'Última copia: ' + bk.last + '.' : 'No hay ninguna copia de seguridad.') + ' Se guarda una copia interna para poder deshacerlo.')) return; if(!confirm('Seguro: se perderán estrellas, stickers y medallas.')) return; keepPrevious(); try { localStorage.removeItem(STATE_KEY); } catch(e){} S = defaultState(); save(); go('welcome'); };
 ACT.copySummary = function(){
