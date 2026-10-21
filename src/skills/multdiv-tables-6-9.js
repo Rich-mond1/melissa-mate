@@ -301,7 +301,7 @@
   function q6Double(){
     const n = randInt(2, 12), three = P(3, n), six = P(6, n), up = chance(0.65);
     if(up) return mcqNum({
-      prompt: '3 × ' + n + ' = ' + three + '. So 6 × ' + n + ' = ?', answer: six,
+      prompt: '6 is double 3. You know <b>3 × ' + n + ' = ' + three + '</b>. Double it to find <b>6 × ' + n + ' = ?</b>', answer: six,
       wrong: [{ v: three, why: three + ' is the answer for 3 groups. 6 is DOUBLE 3, so double ' + three + '.' }, { v: three + n, why: 'That is 4 × ' + n + '. 6 groups is double the 3 groups.' }, { v: three + 6, why: 'You added 6. Doubling means ' + three + ' + ' + three + '.' }, { v: six + n, why: 'That is 7 × ' + n + ': one group too many.' }],
       nearby: [1, -1, 2, -2, 10, -10], valid: pos, count: 4,
       hint: '6 is double 3, so 6 groups is double 3 groups. Double ' + three + '.',
@@ -321,7 +321,7 @@
   function q9Ten(){
     const n = randInt(2, 12), ten = 10 * n, nine = P(9, n), sub = chance(0.55);
     if(sub) return mcqNum({
-      prompt: '10 × ' + n + ' = ' + ten + '. So 9 × ' + n + ' = ' + ten + ' − ?', answer: n,
+      prompt: '9 groups is one group fewer than 10 groups. You know <b>10 × ' + n + ' = ' + ten + '</b>. So <b>9 × ' + n + ' = ' + ten + ' − ?</b> What do we take away?', answer: n,
       wrong: [{ v: 9, why: '9 is the table number. 9 groups is one group fewer than 10 groups, and each group is ' + n + '.' }, { v: 10, why: '10 would take away 10 groups… you only need to take away ONE group of ' + n + '.' }, { v: 1, why: 'You take away one GROUP, and one group is ' + n + ', not 1.' }, { v: ten, why: ten + ' is what you start with. Take away one group of ' + n + '.' }],
       nearby: [1, -1, 2], valid: pos, count: 4,
       hint: '9 groups is 10 groups take away one group. How big is one group?',

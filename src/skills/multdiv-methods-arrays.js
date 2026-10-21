@@ -235,7 +235,7 @@
           if(chance(0.5)){
             const a = randInt(3, 9); let b = randInt(3, 9); if(b === a) b = a === 9 ? 4 : a + 1;
             return numeric({
-              prompt: a + ' × ' + b + ' = ' + b + ' × ?', answer: a,
+              prompt: 'Swap the numbers. Fill the gap: <b>' + a + ' × ' + b + ' = ' + b + ' × ?</b>', answer: a,
               hint: 'The two sides use the same two numbers, swapped. What is missing on the right?',
               explain: ex('Swapping', [a + ' × ' + b + ' and ' + b + ' × ' + a + ' make the same array.', 'So ' + a + ' × ' + b + ' = ' + b + ' × ' + a + '.', 'The missing number is <b>' + a + '</b>. ✅']),
               truth: (a * b) / b, wrong: function(v){ return v === b ? 'That is the number already there. The missing one is the other number in the sum.' : (v === a * b ? 'That is the answer to the multiplication. We want the missing number.' : ''); }

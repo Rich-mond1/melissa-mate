@@ -120,7 +120,7 @@
   }
   function qWord(){
     const d = dataset(), who = pick(NAMES), i = randInt(0, d.times.length - 1), extra = pick([2, 4, 6]);
-    return numeric({ prompt: d.th.intro + ' At <b>' + d.times[i] + '</b> ' + who + ' reads the graph, then the value goes up by another <b>' + extra + '</b>. What would the reading be? Type the number.', visual: d.vis, answer: d.vals[i] + extra, hint: 'First read the dot at ' + d.times[i] + ', then add ' + extra + '.',
+    return numeric({ prompt: d.th.intro + ' At <b>' + d.times[i] + '</b> ' + who + ' reads the value on the graph. Then it goes up by <b>' + extra + '</b>. What is the new value? Type the number.', visual: d.vis, answer: d.vals[i] + extra, hint: 'First read the dot at ' + d.times[i] + ', then add ' + extra + '.',
       explain: ex('Read, then add', ['At ' + d.times[i] + ' the reading is ' + d.vals[i] + '.', d.vals[i] + ' + ' + extra + ' = <b>' + (d.vals[i] + extra) + '</b>. ✅']), truth: decode(d.vis)[i] + extra, decode: function(){ return decode(d.vis)[i] + extra; },
       wrong: function(v){ return v === d.vals[i] ? 'That is only the reading. Now add ' + extra + '.' : ''; } });
   }

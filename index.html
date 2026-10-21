@@ -2333,7 +2333,7 @@ if(typeof module !== 'undefined') module.exports = V;
     ] : [
       function(){ return { t: N1 + ' has <b>' + x + '</b> ' + th + '. ' + N1 + ' gives <b>' + y + '</b> away. How many ' + th + ' are left?', clue: 'left', w: 'takeaway' }; },
       function(){ return { t: 'A hall has <b>' + x + '</b> seats. <b>' + y + '</b> seats are taken. How many seats are empty?', clue: 'empty', w: 'takeaway' }; },
-      function(){ return { t: N1 + ' scores <b>' + x + '</b> points. ' + N2 + ' scores <b>' + y + '</b> points. How many more points does ' + N1 + ' score?', clue: 'how many more', w: 'compare' }; },
+      function(){ return { t: N1 + ' scores <b>' + x + '</b> points. ' + N2 + ' scores <b>' + y + '</b> points. How many more points does ' + N1 + ' score than ' + N2 + '?', clue: 'how many more', w: 'compare' }; },
       function(){ return { t: N1 + ' has <b>' + y + '</b> ' + th + ' and wants <b>' + x + '</b>. How many more ' + th + ' does ' + N1 + ' need?', clue: 'how many more', w: 'compare' }; },
       function(){ return { t: 'A unicorn stable has <b>' + x + '</b> bales of hay. <b>' + y + '</b> bales are eaten. How many bales are left?', clue: 'left', w: 'takeaway' }; }
     ];
@@ -2788,7 +2788,7 @@ if(typeof module !== 'undefined') module.exports = V;
   }
   function qWord(){
     const d = dataset(), who = pick(NAMES), i = randInt(0, d.times.length - 1), extra = pick([2, 4, 6]);
-    return numeric({ prompt: d.th.intro + ' At <b>' + d.times[i] + '</b> ' + who + ' reads the graph, then the value goes up by another <b>' + extra + '</b>. What would the reading be? Type the number.', visual: d.vis, answer: d.vals[i] + extra, hint: 'First read the dot at ' + d.times[i] + ', then add ' + extra + '.',
+    return numeric({ prompt: d.th.intro + ' At <b>' + d.times[i] + '</b> ' + who + ' reads the value on the graph. Then it goes up by <b>' + extra + '</b>. What is the new value? Type the number.', visual: d.vis, answer: d.vals[i] + extra, hint: 'First read the dot at ' + d.times[i] + ', then add ' + extra + '.',
       explain: ex('Read, then add', ['At ' + d.times[i] + ' the reading is ' + d.vals[i] + '.', d.vals[i] + ' + ' + extra + ' = <b>' + (d.vals[i] + extra) + '</b>. ✅']), truth: decode(d.vis)[i] + extra, decode: function(){ return decode(d.vis)[i] + extra; },
       wrong: function(v){ return v === d.vals[i] ? 'That is only the reading. Now add ' + extra + '.' : ''; } });
   }
@@ -3333,7 +3333,7 @@ if(typeof module !== 'undefined') module.exports = V;
         decode: function(){ var d = ds(o), vals = Object.keys(d).map(function(l){ return d[l]; }); return Math.max.apply(null, vals) - Math.min.apply(null, vals); }, nearby: [o.sc, -o.sc, 2, -2, 10] });
     }
     var a2 = randInt(0, 3), add = pick([4, 5, 6, 8]), b2 = (a2 + randInt(1, 3)) % 4, ans3 = o.vs[a2] + add + o.vs[b2];
-    return mcqNum({ prompt: t + ' ' + o.labs[a2] + ' gets ' + add + ' more ' + o.th.things + '. How many do ' + o.labs[a2] + ' and ' + o.labs[b2] + ' have now, altogether?', visual: o.vis, answer: ans3,
+    return mcqNum({ prompt: t + ' ' + o.labs[a2] + ' gets ' + add + ' more ' + (add === 1 ? singular(o.th.things) : o.th.things) + '. How many do ' + o.labs[a2] + ' and ' + o.labs[b2] + ' have now, altogether?', visual: o.vis, answer: ans3,
       wrong: wrongs([{ v: o.vs[a2] + o.vs[b2], why: 'You forgot the ' + add + ' more.' }, { v: o.vs[a2] + add, why: 'That is only ' + o.labs[a2] + '. Add ' + o.labs[b2] + ' too.' }, scaleWrong(o, ans3)]),
       hint: 'Step 1: add the extra ' + add + ' to the first person. Step 2: add the other person.',
       explain: ex('Two steps', ['Step 1: ' + o.labs[a2] + ' now has ' + o.vs[a2] + ' + ' + add + ' = <b>' + (o.vs[a2] + add) + '</b>.', 'Step 2: add ' + readStep(o, b2) + '.', 'Altogether: <b>' + ans3 + '</b>. ✅']),
@@ -3350,7 +3350,7 @@ if(typeof module !== 'undefined') module.exports = V;
       var winner = o.vs[x] + n > o.vs[cur] ? x : cur;
       var cands = o.labs.map(function(l, i){ return opt(K.text(l), l, i === x ? o.labs[x] + ' has ' + o.vs[x] + ' + ' + n + ' = ' + (o.vs[x] + n) + ', which is ' + (winner === cur ? 'still less than ' + o.vs[cur] + '.' : 'not the biggest.') : (i === cur ? o.labs[cur] + ' has ' + o.vs[cur] + ' now' + (winner === x ? ', but ' + o.labs[x] + ' will have more.' : ' — check the new total for ' + o.labs[x] + '.') : o.labs[i] + ' is smaller than the others.')); });
       var fm = function(d){ var best = null, tot = {}; Object.keys(d).forEach(function(l){ tot[l] = d[l] + (l === o.labs[x] ? n : 0); if(best === null || tot[l] > tot[best]) best = l; }); return K.text(best); };
-      return mcq({ prompt: t + ' ' + o.labs[x] + ' gets ' + n + ' more ' + o.th.things + '. Who has the most now?', visual: o.vis, correct: opt(K.text(o.labs[winner]), o.labs[winner]), distractors: cands, keepOrder: true,
+      return mcq({ prompt: t + ' ' + o.labs[x] + ' gets ' + n + ' more ' + (n === 1 ? singular(o.th.things) : o.th.things) + '. Who has the most now?', visual: o.vis, correct: opt(K.text(o.labs[winner]), o.labs[winner]), distractors: cands, keepOrder: true,
         hint: 'Step 1: add the extra ' + n + ' to ' + o.labs[x] + '’s number. Step 2: compare everyone.',
         explain: ex('Two steps', ['Step 1: ' + o.labs[x] + ' = ' + o.vs[x] + ' + ' + n + ' = <b>' + (o.vs[x] + n) + '</b>.', 'Step 2: the biggest other number is ' + o.labs[cur] + ' with <b>' + o.vs[cur] + '</b>.', 'So <b>' + o.labs[winner] + '</b> has the most now. ✅']),
         truth: fm(ds(o)), decode: function(){ return fm(ds(o)); } });
@@ -5346,7 +5346,7 @@ if(typeof module !== 'undefined') module.exports = V;
     cylinder: ['a tin of beans', 'a drinks can', 'a drum', 'a round candle'],
     cone: ['a party hat', 'an ice-cream cone', 'a traffic cone', 'a wizard’s hat'],
     sphere: ['a marble', 'a basketball', 'a bouncy ball', 'a globe'],
-    'square-based pyramid': ['an Egyptian pyramid', 'the pyramids in Egypt'],
+    'square-based pyramid': ['an Egyptian pyramid', 'a pyramid in Egypt'],
     'triangular prism': ['a camping tent', 'a tent with triangle ends']
   };
   const PROPN = { f: 'flat faces', e: 'edges', v: 'vertices' };
@@ -8168,7 +8168,7 @@ if(typeof module !== 'undefined') module.exports = V;
       if(nums.filter(function(n){ return sat(a, n) && sat(b, n); }).length !== 1) continue;
       const vis = cardsHTML(shuffle(nums));
       return mcq({
-        prompt: 'Which number is ' + R[a].label + ' AND ' + R[b].label + '?', visual: vis, count: 4,
+        prompt: 'Which number is ' + R[a].label + ', and also ' + R[b].label + '?', visual: vis, count: 4,
         correct: opt(K.num(ans), String(ans)),
         distractors: nums.slice(1).map(function(n){ return opt(K.num(n), String(n), n + (sat(a, n) ? ' is ' + R[a].label + ' but it is ' + R[R[b].comp].label + '.' : (sat(b, n) ? ' is ' + R[b].label + ' but it is ' + R[R[a].comp].label + '.' : ' is neither of those things.'))); }),
         hint: 'A number must pass BOTH tests. Test each number twice: once for each rule.',
@@ -8228,7 +8228,7 @@ if(typeof module !== 'undefined') module.exports = V;
       const prompt = form === 'not' ? 'Which shape does NOT have this property: it ' + rule.label + '?' : 'Which shape ' + rule.label.replace(/^has /, 'has ') + '?';
       const optsList = shuffle(set);
       const q = mcq({
-        prompt: form === 'not' ? 'Three of these shapes ' + rule.label.replace(/^has/, 'have') + '. Which shape does NOT?' : 'Which of these shapes ' + rule.label + '?',
+        prompt: form === 'not' ? 'Three of these shapes ' + rule.label.replace(/^has/, 'have').replace(/\ball its\b/, 'all their') + '. Which shape does NOT?' : 'Which of these shapes ' + rule.label + '?',
         visual: '', count: 4,
         correct: opt(K.text(target), V.shape2D(target, { width: 112 })),
         distractors: optsList.filter(function(n){ return n !== target; }).map(function(n){ return opt(K.text(n), V.shape2D(n, { width: 112 }), form === 'not' ? 'The ' + SINFO[n].nm + ' DOES ' + rule.label.replace(/^has/, 'have') + '. Look for the one that does not.' : 'The ' + SINFO[n].nm + ' does not match. ' + rule.why(SINFO[n])); }),
@@ -10855,7 +10855,7 @@ if(typeof module !== 'undefined') module.exports = V;
   }
   function qWord(){
     const who = pick(NAMES), n = randInt(3, 40), k = pick([10, 100]);
-    const items = k === 10 ? 'a box holds 10 pencils' : 'a crate holds 100 books';
+    const items = k === 10 ? 'box holds 10 pencils' : 'crate holds 100 books';
     const thing = k === 10 ? 'pencils' : 'books';
     return numeric({ prompt: who + ' has ' + n + ' full ' + (k === 10 ? 'boxes' : 'crates') + '. Each ' + items + '. How many ' + thing + ' is that altogether?', answer: n * k, hint: 'Multiply the number of ' + (k === 10 ? 'boxes' : 'crates') + ' by ' + k + '.',
       explain: ex('Groups of ' + k, [n + ' groups of ' + k + ' = ' + n + ' × ' + k + '.', 'Digits move ' + (k === 10 ? 'one' : 'two') + ' place' + (k === 10 ? '' : 's') + ' left: <b>' + n * k + '</b>. ✅']), truth: times(n, k) });
@@ -11253,7 +11253,7 @@ if(typeof module !== 'undefined') module.exports = V;
           if(chance(0.5)){
             const a = randInt(3, 9); let b = randInt(3, 9); if(b === a) b = a === 9 ? 4 : a + 1;
             return numeric({
-              prompt: a + ' × ' + b + ' = ' + b + ' × ?', answer: a,
+              prompt: 'Swap the numbers. Fill the gap: <b>' + a + ' × ' + b + ' = ' + b + ' × ?</b>', answer: a,
               hint: 'The two sides use the same two numbers, swapped. What is missing on the right?',
               explain: ex('Swapping', [a + ' × ' + b + ' and ' + b + ' × ' + a + ' make the same array.', 'So ' + a + ' × ' + b + ' = ' + b + ' × ' + a + '.', 'The missing number is <b>' + a + '</b>. ✅']),
               truth: (a * b) / b, wrong: function(v){ return v === b ? 'That is the number already there. The missing one is the other number in the sum.' : (v === a * b ? 'That is the answer to the multiplication. We want the missing number.' : ''); }
@@ -11987,7 +11987,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qTypedFull(){
     const m = make(10, true), it = pick(ITEMS), who = pick(NAMES);
     return numeric({
-      prompt: who + ' has ' + m.n + ' ' + it[0] + '. ' + who + ' fills ' + it[1] + ' that each hold ' + m.d + '. How many are filled completely?', answer: m.q,
+      prompt: who + ' has ' + m.n + ' ' + it[0] + '. ' + who + ' fills ' + it[1] + ' that each hold ' + m.d + '. How many ' + it[1] + ' are filled completely?', answer: m.q,
       hint: 'Count in ' + m.d + 's without going over ' + m.n + '.', explain: ex('Full ' + it[1], steps(m)), truth: divmod(m.n, m.d).q,
       wrong: function(v){ return v === m.q + 1 ? 'The ' + m.r + ' left over cannot fill another one.' : v === m.r ? m.r + ' is the number left over, not the number filled.' : ''; }
     });
@@ -13275,7 +13275,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qPlusOne(){
     const n = randInt(2, 12), two = P(2, n), p = P(3, n);
     return mcqNum({
-      prompt: '2 × ' + n + ' = ' + two + '. So 3 × ' + n + ' = ' + two + ' + ?', answer: n,
+      prompt: '3 groups is one group more than 2 groups. You know <b>2 × ' + n + ' = ' + two + '</b>. So <b>3 × ' + n + ' = ' + two + ' + ?</b> What do we add?', answer: n,
       wrong: [{ v: 3, why: '3 is the table number. You need to add one more GROUP, and each group is ' + n + '.' }, { v: 2, why: 'You need one more group of ' + n + ', not 2.' }, { v: two, why: two + ' is what you already have. Add one more ' + n + '.' }, { v: p, why: p + ' is the final answer to 3 × ' + n + '. The question asks what to ADD.' }],
       nearby: [1, -1, 2, -2], valid: pos, count: 4,
       hint: '3 groups is 2 groups plus one more group. How big is one group?',
@@ -14015,7 +14015,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function q6Double(){
     const n = randInt(2, 12), three = P(3, n), six = P(6, n), up = chance(0.65);
     if(up) return mcqNum({
-      prompt: '3 × ' + n + ' = ' + three + '. So 6 × ' + n + ' = ?', answer: six,
+      prompt: '6 is double 3. You know <b>3 × ' + n + ' = ' + three + '</b>. Double it to find <b>6 × ' + n + ' = ?</b>', answer: six,
       wrong: [{ v: three, why: three + ' is the answer for 3 groups. 6 is DOUBLE 3, so double ' + three + '.' }, { v: three + n, why: 'That is 4 × ' + n + '. 6 groups is double the 3 groups.' }, { v: three + 6, why: 'You added 6. Doubling means ' + three + ' + ' + three + '.' }, { v: six + n, why: 'That is 7 × ' + n + ': one group too many.' }],
       nearby: [1, -1, 2, -2, 10, -10], valid: pos, count: 4,
       hint: '6 is double 3, so 6 groups is double 3 groups. Double ' + three + '.',
@@ -14035,7 +14035,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function q9Ten(){
     const n = randInt(2, 12), ten = 10 * n, nine = P(9, n), sub = chance(0.55);
     if(sub) return mcqNum({
-      prompt: '10 × ' + n + ' = ' + ten + '. So 9 × ' + n + ' = ' + ten + ' − ?', answer: n,
+      prompt: '9 groups is one group fewer than 10 groups. You know <b>10 × ' + n + ' = ' + ten + '</b>. So <b>9 × ' + n + ' = ' + ten + ' − ?</b> What do we take away?', answer: n,
       wrong: [{ v: 9, why: '9 is the table number. 9 groups is one group fewer than 10 groups, and each group is ' + n + '.' }, { v: 10, why: '10 would take away 10 groups… you only need to take away ONE group of ' + n + '.' }, { v: 1, why: 'You take away one GROUP, and one group is ' + n + ', not 1.' }, { v: ten, why: ten + ' is what you start with. Take away one group of ' + n + '.' }],
       nearby: [1, -1, 2], valid: pos, count: 4,
       hint: '9 groups is 10 groups take away one group. How big is one group?',
@@ -14825,7 +14825,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qSixPlus(){
     const n = randInt(2, 12), five = P(5, n), p = P(6, n);
     return mcqNum({
-      prompt: '5 × ' + n + ' = ' + five + '. So 6 × ' + n + ' = ' + five + ' + ?', answer: n,
+      prompt: '6 groups is one group more than 5 groups. You know <b>5 × ' + n + ' = ' + five + '</b>. So <b>6 × ' + n + ' = ' + five + ' + ?</b> What do we add?', answer: n,
       wrong: [{ v: 6, why: '6 is the table number. You need one more GROUP, and each group is ' + n + '.' }, { v: 5, why: 'You need one more group of ' + n + ', not 5.' }, { v: five, why: five + ' is what you already have. Add one more ' + n + '.' }, { v: p, why: p + ' is the final answer to 6 × ' + n + '. The question asks what to ADD.' }],
       nearby: [1, -1, 2, -2], valid: pos, count: 4,
       hint: '6 groups is 5 groups plus one more group. How big is one group?',
@@ -15703,7 +15703,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qWord(){
     const who = pick(NAMES), n = build(randInt(2, 8), randInt(0, 9), randInt(0, 9), randInt(0, 9)), more = chance(0.5), thing = pick(['stickers', 'cards', 'beads', 'coins']);
     return numeric({
-      prompt: who + ' has ' + n + ' ' + thing + '. A friend gives ' + who + ' <b>1000 ' + (more ? 'more' : 'fewer') + '</b>' + (more ? '' : ' to keep') + '. ' + (more ? 'How many does ' + who + ' have now?' : 'How many are left?'), answer: more ? n + 1000 : n - 1000,
+      prompt: who + ' has ' + n + ' ' + thing + '. ' + (more ? 'A friend gives ' + who + ' <b>1000 more</b>. How many does ' + who + ' have now?' : who + ' gives <b>1000</b> away. How many are left?'), answer: more ? n + 1000 : n - 1000,
       hint: 'Change only the thousands digit.', explain: ex('1000 ' + (more ? 'more' : 'less'), ['Only the thousands digit changes.', n + (more ? ' + 1000 = ' : ' − 1000 = ') + '<b>' + (more ? n + 1000 : n - 1000) + '</b>. ✅']), truth: more ? n + 1000 : n - 1000
     });
   }
@@ -17217,7 +17217,7 @@ if(typeof module !== 'undefined') module.exports = V;
       wrong: function(v){ return v === (up ? t : t + 1000) ? (up ? 'Halfway always rounds UP.' : '499 has not reached halfway.') : ''; } });
   }
   function qWord(){
-    const n = pickN(), who = pick(NAMES), things = pick(['visitors came to the museum', 'people watched the match', 'books are in the library', 'steps did the walkers take']);
+    const n = pickN(), who = pick(NAMES), things = pick(['visitors came to the museum', 'people watched the match', 'books are in the library', 'steps were taken by the walkers']);
     return numeric({ prompt: n + ' ' + things + '. ' + who + ' says “about how many, to the nearest 1000?” Type the number.', answer: nearest(n), hint: 'Round the number to the nearest 1000.', explain: explain(n), truth: nearest(n) });
   }
   function qMost(){

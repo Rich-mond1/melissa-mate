@@ -17,7 +17,7 @@
     cylinder: ['a tin of beans', 'a drinks can', 'a drum', 'a round candle'],
     cone: ['a party hat', 'an ice-cream cone', 'a traffic cone', 'a wizard’s hat'],
     sphere: ['a marble', 'a basketball', 'a bouncy ball', 'a globe'],
-    'square-based pyramid': ['an Egyptian pyramid', 'the pyramids in Egypt'],
+    'square-based pyramid': ['an Egyptian pyramid', 'a pyramid in Egypt'],
     'triangular prism': ['a camping tent', 'a tent with triangle ends']
   };
   const PROPN = { f: 'flat faces', e: 'edges', v: 'vertices' };

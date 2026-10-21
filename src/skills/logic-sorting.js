@@ -302,7 +302,7 @@
       if(nums.filter(function(n){ return sat(a, n) && sat(b, n); }).length !== 1) continue;
       const vis = cardsHTML(shuffle(nums));
       return mcq({
-        prompt: 'Which number is ' + R[a].label + ' AND ' + R[b].label + '?', visual: vis, count: 4,
+        prompt: 'Which number is ' + R[a].label + ', and also ' + R[b].label + '?', visual: vis, count: 4,
         correct: opt(K.num(ans), String(ans)),
         distractors: nums.slice(1).map(function(n){ return opt(K.num(n), String(n), n + (sat(a, n) ? ' is ' + R[a].label + ' but it is ' + R[R[b].comp].label + '.' : (sat(b, n) ? ' is ' + R[b].label + ' but it is ' + R[R[a].comp].label + '.' : ' is neither of those things.'))); }),
         hint: 'A number must pass BOTH tests. Test each number twice: once for each rule.',
@@ -362,7 +362,7 @@
       const prompt = form === 'not' ? 'Which shape does NOT have this property: it ' + rule.label + '?' : 'Which shape ' + rule.label.replace(/^has /, 'has ') + '?';
       const optsList = shuffle(set);
       const q = mcq({
-        prompt: form === 'not' ? 'Three of these shapes ' + rule.label.replace(/^has/, 'have') + '. Which shape does NOT?' : 'Which of these shapes ' + rule.label + '?',
+        prompt: form === 'not' ? 'Three of these shapes ' + rule.label.replace(/^has/, 'have').replace(/\ball its\b/, 'all their') + '. Which shape does NOT?' : 'Which of these shapes ' + rule.label + '?',
         visual: '', count: 4,
         correct: opt(K.text(target), V.shape2D(target, { width: 112 })),
         distractors: optsList.filter(function(n){ return n !== target; }).map(function(n){ return opt(K.text(n), V.shape2D(n, { width: 112 }), form === 'not' ? 'The ' + SINFO[n].nm + ' DOES ' + rule.label.replace(/^has/, 'have') + '. Look for the one that does not.' : 'The ' + SINFO[n].nm + ' does not match. ' + rule.why(SINFO[n])); }),
