@@ -319,7 +319,7 @@
   function qSixPlus(){
     const n = randInt(2, 12), five = P(5, n), p = P(6, n);
     return mcqNum({
-      prompt: '5 × ' + n + ' = ' + five + '. So 6 × ' + n + ' = ' + five + ' + ?', answer: n,
+      prompt: '6 groups is one group more than 5 groups. You know <b>5 × ' + n + ' = ' + five + '</b>. So <b>6 × ' + n + ' = ' + five + ' + ?</b> What do we add?', answer: n,
       wrong: [{ v: 6, why: '6 is the table number. You need one more GROUP, and each group is ' + n + '.' }, { v: 5, why: 'You need one more group of ' + n + ', not 5.' }, { v: five, why: five + ' is what you already have. Add one more ' + n + '.' }, { v: p, why: p + ' is the final answer to 6 × ' + n + '. The question asks what to ADD.' }],
       nearby: [1, -1, 2, -2], valid: pos, count: 4,
       hint: '6 groups is 5 groups plus one more group. How big is one group?',

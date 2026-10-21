@@ -113,7 +113,7 @@
   function qTypedFull(){
     const m = make(10, true), it = pick(ITEMS), who = pick(NAMES);
     return numeric({
-      prompt: who + ' has ' + m.n + ' ' + it[0] + '. ' + who + ' fills ' + it[1] + ' that each hold ' + m.d + '. How many are filled completely?', answer: m.q,
+      prompt: who + ' has ' + m.n + ' ' + it[0] + '. ' + who + ' fills ' + it[1] + ' that each hold ' + m.d + '. How many ' + it[1] + ' are filled completely?', answer: m.q,
       hint: 'Count in ' + m.d + 's without going over ' + m.n + '.', explain: ex('Full ' + it[1], steps(m)), truth: divmod(m.n, m.d).q,
       wrong: function(v){ return v === m.q + 1 ? 'The ' + m.r + ' left over cannot fill another one.' : v === m.r ? m.r + ' is the number left over, not the number filled.' : ''; }
     });

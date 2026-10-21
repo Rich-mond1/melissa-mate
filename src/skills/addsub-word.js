@@ -46,7 +46,7 @@
     ] : [
       function(){ return { t: N1 + ' has <b>' + x + '</b> ' + th + '. ' + N1 + ' gives <b>' + y + '</b> away. How many ' + th + ' are left?', clue: 'left', w: 'takeaway' }; },
       function(){ return { t: 'A hall has <b>' + x + '</b> seats. <b>' + y + '</b> seats are taken. How many seats are empty?', clue: 'empty', w: 'takeaway' }; },
-      function(){ return { t: N1 + ' scores <b>' + x + '</b> points. ' + N2 + ' scores <b>' + y + '</b> points. How many more points does ' + N1 + ' score?', clue: 'how many more', w: 'compare' }; },
+      function(){ return { t: N1 + ' scores <b>' + x + '</b> points. ' + N2 + ' scores <b>' + y + '</b> points. How many more points does ' + N1 + ' score than ' + N2 + '?', clue: 'how many more', w: 'compare' }; },
       function(){ return { t: N1 + ' has <b>' + y + '</b> ' + th + ' and wants <b>' + x + '</b>. How many more ' + th + ' does ' + N1 + ' need?', clue: 'how many more', w: 'compare' }; },
       function(){ return { t: 'A unicorn stable has <b>' + x + '</b> bales of hay. <b>' + y + '</b> bales are eaten. How many bales are left?', clue: 'left', w: 'takeaway' }; }
     ];

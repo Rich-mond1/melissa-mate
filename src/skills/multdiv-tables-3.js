@@ -300,7 +300,7 @@
   function qPlusOne(){
     const n = randInt(2, 12), two = P(2, n), p = P(3, n);
     return mcqNum({
-      prompt: '2 × ' + n + ' = ' + two + '. So 3 × ' + n + ' = ' + two + ' + ?', answer: n,
+      prompt: '3 groups is one group more than 2 groups. You know <b>2 × ' + n + ' = ' + two + '</b>. So <b>3 × ' + n + ' = ' + two + ' + ?</b> What do we add?', answer: n,
       wrong: [{ v: 3, why: '3 is the table number. You need to add one more GROUP, and each group is ' + n + '.' }, { v: 2, why: 'You need one more group of ' + n + ', not 2.' }, { v: two, why: two + ' is what you already have. Add one more ' + n + '.' }, { v: p, why: p + ' is the final answer to 3 × ' + n + '. The question asks what to ADD.' }],
       nearby: [1, -1, 2, -2], valid: pos, count: 4,
       hint: '3 groups is 2 groups plus one more group. How big is one group?',

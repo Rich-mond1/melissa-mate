@@ -97,7 +97,7 @@
   function qWord(){
     const who = pick(NAMES), n = build(randInt(2, 8), randInt(0, 9), randInt(0, 9), randInt(0, 9)), more = chance(0.5), thing = pick(['stickers', 'cards', 'beads', 'coins']);
     return numeric({
-      prompt: who + ' has ' + n + ' ' + thing + '. A friend gives ' + who + ' <b>1000 ' + (more ? 'more' : 'fewer') + '</b>' + (more ? '' : ' to keep') + '. ' + (more ? 'How many does ' + who + ' have now?' : 'How many are left?'), answer: more ? n + 1000 : n - 1000,
+      prompt: who + ' has ' + n + ' ' + thing + '. ' + (more ? 'A friend gives ' + who + ' <b>1000 more</b>. How many does ' + who + ' have now?' : who + ' gives <b>1000</b> away. How many are left?'), answer: more ? n + 1000 : n - 1000,
       hint: 'Change only the thousands digit.', explain: ex('1000 ' + (more ? 'more' : 'less'), ['Only the thousands digit changes.', n + (more ? ' + 1000 = ' : ' − 1000 = ') + '<b>' + (more ? n + 1000 : n - 1000) + '</b>. ✅']), truth: more ? n + 1000 : n - 1000
     });
   }

@@ -114,7 +114,7 @@
         decode: function(){ var d = ds(o), vals = Object.keys(d).map(function(l){ return d[l]; }); return Math.max.apply(null, vals) - Math.min.apply(null, vals); }, nearby: [o.sc, -o.sc, 2, -2, 10] });
     }
     var a2 = randInt(0, 3), add = pick([4, 5, 6, 8]), b2 = (a2 + randInt(1, 3)) % 4, ans3 = o.vs[a2] + add + o.vs[b2];
-    return mcqNum({ prompt: t + ' ' + o.labs[a2] + ' gets ' + add + ' more ' + o.th.things + '. How many do ' + o.labs[a2] + ' and ' + o.labs[b2] + ' have now, altogether?', visual: o.vis, answer: ans3,
+    return mcqNum({ prompt: t + ' ' + o.labs[a2] + ' gets ' + add + ' more ' + (add === 1 ? singular(o.th.things) : o.th.things) + '. How many do ' + o.labs[a2] + ' and ' + o.labs[b2] + ' have now, altogether?', visual: o.vis, answer: ans3,
       wrong: wrongs([{ v: o.vs[a2] + o.vs[b2], why: 'You forgot the ' + add + ' more.' }, { v: o.vs[a2] + add, why: 'That is only ' + o.labs[a2] + '. Add ' + o.labs[b2] + ' too.' }, scaleWrong(o, ans3)]),
       hint: 'Step 1: add the extra ' + add + ' to the first person. Step 2: add the other person.',
       explain: ex('Two steps', ['Step 1: ' + o.labs[a2] + ' now has ' + o.vs[a2] + ' + ' + add + ' = <b>' + (o.vs[a2] + add) + '</b>.', 'Step 2: add ' + readStep(o, b2) + '.', 'Altogether: <b>' + ans3 + '</b>. ✅']),
@@ -131,7 +131,7 @@
       var winner = o.vs[x] + n > o.vs[cur] ? x : cur;
       var cands = o.labs.map(function(l, i){ return opt(K.text(l), l, i === x ? o.labs[x] + ' has ' + o.vs[x] + ' + ' + n + ' = ' + (o.vs[x] + n) + ', which is ' + (winner === cur ? 'still less than ' + o.vs[cur] + '.' : 'not the biggest.') : (i === cur ? o.labs[cur] + ' has ' + o.vs[cur] + ' now' + (winner === x ? ', but ' + o.labs[x] + ' will have more.' : ' — check the new total for ' + o.labs[x] + '.') : o.labs[i] + ' is smaller than the others.')); });
       var fm = function(d){ var best = null, tot = {}; Object.keys(d).forEach(function(l){ tot[l] = d[l] + (l === o.labs[x] ? n : 0); if(best === null || tot[l] > tot[best]) best = l; }); return K.text(best); };
-      return mcq({ prompt: t + ' ' + o.labs[x] + ' gets ' + n + ' more ' + o.th.things + '. Who has the most now?', visual: o.vis, correct: opt(K.text(o.labs[winner]), o.labs[winner]), distractors: cands, keepOrder: true,
+      return mcq({ prompt: t + ' ' + o.labs[x] + ' gets ' + n + ' more ' + (n === 1 ? singular(o.th.things) : o.th.things) + '. Who has the most now?', visual: o.vis, correct: opt(K.text(o.labs[winner]), o.labs[winner]), distractors: cands, keepOrder: true,
         hint: 'Step 1: add the extra ' + n + ' to ' + o.labs[x] + '’s number. Step 2: compare everyone.',
         explain: ex('Two steps', ['Step 1: ' + o.labs[x] + ' = ' + o.vs[x] + ' + ' + n + ' = <b>' + (o.vs[x] + n) + '</b>.', 'Step 2: the biggest other number is ' + o.labs[cur] + ' with <b>' + o.vs[cur] + '</b>.', 'So <b>' + o.labs[winner] + '</b> has the most now. ✅']),
         truth: fm(ds(o)), decode: function(){ return fm(ds(o)); } });

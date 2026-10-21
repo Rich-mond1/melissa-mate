@@ -97,7 +97,7 @@
   }
   function qWord(){
     const who = pick(NAMES), n = randInt(3, 40), k = pick([10, 100]);
-    const items = k === 10 ? 'a box holds 10 pencils' : 'a crate holds 100 books';
+    const items = k === 10 ? 'box holds 10 pencils' : 'crate holds 100 books';
     const thing = k === 10 ? 'pencils' : 'books';
     return numeric({ prompt: who + ' has ' + n + ' full ' + (k === 10 ? 'boxes' : 'crates') + '. Each ' + items + '. How many ' + thing + ' is that altogether?', answer: n * k, hint: 'Multiply the number of ' + (k === 10 ? 'boxes' : 'crates') + ' by ' + k + '.',
       explain: ex('Groups of ' + k, [n + ' groups of ' + k + ' = ' + n + ' × ' + k + '.', 'Digits move ' + (k === 10 ? 'one' : 'two') + ' place' + (k === 10 ? '' : 's') + ' left: <b>' + n * k + '</b>. ✅']), truth: times(n, k) });

@@ -59,7 +59,7 @@
       wrong: function(v){ return v === (up ? t : t + 1000) ? (up ? 'Halfway always rounds UP.' : '499 has not reached halfway.') : ''; } });
   }
   function qWord(){
-    const n = pickN(), who = pick(NAMES), things = pick(['visitors came to the museum', 'people watched the match', 'books are in the library', 'steps did the walkers take']);
+    const n = pickN(), who = pick(NAMES), things = pick(['visitors came to the museum', 'people watched the match', 'books are in the library', 'steps were taken by the walkers']);
     return numeric({ prompt: n + ' ' + things + '. ' + who + ' says “about how many, to the nearest 1000?” Type the number.', answer: nearest(n), hint: 'Round the number to the nearest 1000.', explain: explain(n), truth: nearest(n) });
   }
   function qMost(){
