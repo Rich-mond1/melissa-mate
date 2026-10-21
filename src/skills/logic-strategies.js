@@ -170,7 +170,7 @@
       const first = three ? '' : 'Take the first ' + cx.a[2] + ': it can go with each of the ' + B + ' ' + cx.b[1] + ', so that is ' + B + ' ' + cx.pl + '.';
       const steps = three
         ? ['<b>Make a list</b>, one choice at a time. Pair each of the ' + A + ' ' + cx.a[1] + ' with each of the ' + B + ' ' + cx.b[1] + ': ' + A + ' × ' + B + ' = ' + A * B + ' pairs.', 'Each pair can go with any of the ' + Cn + ' ' + cx.c[1] + ': ' + A * B + ' × ' + Cn + '.', 'There are <b>' + ans + '</b> different ways. ✅']
-        : ['Strategy: <b>make a list</b>. ' + first, 'Do the same for each of the ' + A + ' ' + cx.a[1] + ': ' + A + ' groups of ' + B + '.', A + ' × ' + B + ' = <b>' + ans + '</b> different ' + cx.what + 's. ✅'];
+        : ['Strategy: <b>make a list</b>. ' + first, 'Do the same for each of the ' + A + ' ' + cx.a[1] + ': ' + A + ' groups of ' + B + '.', A + ' × ' + B + ' = <b>' + ans + '</b> different ' + (cx.pl || cx.what + 's') + '. ✅'];
       const decode = function(){ return decodeSets(vis).reduce(function(t, n){ return t * n; }, 1); };
       const hint = 'Make an organised list: take the first one and pair it with every choice from the other group. Then do the next one.';
       const wrong = [{ v: A + B + (three ? Cn : 0), why: 'That adds the numbers. Each choice from one group goes with EVERY choice from the other, so multiply.' }, { v: three ? A * B + Cn : A * B - 1, why: 'You missed some. Check every pairing.' }, { v: three ? A * B : A * (B + 1), why: 'Check your list: it needs every choice from ALL the groups.' }];
@@ -193,7 +193,7 @@
     const prompt = n + ' friends meet. Every friend shakes hands with each of the other friends once. How many handshakes are there?';
     const hint = 'Make a list. The first person shakes with everyone else. The next person only needs the people who are left, and so on.';
     const decode = function(){ const c = decodeSets(vis)[0]; let t = 0; for(let i = 0; i < c; i++) for(let j = i + 1; j < c; j++) t++; return t; };
-    if(o.typed) return numeric({ prompt: prompt, visual: vis, answer: ans, hint: hint, explain: ex('Strategy: make a list', steps), truth: pairs, decode: decode, wrong: function(v){ return v === n * (n - 1) ? 'That counts every handshake twice (A shakes B, and B shakes A is the same handshake).' : ''; } });
+    if(o.typed) return numeric({ prompt: prompt, visual: vis, answer: ans, hint: hint, explain: ex('Strategy: make a list', steps), truth: pairs, decode: decode, wrong: function(v){ return v === n * (n - 1) ? 'That counts every handshake twice (A shaking hands with B is the same handshake as B shaking hands with A).' : ''; } });
     return mcqNum({ prompt: prompt, visual: vis, answer: ans, count: 4, hint: hint, explain: ex('Strategy: make a list', steps), truth: pairs, decode: decode,
       wrong: [{ v: n * (n - 1), why: 'That counts every handshake twice. A shaking B is the same handshake as B shaking A.' }, { v: n, why: 'That is the number of friends. Each friend shakes several hands.' }, { v: n * (n - 1) / 2 + 1, why: 'Check your list again — you counted one too many.' }, { v: n - 1, why: 'That is how many hands ONE friend shakes. Everyone shakes hands.' }] });
   }

@@ -264,7 +264,7 @@
           return numeric({
             prompt: 'The same number multiplies both parts of ' + n + '. What is the missing number on the side?', visual: vis, answer: mm,
             hint: 'Look at the tens box. What do you multiply ' + s.t + ' by to get ' + s.t * mm + '?',
-            explain: ex('Working backwards', ['The tens box says <b>' + s.t * mm + '</b> and the top says <b>' + s.t + '</b>.', s.t * mm + ' ÷ ' + s.t + ' = <b>' + mm + '</b> (check: ' + s.o + ' × ' + mm + ' = ' + s.o * mm + ' ✓).', 'The missing number is <b>' + mm + '</b>. ✅']),
+            explain: ex('Working backwards', ['The tens box says <b>' + s.t * mm + '</b> and the top says <b>' + s.t + '</b>.', s.t * mm + ' ÷ ' + s.t + ' = <b>' + mm + '</b> (check: ' + s.t + ' × ' + mm + ' = ' + s.t * mm + ').', 'The missing number is <b>' + mm + '</b>. ✅']),
             truth: mm, decode: function(){ const d = V.decodeAreaModel(vis); return d.cellT / d.tens; },
             wrong: function(v){ return v === s.t * mm ? 'That is the number in the tens box. We want the number on the side.' : (v === s.o * mm ? 'That is the number in the ones box. We want the number on the side.' : ''); }
           });

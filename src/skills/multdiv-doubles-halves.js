@@ -59,7 +59,7 @@
     return mcq2({
       prompt: who + ' has ' + m + ' ' + it + ' and shares them equally between 2 friends. Is there an equal share with none left over?', correct: opt(K.bool(even), even ? 'Yes, they share equally' : 'No, one is left over'), other: opt(K.bool(!even), even ? 'No, one is left over' : 'Yes, they share equally', even ? m + ' is even: ' + m / 2 + ' + ' + m / 2 + ' = ' + m + '.' : m + ' is odd, so one is left over after sharing.'),
       hint: 'Even numbers end in 0, 2, 4, 6 or 8. They halve exactly.',
-      explain: ex('Even or odd?', [m + ' ends in ' + (m % 10) + ', so it is ' + (even ? '<b>even</b>' : '<b>odd</b>') + '.', even ? 'Half of ' + m + ' is ' + m / 2 + ', with none left over.' : 'Half of ' + (m - 1) + ' is ' + (m - 1) / 2 + ', with 1 left over.', even ? 'So they share equally. ✅' : 'So one is left over. ✅']), truth: K.bool(shareOut(m) !== -1)
+      explain: ex('Even or odd?', [m + ' ends in ' + (m % 10) + ', so it is ' + (even ? '<b>even</b>' : '<b>odd</b>') + '.', even ? 'Half of ' + m + ' is ' + m / 2 + ', with none left over.' : 'Share ' + m + ' between 2: each gets ' + (m - 1) / 2 + ' and 1 is left over.', even ? 'So they share equally. ✅' : 'So one is left over. ✅']), truth: K.bool(shareOut(m) !== -1)
     });
   }
   /* ---- tier 3: two-digit, typed ---- */

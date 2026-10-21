@@ -35,7 +35,7 @@
     if(m === 15) out.push({ h: h, m: 45, why: 'Long hand on the 3 is quarter PAST, not quarter to. Quarter to is when it is on the 9.' });
     if(m > 30 && m !== 45) out.push({ h: nx(h), m: 60 - m, why: 'Careful! “' + spoken(h, m) + '” means ' + (60 - m) + ' minutes BEFORE ' + nx(h) + ', so it is ' + dig(h, m) + ', not ' + dig(nx(h), 60 - m) + '.' });
     if(m === 45) out.push({ h: nx(h), m: 15, why: 'Quarter to ' + nx(h) + ' is BEFORE ' + nx(h) + ' o’clock, so it is ' + dig(h, 45) + ', not ' + dig(nx(h), 15) + '.' });
-    if(m > 30) out.push({ h: pv(h), m: m, why: 'For “to” times the short hand is nearly at the NEXT hour. Here it is nearly at ' + nx(h) + ', so say ' + nx(h) + ' for “to” — the hour hand has passed ' + h + '.' });
+    if(m > 30) out.push({ h: pv(h), m: m, why: 'For “to” times the short hand is nearly at the NEXT hour. Here it is nearly at ' + nx(h) + ', so the hour you say is ' + nx(h) + '.' });
     else if(m > 0) out.push({ h: nx(h), m: m, why: 'The short hand has only just passed ' + h + ' — it has not reached ' + nx(h) + ' yet.' });
     if(m > 30) out.push({ h: nx(h), m: m, why: 'The short hand has not reached ' + nx(h) + ' yet, so the hour is still ' + h + '.' });
     else if(m > 0) out.push({ h: pv(h), m: m, why: 'The short hand is just past ' + h + ', not ' + pv(h) + '.' });

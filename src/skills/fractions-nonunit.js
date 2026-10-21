@@ -43,7 +43,7 @@
       { n: n, d: d - n, why: 'You compared coloured with white. The bottom number must count ALL the ' + unit + ', coloured and white.' }
     ];
     const same = [], other = [];
-    for(let k = 1; k < d; k++) same.push({ n: k, d: d, why: 'Count the coloured ' + unit + ' carefully: there are ' + n + ', not ' + k + '.' });
+    for(let k = 1; k < d; k++) same.push({ n: k, d: d, why: 'Count the coloured ' + unit + ' carefully: there ' + isAre(n) + ' ' + n + ', not ' + k + '.' });
     shuffle(DENS).sort(function(a, b){ return Math.abs(a - d) - Math.abs(b - d); }).forEach(function(dd){ if(dd !== d) for(let k = 1; k < dd; k++) other.push({ n: k, d: dd, why: 'Count ALL the ' + unit + ' for the bottom number: there are ' + d + '.' }); });
     return w.concat(shuffle(same), shuffle(other)).filter(function(x){
       if(x.d < 2 || x.n < 1 || x.n === x.d) return false;

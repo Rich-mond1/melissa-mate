@@ -102,7 +102,7 @@
       correct: opt(K.text(heavier), 'The ' + heavier),
       other: opt(K.text(lighter), 'The ' + lighter, 'Read both dials: the ' + lighter + ' show ' + Math.min(a, b) + ' g, which is less than ' + Math.max(a, b) + ' g.'),
       hint: 'Read each needle in grams. The bigger number means heavier.',
-      explain: ex('Which is heavier?', ['The ' + p[0][0] + ' show <b>' + a + ' g</b>.', 'The ' + p[1][0] + ' show <b>' + b + ' g</b>.', Math.max(a, b) + ' g is more than ' + Math.min(a, b) + ' g, so <b>The ' + heavier + '</b> is heavier. ✅']),
+      explain: ex('Which is heavier?', ['The ' + p[0][0] + ' show <b>' + a + ' g</b>.', 'The ' + p[1][0] + ' show <b>' + b + ' g</b>.', Math.max(a, b) + ' g is more than ' + Math.min(a, b) + ' g, so <b>the ' + heavier + '</b> are heavier. ✅']),
       truth: K.text([[a, p[0][0]], [b, p[1][0]]].sort(function(x, y){ return y[0] - x[0]; })[0][1]),
       decode: function(){ return K.text(dv(va, 50) > dv(vb, 50) ? p[0][0] : p[1][0]); }
     });
@@ -207,7 +207,7 @@
       hint: 'Each little mark is 10 g. Start at the last labelled number the needle passed, then count the little marks.',
       explain: ex('Between the labels', readSteps(val, sc).concat(['The scale shows <b>' + val + ' g</b>. ✅'])),
       truth: lab + ticks * 10, decode: function(){ return dv(vis, 10); },
-      wrong: function(v){ return v === lab ? 'That is the last labelled number. The needle is ' + ticks + ' little marks further.' : v === lab + 100 ? 'The needle has not reached ' + (lab + 100) + ' yet.' : v === lab + ticks ? 'Each little mark is 10 g, not 1 g.' : v === lab + ticks * 5 ? 'Each little mark is 10 g, not 5 g.' : ''; }
+      wrong: function(v){ return v === lab ? 'That is the last labelled number. The needle is ' + (ticks === 1 ? '1 little mark' : ticks + ' little marks') + ' further.' : v === lab + 100 ? 'The needle has not reached ' + (lab + 100) + ' yet.' : v === lab + ticks ? 'Each little mark is 10 g, not 1 g.' : v === lab + ticks * 5 ? 'Each little mark is 10 g, not 5 g.' : ''; }
     });
   }
   function t3K(){

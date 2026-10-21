@@ -266,7 +266,7 @@
       hint: 'Two steps. First find ' + n + ' groups of ' + t + '. Then ' + (minus ? 'take away ' : 'add ') + k + '.',
       explain: ex('Two steps', ['Step 1: ' + n + ' × ' + t + ' — count in ' + t + 's: ' + skipHTML(t, n) + '.', 'Step 2: ' + p + (minus ? ' − ' : ' + ') + k + ' = <b>' + ans + '</b>.', 'So there are ' + ans + ' ' + th[1] + (minus ? ' left' : ' now') + '. ✅']),
       truth: n * t + (minus ? -k : k),
-      wrong: function(v){ return v === p ? p + ' is only step 1. Now ' + (minus ? 'take away ' : 'add ') + k + '.' : v === (minus ? p + k : p - k) ? 'That goes the wrong way. ' + (minus ? 'Take away' : 'Add') + ' ' + k + ' to ' + p + '.' : ''; }
+      wrong: function(v){ return v === p ? p + ' is only step 1. Now ' + (minus ? 'take away ' : 'add ') + k + '.' : v === (minus ? p + k : p - k) ? (minus ? 'You added ' + k + ' to ' + p + ', but this step takes ' + k + ' away.' : 'You took ' + k + ' away from ' + p + ', but this step adds ' + k + '.') : ''; }
     });
   }
   function weighted(list){ const out = []; list.forEach(function(e){ for(let i = 0; i < (e[1] || 1); i++) out.push(e[0]); }); return out; }
@@ -359,7 +359,7 @@
       prompt: 'You know that ' + t + ' × ' + n + ' = ' + p + '. Use it to work out <b>' + p + ' ÷ ' + d + '</b>.', answer: ans,
       wrong: [{ v: p, why: p + ' is the answer to the multiplication. Division goes backwards.' }, { v: d, why: d + ' is the number you divide by. The answer is the OTHER number in the fact.' }, { v: p - d, why: 'You subtracted. Use the multiplication fact backwards.' }, { v: p + d, why: 'You added. Use the multiplication fact backwards.' }],
       nearby: [1, -1, 2], valid: pos, count: 4,
-      hint: 'The fact t × n = p has three numbers: ' + t + ', ' + n + ' and ' + p + '. Divide by one and you get the other.',
+      hint: 'A fact family uses three numbers: ' + t + ', ' + n + ' and ' + p + '. Divide the biggest by one of the others and you get the third.',
       explain: ex('Using the inverse', [t + ' × ' + n + ' = ' + p + ' is a fact family with <b>' + t + ', ' + n + ' and ' + p + '</b>.', 'Dividing ' + p + ' by ' + d + ' gives the OTHER number: <b>' + ans + '</b>.', 'Check: ' + ans + ' × ' + d + ' = ' + p + '. So ' + p + ' ÷ ' + d + ' = ' + ans + '. ✅']),
       truth: p / d
     });

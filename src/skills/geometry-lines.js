@@ -55,7 +55,7 @@
     const q = mcq({
       prompt: 'Which one is a <b>' + o + '</b> line?', visual: '', correct: opt(K.text(items[o]), items[o]), distractors: ds, count: 3,
       hint: o === 'horizontal' ? 'Horizontal = flat, side to side, like the horizon.' : 'Vertical = straight up and down, like a flagpole.',
-      explain: ex('Lines around us', [o === 'horizontal' ? 'Horizontal lines are <b>flat</b>, going side to side.' : 'Vertical lines go <b>straight up and down</b>.', 'The answer is <b>' + items[o] + '</b>: it is ' + o + '.', 'The others lean or go the other way. ✅']),
+      explain: ex('Lines around us', [o === 'horizontal' ? 'Horizontal lines are <b>flat</b>, going side to side.' : 'Vertical lines go <b>straight up and down</b>.', 'The answer is <b>' + items[o] + '</b>: it is ' + o + '.', 'The others are not ' + o + '. ✅']),
       truth: 'pending'
     });
     const ok2 = q.options.filter(function(x){ return Object.keys(OBJL).some(function(c){ return c === o && OBJL[c].some(function(it){ return K.text(it) === x.key; }); }); });
@@ -64,7 +64,7 @@
   }
   function pairQ(seeds, kinds, count){
     const kind = pick(kinds), seed = pick(seeds), vis = V.linePair(kind, seed);
-    const ds = kinds.filter(function(x){ return x !== kind; }).map(function(x){ return opt(K.text(x), PLAB[x], 'These lines are ' + PEXP[kind] + '. ' + cap(PLAB[x]) + ' lines are ' + PEXP[x] + '.'); });
+    const ds = kinds.filter(function(x){ return x !== kind; }).map(function(x){ return opt(K.text(x), PLAB[x], 'These lines are ' + PEXP[kind] + '. ' + (x === 'neither' ? 'A pair that is neither parallel nor perpendicular is not side by side and does not meet at a right angle.' : cap(PLAB[x]) + ' lines are ' + PEXP[x] + '.')); });
     return mcq({
       prompt: 'Look at the two lines. Are they <b>' + kinds.map(function(k){ return PLAB[k]; }).join('</b>, <b>').replace(/, ([^,]*)$/, ' or $1') + '</b>?', visual: vis,
       correct: opt(K.text(kind), PLAB[kind]), distractors: ds, keepOrder: true, count: count,
@@ -76,7 +76,7 @@
   function objPairQ(){
     const target = pick(['parallel', 'perpendicular']);
     const items = {}; Object.keys(OBJP).forEach(function(c){ items[c] = pick(OBJP[c]); });
-    const ds = Object.keys(OBJP).filter(function(c){ return c !== target; }).map(function(c){ return opt(K.text(items[c]), items[c], cap(items[c]) + ' is ' + PLAB[c] + ': ' + PEXP[c] + '.'); });
+    const ds = Object.keys(OBJP).filter(function(c){ return c !== target; }).map(function(c){ return opt(K.text(items[c]), items[c], cap(items[c]) + (/^(railway tracks|the stripes|the two |the rungs|the lines|the hands|the post and)/.test(items[c]) ? ' are ' : ' is ') + PLAB[c] + ': ' + PEXP[c] + '.'); });
     const q = mcq({
       prompt: 'Which one shows <b>' + PLAB[target] + '</b> lines?', visual: '', correct: opt(K.text(items[target]), items[target]), distractors: ds, count: 3,
       hint: target === 'parallel' ? 'Parallel lines run side by side and never meet, like train tracks.' : 'Perpendicular lines meet at a right angle, like the corner of a book.',

@@ -161,6 +161,7 @@
     const real = a - b, right = chance(0.5);
     const off = pick([10, -10, 100, -100, 20, -20]);
     const claim = right ? real : real + off;
+    if(claim < 10) return checkQ();
     const q = mcq2({ prompt: n + ' says <b>' + a + ' − ' + b + ' = ' + claim + '</b>. Use an <b>addition</b> to check. Is ' + n + ' right?',
       correct: opt(K.bool(right), right ? 'Yes' : 'No'), other: opt(K.bool(!right), right ? 'No' : 'Yes', right ? 'Check by adding: ' + claim + ' + ' + b + ' = ' + (claim + b) + ', which IS ' + a + '. So the answer is right.' : 'Check by adding: ' + claim + ' + ' + b + ' = ' + (claim + b) + ', which is NOT ' + a + '. So the answer is wrong.'),
       hint: 'To check a subtraction, add the answer to the number that was taken away. You should get back to the start.',

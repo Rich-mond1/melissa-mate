@@ -2,6 +2,7 @@
    Pictures are generated from the rule and decoded from the DRAWING (shape geometry + fill, number cards, stick lines). */
 (function(){
   const INK = 'var(--vis-ink,#1B1B2F)';
+  function ordSuffix(n){ const t = n % 100, u = n % 10; return n + ((t >= 11 && t <= 13) ? 'th' : (u === 1 ? 'st' : (u === 2 ? 'nd' : (u === 3 ? 'rd' : 'th')))); }
   function r2(n){ return Math.round(n * 100) / 100; }
   function attr(tag, name){ const m = new RegExp(' ' + name + '="([^"]*)"').exec(tag); return m ? m[1] : null; }
   const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
@@ -245,12 +246,12 @@
         { name: shown[n - 1], why: 'That is just the last shape in the picture. The pattern carries on from there.' }
       ];
       const q = mcq({
-        prompt: 'The pattern carries on and on. What is the ' + N + 'th shape?', visual: vis,
+        prompt: 'The pattern carries on and on. What is the ' + ordSuffix(N) + ' shape?', visual: vis,
         correct: tokOpt(correct), keepOrder: true, count: 4, distractors: pools(wrongs),
         hint: 'Count how many shapes are in ONE repeat. Then jump along in whole repeats and count on the rest.',
-        explain: ex('The ' + N + 'th shape', [
+        explain: ex('The ' + ordSuffix(N) + ' shape', [
           'One repeat has <b>' + L + '</b> shapes: ' + unitText(unit) + '.',
-          N + ' = ' + Math.floor((N - 1) / L) + ' whole repeat' + (Math.floor((N - 1) / L) === 1 ? '' : 's') + ' (that is ' + Math.floor((N - 1) / L) * L + ' shapes) and ' + (((N - 1) % L) + 1) + ' more.',
+          'Shape ' + N + ' is ' + Math.floor((N - 1) / L) + ' whole repeat' + (Math.floor((N - 1) / L) === 1 ? '' : 's') + ' (that is ' + Math.floor((N - 1) / L) * L + ' shapes) and ' + (((N - 1) % L) + 1) + ' more.',
           'The ' + (((N - 1) % L) + 1) + (((N - 1) % L) + 1 === 1 ? 'st' : ((N - 1) % L) + 1 === 2 ? 'nd' : ((N - 1) % L) + 1 === 3 ? 'rd' : 'th') + ' shape of the repeat is <b>' + truthName + '</b>. ✅'
         ]),
         truth: K.text(truthName)
@@ -275,7 +276,7 @@
         hint: 'How many ' + target + 's are in ONE repeat? Then see how many whole repeats fit into ' + N + '.',
         explain: ex('Counting the ' + target + 's', [
           'One repeat has <b>' + L + '</b> shapes and <b>' + perUnit + '</b> of them ' + (perUnit === 1 ? (/^[aeiou]/.test(target) ? 'is an ' : 'is a ') : 'are ') + target + (perUnit === 1 ? '' : 's') + '.',
-          N + ' shapes is ' + Math.floor(N / L) + ' whole repeats' + (N % L ? ' plus ' + (N % L) + ' extra shapes (' + unit.slice(0, N % L).join(', ') + ')' : '') + '.',
+          N + ' shapes is ' + plural(Math.floor(N / L), 'whole repeat') + (N % L ? ' plus ' + plural(N % L, 'extra shape') + ' (' + unit.slice(0, N % L).join(', ') + ')' : '') + '.',
           'Altogether there are <b>' + cnt + '</b> ' + target + (cnt === 1 ? '' : 's') + '. ✅'
         ]),
         truth: (function(){ const p = minPeriod(decodeRow(vis)), row = decodeRow(vis); let c = 0; for(let i = 0; i < N; i++) if(row[i % p] === target) c++; return c; })(),

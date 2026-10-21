@@ -37,7 +37,7 @@
         { say: 'When the long hand points straight down to the <b>6</b>, half the clock has gone round. It is <b>half past</b>. This is <b>half past 3</b>, written <b>3:30</b>.', vis: { kind: 'clock', args: [3, 30] } },
         { say: 'Long hand on the <b>3</b> means <b>quarter past</b>. It is <b>quarter past 7</b>, written <b>7:15</b>.', vis: { kind: 'clock', args: [7, 15] } },
         { say: 'Long hand on the <b>9</b> means <b>quarter to</b> the NEXT hour. The short hand is nearly at the 5, so this is <b>quarter to 5</b>, written <b>4:45</b>.', vis: { kind: 'clock', args: [4, 45] },
-          quiz: { prompt: 'The long hand points to the 9 and the short hand is just past the 9. What time is it?', options: [{ label: 'Quarter to 9', ok: false }, { label: 'Quarter to 10', ok: true }, { label: 'Quarter past 9', ok: false }], right: 'Yes! The short hand is just past the 9 and heading for the 10, so it is quarter to the NEXT hour: quarter to 10 (9:45).', wrong: 'Careful: the short hand has only just passed the 9, so it is still the 9 o’clock hour and is walking towards 10. It is quarter to 10 (9:45).' } }
+          quiz: { prompt: 'The long hand points to the 9 and the short hand is between the 9 and the 10, nearly at the 10. What time is it?', options: [{ label: 'Quarter to 9', ok: false }, { label: 'Quarter to 10', ok: true }, { label: 'Quarter past 9', ok: false }], right: 'Yes! The short hand is nearly at the 10, so it is quarter to the NEXT hour: quarter to 10 (9:45).', wrong: 'Careful: the short hand has passed the 9 but has not reached the 10 yet, so it is still the 9 o’clock hour and is walking towards 10. It is quarter to 10 (9:45).' } }
       ]
     },
     trick: {

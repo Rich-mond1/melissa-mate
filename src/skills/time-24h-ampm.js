@@ -22,9 +22,9 @@
     const h = to24(h12, ap), out = [];
     if(h12 === 12){
       if(ap === 'pm'){
-        out.push(o24(0, m, '12 pm is NOON (the middle of the day), not midnight. At noon the 24-hour clock shows 12.'));
-        out.push(o24(24, m, 'Do not add 12 to the 12! At noon the 24-hour clock shows 12:' + pad2(m) + '. There is no 24:' + pad2(m) + '.'));
-        out.push(o24(13, m, '13:' + pad2(m) + ' is 1:' + pad2(m) + ' pm. At noon it shows 12.'));
+        out.push(o24(0, m, '12 pm is NOON (the middle of the day), not midnight. Just after noon the 24-hour clock still shows 12.'));
+        out.push(o24(24, m, 'Do not add 12 to the 12! Just after noon the 24-hour clock shows 12:' + pad2(m) + '. There is no 24:' + pad2(m) + '.'));
+        out.push(o24(13, m, '13:' + pad2(m) + ' is 1:' + pad2(m) + ' pm. Just after noon it still shows 12.'));
       } else {
         out.push(o24(12, m, '12 am is MIDNIGHT, the start of the day. 12:' + pad2(m) + ' on the 24-hour clock is noon.'));
         out.push(o24(24, m, 'There is no 24:' + pad2(m) + ' on a clock. After 23:59 the 24-hour clock goes back to 00:00.'));
@@ -49,9 +49,9 @@
   function wrong12(h, m){
     const out = [], h12 = h % 12 || 12, ap = h < 12 ? 'am' : 'pm', op = ap === 'am' ? 'pm' : 'am';
     if(h === 12){
-      out.push(o12(12, m, 'am', '12:' + pad2(m) + ' is NOON, which is 12 pm. 12 am is midnight.'));
+      out.push(o12(12, m, 'am', '12:' + pad2(m) + ' is just after noon, so it is pm, not am. 12 am is midnight.'));
       out.push(o12(1, m, 'pm', 'Only take 12 away from times AFTER 12:59. At 12:' + pad2(m) + ' the 12-hour clock also shows 12.'));
-      out.push(o12(11, m, 'am', '12:' + pad2(m) + ' is just after 11:' + pad2(m) + ' am. It is noon, 12 pm.'));
+      out.push(o12(11, m, 'am', '12:' + pad2(m) + ' is just after noon, not just after 11 am. It is 12 pm.'));
     } else if(h === 0){
       out.push(o12(12, m, 'pm', '00:' + pad2(m) + ' is just after MIDNIGHT, so it is am. 12 pm is noon.'));
       out.push(o12(1, m, 'am', '00 is 12 on the 12-hour clock (midnight). 1 am is 01:' + pad2(m) + '.'));

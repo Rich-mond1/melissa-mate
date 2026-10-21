@@ -129,7 +129,7 @@
       correct: opt(K.text(longer[0]), 'The ' + longer[0]),
       other: opt(K.text(shorter[0]), 'The ' + shorter[0], 'Read both rulers: the ' + shorter[0] + ' is the shorter one (' + Math.min(a, b) + ' cm, not ' + Math.max(a, b) + ' cm).'),
       hint: 'Read each ruler at the end of the object. The bigger number is the longer object.',
-      explain: ex('Comparing lengths', ['The ' + o[0][0] + ' is <b>' + a + ' cm</b>.', 'The ' + o[1][0] + ' is <b>' + b + ' cm</b>.', Math.max(a, b) + ' is more than ' + Math.min(a, b) + ', so <b>The ' + longer[0] + '</b> is longer. ✅']),
+      explain: ex('Comparing lengths', ['The ' + o[0][0] + ' is <b>' + a + ' cm</b>.', 'The ' + o[1][0] + ' is <b>' + b + ' cm</b>.', Math.max(a, b) + ' is more than ' + Math.min(a, b) + ', so <b>the ' + longer[0] + '</b> is longer. ✅']),
       truth: K.text([[a, o[0][0]], [b, o[1][0]]].sort(function(x, y){ return y[0] - x[0]; })[0][1]),
       decode: function(){ return K.text(lenOf(va) > lenOf(vb) ? o[0][0] : o[1][0]); }
     });
@@ -177,7 +177,7 @@
       correct: opt(K.text(longer[0]), 'The ' + longer[0]),
       other: opt(K.text(shorter[0]), 'The ' + shorter[0], 'They are close! Read each to the half cm: the ' + shorter[0] + ' is ' + halfTxt(Math.min(a, b)) + ', the other is ' + halfTxt(Math.max(a, b)) + '.'),
       hint: 'Read each ruler carefully to the nearest half cm, then compare the two numbers.',
-      explain: ex('Comparing lengths', ['The ' + o[0][0] + ' is <b>' + halfTxt(a) + '</b>.', 'The ' + o[1][0] + ' is <b>' + halfTxt(b) + '</b>.', halfTxt(Math.max(a, b)) + ' is longer than ' + halfTxt(Math.min(a, b)) + ', so <b>The ' + longer[0] + '</b> is longer. ✅']),
+      explain: ex('Comparing lengths', ['The ' + o[0][0] + ' is <b>' + halfTxt(a) + '</b>.', 'The ' + o[1][0] + ' is <b>' + halfTxt(b) + '</b>.', halfTxt(Math.max(a, b)) + ' is longer than ' + halfTxt(Math.min(a, b)) + ', so <b>the ' + longer[0] + '</b> is longer. ✅']),
       truth: K.text(a * 2 > b * 2 ? o[0][0] : o[1][0]),
       decode: function(){ return K.text(lenOf(va) > lenOf(vb) ? o[0][0] : o[1][0]); }
     });

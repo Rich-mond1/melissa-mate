@@ -25,7 +25,7 @@
   const AXPAIRS = [['par', 'm5'], ['par', 'big'], ['m5', 'big'], ['m10', 'big']];
   function sat(id, n){ return R[id].fn(n); }
   function failWhy(n, id){ return n + ' is ' + R[R[id].comp].label + ', so it does not go under "' + cap(R[id].label) + '".'; }
-  function asks(n, id){ return 'Is ' + n + ' ' + R[id].label + '? ' + (sat(id, n) ? 'Yes ✅' : 'No ❌'); }
+  function asks(n, id){ return 'Is ' + n + ' ' + (id === 'le50' ? 'equal to 50, or less' : R[id].label) + '? ' + (sat(id, n) ? 'Yes ✅' : 'No ❌'); }
 
   /* ------------------------------------------------------------ pictures: number cards */
   function cardsHTML(nums){
@@ -109,7 +109,7 @@
         prompt: prompt, visual: vis, count: o.count || 4,
         correct: opt(K.num(target), String(target)),
         distractors: nums.filter(function(n){ return n !== target; }).map(function(n){
-          return opt(K.num(n), String(n), form === 'not' ? n + ' IS ' + label + ', so it belongs with the others. Look for the one that does not.' : n + ' is ' + R[rule.comp].label + ', not ' + label + '. ' + rule.how);
+          return opt(K.num(n), String(n), form === 'not' ? n + ' IS ' + label + ', so it belongs with the others. Look for the one that does not.' : (R[rule.comp].label === label ? n + ' does not fit this box. ' : n + ' is ' + R[rule.comp].label + ', not ' + label + '. ') + rule.how);
         }),
         hint: rule.how + ' Test every number.',
         explain: ex('Testing every number', [rule.how].concat(lines).concat(['So the answer is <b>' + target + '</b>. ✅'])),
@@ -285,7 +285,7 @@
       prompt: 'Which box does the new number go in?', visual: vis,
       correct: opt('|' + home[0], cap(R[home[0]].label)), other: opt('|' + cols.filter(function(c){ return c !== home[0]; })[0], cap(R[cols.filter(function(c){ return c !== home[0]; })[0]].label), failWhy(x, cols.filter(function(c){ return c !== home[0]; })[0]) + ' ' + R[home[0]].how),
       hint: R[cols[0]].how,
-      explain: ex('Sorting ' + x, [R[cols[0]].how, asks(x, cols[0]), 'So ' + x + ' goes in the <b>' + cap(R[home[0]].label) + '</b> box. ✅']),
+      explain: ex('Sorting ' + x, [R[cols[0]].how, asks(x, cols[0]), 'So ' + x + ' goes in the <b>“' + cap(R[home[0]].label) + '”</b> box. ✅']),
       truth: '|' + (R[cols[0]].fn(x) ? cols[0] : cols[1]),
       decode: function(){ const p = parseCarroll(vis), hit = p.cells.filter(function(cl){ return inCell(cl, p.card); }); return hit.length === 1 ? '|' + hit[0].c : 'none'; }
     });

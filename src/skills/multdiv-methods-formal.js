@@ -38,14 +38,14 @@
   function resultOf(c){ return String(c.m.rh > 0 ? c.m.rh : '') + String(c.m.rt) + String(c.m.ro); }
   function workings(c){
     const m = c.m, st = ['<b>Ones first:</b> ' + m.o + ' × ' + c.b + ' = ' + m.po + (m.c1 ? '. Write <b>' + m.ro + '</b> in the ones and carry <b>' + m.c1 + '</b> to the tens.' : '. Write <b>' + m.ro + '</b> in the ones.')];
-    st.push('<b>Then the tens:</b> ' + m.t + ' tens × ' + c.b + ' = ' + m.t * c.b + (m.c1 ? ', and add the carried ' + m.c1 + ': ' + m.pt + '.' : '.') + ' Write <b>' + m.pt + '</b> in the tens' + (m.rh ? ' and hundreds.' : '.'));
+    st.push('<b>Then the tens:</b> ' + m.t + (m.t === 1 ? ' ten' : ' tens') + ' × ' + c.b + ' = ' + m.t * c.b + (m.c1 ? ', and add the carried ' + m.c1 + ': ' + m.pt + '.' : '.') + ' Write <b>' + m.pt + '</b> in the tens' + (m.rh ? ' and hundreds.' : '.'));
     st.push(c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>. ✅'); return st;
   }
   function wrongs(c){
     const m = c.m, w = [], t = m.t, correct = c.a * c.b;
     if(m.c1){
       w.push({ v: 10 * (t * c.b) + m.ro, why: 'You forgot the carried ' + m.c1 + '. Add it to the tens: ' + t * c.b + ' + ' + m.c1 + ' = ' + m.pt + '.' });
-      w.push({ v: 10 * (t * c.b) + m.ro + m.c1, why: 'The carried ' + m.c1 + ' is worth ' + m.c1 + ' TENS, so it is added in the tens column, not the ones.' });
+      w.push({ v: 10 * (t * c.b) + m.ro + m.c1, why: 'The carried ' + m.c1 + ' is worth ' + m.c1 + (m.c1 === 1 ? ' TEN' : ' TENS') + ', so it is added in the tens column, not the ones.' });
       w.push({ v: Number(String(t * c.b) + String(m.po)), why: 'You wrote both products side by side. Write only the ones digit (' + m.ro + ') and carry the rest.' });
       w.push({ v: m.po, why: m.po + ' is only the ones: ' + m.o + ' × ' + c.b + '. The tens still need multiplying.' });
     } else {
@@ -86,7 +86,7 @@
       prompt: 'Here is a finished column multiplication. What is <b>' + c.a + ' × ' + c.b + '</b>?', visual: vis, answer: c.a * c.b,
       wrong: wrongs(c), nearby: NEAR, valid: pos, count: 3,
       hint: 'Read the digits of the answer row from left to right.',
-      explain: ex('Reading the column', ['The answer row shows <b>' + resultOf(c) + '</b>.', 'Check: ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + ' and ' + c.m.t + ' tens × ' + c.b + ' = ' + c.m.pt + ' tens.', c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>. ✅']),
+      explain: ex('Reading the column', ['The answer row shows <b>' + resultOf(c) + '</b>.', 'Check: ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + ' and ' + c.m.t + (c.m.t === 1 ? ' ten' : ' tens') + ' × ' + c.b + ' = ' + c.m.pt + (c.m.pt === 1 ? ' ten.' : ' tens.'), c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>. ✅']),
       truth: c.a * c.b, decode: function(){ return parseInt(readRow(vis, 'dr'), 10); }
     });
   }
@@ -149,7 +149,7 @@
       prompt: who + ' worked out ' + c.a + ' × ' + c.b + ' and got <b>' + bad + '</b>. ' + who + ' forgot to add the carry. What is the correct answer?', answer: c.a * c.b,
       hint: 'The ones product ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + ' carries ' + c.m.c1 + '. Add it to the tens step.',
       explain: ex('Putting the carry back', workings(c)), truth: c.a * c.b,
-      wrong: function(v){ return v === bad ? bad + ' is the answer without the carry. Add the carried ' + c.m.c1 + ' tens.' : ''; }
+      wrong: function(v){ return v === bad ? bad + ' is the answer without the carry. Add the carried ' + c.m.c1 + ' to the tens.' : ''; }
     });
   }
   function qMissingDigit(){

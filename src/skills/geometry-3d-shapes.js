@@ -212,7 +212,7 @@
       correct: opt(K.bool(isTrue), isTrue ? 'True' : 'False'),
       other: opt(K.bool(!isTrue), isTrue ? 'False' : 'True', isTrue ? 'Count again: ' + art(name) + ' really does have ' + real + ' ' + (real === 1 ? singular : pl) + '.' : 'Count again: ' + art(name) + ' has ' + real + ' ' + (real === 1 ? singular : pl) + ', not ' + shown + '.'),
       hint: 'Count the ' + pl + ' on the picture yourself, then compare with the number in the sentence.',
-      explain: ex('Checking a statement', ['Count the ' + pl + ' on ' + art(name) + ': there are <b>' + real + '</b>.', 'The sentence says <b>' + shown + '</b>.', isTrue ? 'They match, so the statement is <b>True</b>. ✅' : 'They do not match, so the statement is <b>False</b>. ✅']),
+      explain: ex('Checking a statement', ['Count the ' + pl + ' on ' + art(name) + ': there ' + isAre(real) + ' <b>' + real + '</b>.', 'The sentence says <b>' + shown + '</b>.', isTrue ? 'They match, so the statement is <b>True</b>. ✅' : 'They do not match, so the statement is <b>False</b>. ✅']),
       truth: K.bool(V.FACTS3D[name][key] === shown), decode: function(){ return K.bool(V.FACTS3D[kind3D(vis)][key] === shown); }
     });
   }

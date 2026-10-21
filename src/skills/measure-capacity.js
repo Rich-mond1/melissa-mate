@@ -282,7 +282,7 @@
     return numeric({
       prompt: nm + ' needs 1 litre of ' + pick(LIQ) + '. How many more millilitres must ' + nm + ' pour into the jug?', visual: vis, answer: d, unit: 'ml',
       hint: '1 litre = 1000 ml. Read the jug first, then count up to 1000.',
-      explain: ex('Filling to 1 litre', ['The jug has <b>' + val + ' ml</b>.', '1 litre = 1000 ml. Count up: ' + val + ' → ' + (Math.ceil(val / 100) * 100) + ' (' + (Math.ceil(val / 100) * 100 - val) + ' ml) → 1000 (' + (1000 - Math.ceil(val / 100) * 100) + ' ml).', 'Total needed: 1000 − ' + val + ' = <b>' + d + ' ml</b>. ✅']),
+      explain: ex('Filling to 1 litre', ['The jug has <b>' + val + ' ml</b>.', '1 litre = 1000 ml. ' + (val % 100 === 0 ? 'Count up from ' + val + ' to 1000.' : 'Count up: ' + val + ' → ' + (Math.ceil(val / 100) * 100) + ' (' + (Math.ceil(val / 100) * 100 - val) + ' ml) → 1000 (' + (1000 - Math.ceil(val / 100) * 100) + ' ml).'), 'Total needed: 1000 − ' + val + ' = <b>' + d + ' ml</b>. ✅']),
       truth: (1000 - 50) - (val - 50), decode: function(){ return 1000 - dj(vis, 50); },
       wrong: function(v){ return v === val ? 'That is how much is already in the jug. Find how much MORE is needed.' : v === 1 - val / 1000 ? 'Use millilitres: 1 litre = 1000 ml.' : ''; }
     });

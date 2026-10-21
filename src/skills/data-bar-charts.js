@@ -124,7 +124,7 @@
       var cnt = o.vs.filter(function(v){ return v > thr; }).length;
       return numeric({ prompt: o.th.intro + ' How many bars show more than ' + thr + '?', visual: o.vis, answer: cnt,
         hint: 'Find ' + thr + ' on the side. Count the bars that go higher than that.',
-        explain: ex('Bars above ' + thr, ['Find ' + thr + ' on the side.', 'Bars taller than that: ' + o.labs.filter(function(l, x){ return o.vs[x] > thr; }).join(', ') + '.', 'There ' + (cnt === 1 ? 'is' : 'are') + ' <b>' + cnt + '</b> ' + (cnt === 1 ? 'bar' : 'bars') + '. ✅']),
+        explain: ex('Bars above ' + thr, ['Find ' + thr + ' on the side.', (cnt ? 'Bars taller than that: ' + o.labs.filter(function(l, x){ return o.vs[x] > thr; }).join(', ') + '.' : 'No bar is taller than that.'), 'There ' + (cnt === 1 ? 'is' : 'are') + ' <b>' + cnt + '</b> ' + (cnt === 1 ? 'bar' : 'bars') + '. ✅']),
         truth: cnt, decode: function(){ var d = dec(o); return Object.keys(d).filter(function(l){ return d[l] > thr; }).length; } });
     }
     var p = two(k), a = p[0], b = p[1], hi = o.vs[a] > o.vs[b] ? a : b, lo = hi === a ? b : a, diff = o.vs[hi] - o.vs[lo];

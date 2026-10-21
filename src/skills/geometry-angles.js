@@ -111,7 +111,7 @@
       prompt: 'It is ' + h + ' o’clock. Look at the small angle between the two hands. Is it ' + (bridge ? 'acute, right or obtuse?' : 'smaller than, bigger than, or a right angle?'), visual: vis,
       correct: opt(K.text(cat), labs[cat]), distractors: ds, count: 3,
       hint: 'At 3 o’clock the hands make a perfect square corner. Is ' + h + ' o’clock closer together than that, or further apart?',
-      explain: ex('Angle between clock hands', ['Each hour on a clock is one twelfth of a turn, so the hands at ' + h + ' o’clock are ' + plural(Math.min(h, 12 - h), 'hour-gap') + ' apart.', 'At 3 o’clock there are 3 gaps and the angle is a right angle.', Math.min(h, 12 - h) === 3 ? 'Here there are 3 gaps too.' : 'Here there are ' + (Math.min(h, 12 - h) < 3 ? 'fewer' : 'more') + ' gaps.', 'So the angle is <b>' + labs[cat] + '</b>' + (bridge ? ' (Year 4 words: acute = smaller, obtuse = bigger)' : '') + '. ✅']),
+      explain: ex('Angle between clock hands', ['Each hour on a clock is one twelfth of a turn, so the hands at ' + h + ' o’clock are ' + plural(Math.min(h, 12 - h), 'hour-gap') + ' apart (the shorter way round).', 'At 3 o’clock there are 3 gaps and the angle is a right angle.', Math.min(h, 12 - h) === 3 ? 'Here there are 3 gaps too.' : 'Here there are ' + (Math.min(h, 12 - h) < 3 ? 'fewer' : 'more') + ' gaps.', 'So the angle is <b>' + labs[cat] + '</b>' + (bridge ? ' (acute = smaller than a right angle, obtuse = bigger)' : '') + '. ✅']),
       truth: K.text(degCat(Math.min(30 * h, 360 - 30 * h))), decode: function(){ const d = V.decodeClock(vis); const hh = d.h % 12; return K.text(degCat(Math.min(30 * hh, 360 - 30 * hh))); }
     });
   }
@@ -120,10 +120,10 @@
     const labs = { smaller: 'acute angle', right: 'right angle', bigger: 'obtuse angle' };
     const ds = CATS.filter(function(c){ return c !== cat; }).map(function(c){ return opt(K.text(c), labs[c], 'The word ' + (c === 'smaller' ? 'acute' : (c === 'bigger' ? 'obtuse' : 'right')) + ' means ' + LAB[c] + '. This angle is ' + LAB[cat] + '.'); });
     return mcq({
-      prompt: '<b>Year 4 words:</b> acute means smaller than a right angle, obtuse means bigger than a right angle (but less than a straight line). What type of angle is this?', visual: vis,
+      prompt: '<b>Acute</b> means smaller than a right angle, obtuse means bigger than a right angle (but less than a straight line). What type of angle is this?', visual: vis,
       correct: opt(K.text(cat), labs[cat]), distractors: ds, count: 3,
       hint: 'First decide: is it smaller than, the same as, or bigger than a square corner? Then pick the matching word.',
-      explain: ex('Acute, right or obtuse? (a Year 4 bridge question)', ['Compare with a right angle (a square corner).', 'This angle is <b>' + LAB[cat] + '</b>.', 'Smaller = acute, exactly square = right angle, bigger = obtuse. So it is <b>' + art(labs[cat]) + '</b>. ✅']),
+      explain: ex('Acute, right or obtuse?', ['Compare with a right angle (a square corner).', 'This angle is <b>' + LAB[cat] + '</b>.', 'Smaller = acute, exactly square = right angle, bigger = obtuse. So it is <b>' + art(labs[cat]) + '</b>. ✅']),
       truth: K.text(degCat(deg)), decode: function(){ return K.text(degCat(V.decodeAngle(vis))); }
     });
   }
