@@ -129,7 +129,7 @@
         if(f === 1){ // how many ones after exchange
           const c = gen({ amin: 31, amax: 95, bmin: 12, bmax: 88, oneEx: true, minDiff: 6 });
           const vis = tbl(c, false), right = c.a % 10 + 10;
-          return mcqNum({ prompt: 'To work out <b>' + c.a + ' − ' + c.b + '</b>, we exchange 1 ten. How many <b>ones</b> do we have after the exchange?', visual: vis, answer: right,
+          return mcqNum({ prompt: 'To work out <b>' + c.a + ' − ' + c.b + '</b>, we exchange 1 ten for 10 ones. How many <b>ones</b> are in the ones column now?', visual: vis, answer: right,
             wrong: [{ v: c.a % 10, why: 'That is how many ones there were before. The exchange gives 10 more ones.' }, { v: 10, why: 'The exchange gives 10 ones, but we still have the ' + plural(c.a % 10, 'one', 'ones') + ' we started with.' }, { v: Math.floor(c.a / 10) - 1, why: 'That is how many TENS are left. We want the ones.' }],
             nearby: [1, -1, 2, -2, 10], valid: function(v){ return v >= 1 && v < 30; },
             hint: 'You keep the ones you already have and add the 10 ones from the exchanged ten.',
@@ -139,7 +139,7 @@
         // what do we do?
         const c = gen({ amin: 31, amax: 95, bmin: 12, bmax: 88, oneEx: true, minDiff: 6 });
         const vis = tbl(c, false), x = c.a % 10, y = c.b % 10;
-        return mcq({ prompt: 'In <b>' + c.a + ' − ' + c.b + '</b>, the ones column is ' + x + ' − ' + y + '. What should we do?', visual: vis,
+        return mcq({ prompt: 'In <b>' + c.a + ' − ' + c.b + '</b>, the ones column is ' + x + ' − ' + y + '. Can we take ' + y + ' away from ' + x + '? What should we do?', visual: vis,
           correct: opt(K.text('exchange'), 'Exchange 1 ten for 10 ones'), keepOrder: true, count: 3,
           distractors: [opt(K.text('swap'), 'Do ' + y + ' − ' + x + ' instead', 'You cannot flip the numbers. The top number is what we take away FROM, so we need to exchange.'),
             opt(K.text('skip'), 'Ignore the ones and do the tens', 'Every column needs an answer. Exchange 1 ten for 10 ones so the ones can be subtracted.'),

@@ -122,7 +122,7 @@
         if(f === 0){ const p = pairGen(11, 88, 3, 11, { crossTen: true }); return numQ(p, 'What is the <b>difference</b> between <b>' + p.lo + '</b> and <b>' + p.hi + '</b>? Count on along the line.', nlVis(p.lo, p.hi)); }
         if(f === 1){ const p = pairGen(11, 88, 3, 11, { crossTen: true }); return numQ(p, moreStory(p), nlVis(p.lo, p.hi), 'Start at the smaller number and count on to the bigger one.', 'How many more?'); }
         const p = pairGen(11, 88, 3, 11, { crossTen: true }), first = Math.ceil(p.lo / 10) * 10 - p.lo, vis = nlVis(p.lo, p.hi);
-        return mcqNum({ prompt: 'Counting on from <b>' + p.lo + '</b> to <b>' + p.hi + '</b>. How big is the <b>first jump</b>, to the next ten?', visual: vis, answer: first,
+        return mcqNum({ prompt: 'Counting on from <b>' + p.lo + '</b> to <b>' + p.hi + '</b>. How big is the <b>first jump</b>, from ' + p.lo + ' up to the next ten?', visual: vis, answer: first,
           wrong: [{ v: p.hi - p.lo, why: 'That is the whole difference. The first jump only goes as far as the next ten.' }, { v: p.lo % 10, why: 'That is the ones digit of ' + p.lo + '. We need how many MORE to reach the next ten.' }, { v: 10 - first, why: 'That is the part of the ten you have already. The jump is the part still missing.' }],
           nearby: [1, -1, 2, -2, 3], valid: function(v){ return v >= 1 && v <= 10; },
           hint: 'What is the next ten after ' + p.lo + '? How far is it from ' + p.lo + '?',

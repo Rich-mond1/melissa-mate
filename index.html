@@ -1383,7 +1383,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qMakeTenGap(){
     const a = randInt(6, 9), b = randInt(11 - a + 1, 9) , need = 10 - a;
     return mcqNum({
-      prompt: 'To work out <b>' + a + ' + ' + b + '</b>, first make 10. How much do you add to ' + a + ' to make 10?', answer: need,
+      prompt: 'Let’s work out <b>' + a + ' + ' + b + '</b> in two easy steps: first fill up to a full ten (<b>' + a + ' + ? = 10</b>), then add what is left of ' + b + '. <b>Step 1:</b> what number goes in place of the ?', answer: need,
       wrong: [{ v: b, why: b + ' is the other number. First find how many to ADD to ' + a + ' to reach 10.' }, { v: 10, why: '10 is where you are heading. How many steps from ' + a + '?' }, { v: need + 1, why: 'Count on from ' + a + ': ' + (need + 1) + ' steps goes past 10.' }, { v: a, why: a + ' is the number you start with.' }],
       nearby: [1, -1, 2, 3, 4], valid: pos, count: 4, hint: 'Count on from ' + a + ' to 10.',
       explain: ex('Make ten', [a + ' + <b>' + need + '</b> = 10.', 'So split ' + b + ' into ' + need + ' and ' + (b - need) + '.', a + ' + ' + b + ' = 10 + ' + (b - need) + ' = <b>' + (a + b) + '</b>. ✅']), truth: countOn(a, 10)
@@ -1392,7 +1392,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qMakeTenSum(){
     const a = randInt(6, 9), b = randInt(11 - a + 1, 9), need = 10 - a, s = a + b;
     return mcqNum({
-      prompt: 'Make ten to work out <b>' + a + ' + ' + b + '</b>: ' + a + ' + ' + need + ' = 10, then add the rest of ' + b + '. What is ' + a + ' + ' + b + '?', answer: s,
+      prompt: 'Let’s work out <b>' + a + ' + ' + b + '</b> by making ten. Split ' + b + ' into ' + need + ' and ' + (b - need) + '. First <b>' + a + ' + ' + need + ' = 10</b>. Then <b>10 + ' + (b - need) + ' = ?</b> What is ' + a + ' + ' + b + '?', answer: s,
       wrong: [{ v: 10 + b, why: 'You added all of ' + b + ' to 10. Only ' + (b - need) + ' of it is left after making ten.' }, { v: s + 1, why: 'Close! Count again: 10 + ' + (b - need) + '.' }, { v: s - 1, why: 'Close! Count again: 10 + ' + (b - need) + '.' }, { v: 10 + need, why: 'You stopped too early. After making 10, add the rest: ' + (b - need) + '.' }],
       nearby: [1, -1, 2, -2], valid: pos, count: 4, hint: 'After making 10, how much of ' + b + ' is left to add?',
       explain: ex('Make ten', [a + ' + ' + need + ' = 10 (we used ' + need + ' of the ' + b + ').', b + ' − ' + need + ' = ' + (b - need) + ' is left.', '10 + ' + (b - need) + ' = <b>' + s + '</b>. ✅']), truth: (a + need) + (b - need)
@@ -1608,7 +1608,7 @@ if(typeof module !== 'undefined') module.exports = V;
         if(f === 0){ const p = pairGen(11, 88, 3, 11, { crossTen: true }); return numQ(p, 'What is the <b>difference</b> between <b>' + p.lo + '</b> and <b>' + p.hi + '</b>? Count on along the line.', nlVis(p.lo, p.hi)); }
         if(f === 1){ const p = pairGen(11, 88, 3, 11, { crossTen: true }); return numQ(p, moreStory(p), nlVis(p.lo, p.hi), 'Start at the smaller number and count on to the bigger one.', 'How many more?'); }
         const p = pairGen(11, 88, 3, 11, { crossTen: true }), first = Math.ceil(p.lo / 10) * 10 - p.lo, vis = nlVis(p.lo, p.hi);
-        return mcqNum({ prompt: 'Counting on from <b>' + p.lo + '</b> to <b>' + p.hi + '</b>. How big is the <b>first jump</b>, to the next ten?', visual: vis, answer: first,
+        return mcqNum({ prompt: 'Counting on from <b>' + p.lo + '</b> to <b>' + p.hi + '</b>. How big is the <b>first jump</b>, from ' + p.lo + ' up to the next ten?', visual: vis, answer: first,
           wrong: [{ v: p.hi - p.lo, why: 'That is the whole difference. The first jump only goes as far as the next ten.' }, { v: p.lo % 10, why: 'That is the ones digit of ' + p.lo + '. We need how many MORE to reach the next ten.' }, { v: 10 - first, why: 'That is the part of the ten you have already. The jump is the part still missing.' }],
           nearby: [1, -1, 2, -2, 3], valid: function(v){ return v >= 1 && v <= 10; },
           hint: 'What is the next ten after ' + p.lo + '? How far is it from ' + p.lo + '?',
@@ -2200,7 +2200,7 @@ if(typeof module !== 'undefined') module.exports = V;
         if(f === 1){ // how many ones after exchange
           const c = gen({ amin: 31, amax: 95, bmin: 12, bmax: 88, oneEx: true, minDiff: 6 });
           const vis = tbl(c, false), right = c.a % 10 + 10;
-          return mcqNum({ prompt: 'To work out <b>' + c.a + ' − ' + c.b + '</b>, we exchange 1 ten. How many <b>ones</b> do we have after the exchange?', visual: vis, answer: right,
+          return mcqNum({ prompt: 'To work out <b>' + c.a + ' − ' + c.b + '</b>, we exchange 1 ten for 10 ones. How many <b>ones</b> are in the ones column now?', visual: vis, answer: right,
             wrong: [{ v: c.a % 10, why: 'That is how many ones there were before. The exchange gives 10 more ones.' }, { v: 10, why: 'The exchange gives 10 ones, but we still have the ' + plural(c.a % 10, 'one', 'ones') + ' we started with.' }, { v: Math.floor(c.a / 10) - 1, why: 'That is how many TENS are left. We want the ones.' }],
             nearby: [1, -1, 2, -2, 10], valid: function(v){ return v >= 1 && v < 30; },
             hint: 'You keep the ones you already have and add the 10 ones from the exchanged ten.',
@@ -2210,7 +2210,7 @@ if(typeof module !== 'undefined') module.exports = V;
         // what do we do?
         const c = gen({ amin: 31, amax: 95, bmin: 12, bmax: 88, oneEx: true, minDiff: 6 });
         const vis = tbl(c, false), x = c.a % 10, y = c.b % 10;
-        return mcq({ prompt: 'In <b>' + c.a + ' − ' + c.b + '</b>, the ones column is ' + x + ' − ' + y + '. What should we do?', visual: vis,
+        return mcq({ prompt: 'In <b>' + c.a + ' − ' + c.b + '</b>, the ones column is ' + x + ' − ' + y + '. Can we take ' + y + ' away from ' + x + '? What should we do?', visual: vis,
           correct: opt(K.text('exchange'), 'Exchange 1 ten for 10 ones'), keepOrder: true, count: 3,
           distractors: [opt(K.text('swap'), 'Do ' + y + ' − ' + x + ' instead', 'You cannot flip the numbers. The top number is what we take away FROM, so we need to exchange.'),
             opt(K.text('skip'), 'Ignore the ones and do the tens', 'Every column needs an answer. Exchange 1 ten for 10 ones so the ones can be subtracted.'),
@@ -11967,7 +11967,7 @@ if(typeof module !== 'undefined') module.exports = V;
       if(c[0] >= 1){ const l = m.d + ' × ' + c[0] + ' = ' + m.d * c[0]; if(l !== good) ds.push(opt(K.text(l), l, c[1])); }
     });
     return mcq({
-      prompt: 'To work out <b>' + m.n + ' ÷ ' + m.d + '</b>, which fact is the <b>nearest</b> to ' + m.n + ' without going over?', correct: opt(K.text(good), good), distractors: ds, keepOrder: true, count: 4,
+      prompt: 'To work out <b>' + m.n + ' ÷ ' + m.d + '</b>, count in ' + m.d + 's. Which fact in the ' + m.d + ' times table is the <b>biggest one that is not more than</b> ' + m.n + '?', correct: opt(K.text(good), good), distractors: ds, keepOrder: true, count: 4,
       hint: 'All the facts are true. Pick the one that is closest to ' + m.n + ' but not bigger than ' + m.n + '.',
       explain: ex('Nearest fact', ['Count in ' + m.d + 's: ' + countIn(m.d, m.q) + ', then ' + m.d * (m.q + 1) + ' is too big.', 'The nearest fact without going over ' + m.n + ' is <b>' + good + '</b>.', m.n + ' − ' + m.d * m.q + ' = ' + m.r + ', so ' + m.n + ' ÷ ' + m.d + ' = ' + m.q + ' remainder ' + m.r + '. ✅']),
       truth: K.text(m.d + ' × ' + divmod(m.n, m.d).q + ' = ' + m.d * divmod(m.n, m.d).q)
@@ -14066,10 +14066,10 @@ if(typeof module !== 'undefined') module.exports = V;
     });
   }
   function q9TF(){
-    const n = randInt(3, 10), p = P(9, n), good = chance(0.4), claim = good ? p : p + pick([1, -1, 2, -2, 9, -9]), who = pick(NAMES);
+    const n = randInt(3, 10), p = P(9, n), good = chance(0.4), claim = good ? p : p + pick([1, -1, 2, -2, 3, -3, 4, -4])   /* never ±9: 27 → 36 still passes the digit check, so the check could not catch it */, who = pick(NAMES);
     const sums = String(claim).split('').join(' + ') + ' = ' + digitSum(claim);
     return mcq2({
-      prompt: who + ' says 9 × ' + n + ' = ' + claim + '. Use the digit check. Is ' + who + ' right?',
+      prompt: who + ' says 9 × ' + n + ' = ' + claim + '. <b>Digit check:</b> in the 9 times table, the digits of the answer add up to 9. Is ' + who + ' right?',
       correct: opt(K.bool(claim === 9 * n), claim === 9 * n ? 'Yes, that is right' : 'No, that is wrong'), other: opt(K.bool(claim !== 9 * n), claim === 9 * n ? 'No, that is wrong' : 'Yes, that is right', claim === 9 * n ? 'The digits of ' + claim + ' add up to ' + digitSum(claim) + ', so it passes the check.' : 'Try the digit check: ' + sums + '. In the 9 times table the digits add up to 9, so this does not pass.'),
       hint: 'Add the digits of ' + claim + '. Do they make 9?',
       explain: ex('Checking with digits', ['The digits of ' + claim + ' add up: ' + sums + '.', claim === 9 * n ? 'They make 9, and ' + claim + ' = 9 × ' + n + '.' : 'They do not make 9, so ' + claim + ' is not in the 9 times table.', claim === 9 * n ? 'So ' + who + ' is right. ✅' : 'The real answer is 9 × ' + n + ' = ' + p + ', so ' + who + ' is wrong. ✅']),
@@ -14433,7 +14433,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qTripleDouble(){
     const n = randInt(2, 12), d = P(2, n), f = P(4, n), p = P(8, n);
     return mcqNum({
-      prompt: 'Double, double, double! ' + n + ' → ' + d + ' → ' + f + ' → ?  What number comes next?', answer: p,
+      prompt: 'Double, double, double! Keep doubling: ' + n + ' → ' + d + ' → ' + f + ' → ?  What number comes next?', answer: p,
       wrong: [{ v: f + 4, why: 'You added 4. Doubling means ' + f + ' + ' + f + '.' }, { v: f + 8, why: 'You added 8. Doubling means ' + f + ' + ' + f + '.' }, { v: f, why: 'That is the number you already have. Double it once more.' }, { v: f + d, why: 'That adds the wrong numbers. Double ' + f + ' means ' + f + ' + ' + f + '.' }],
       nearby: [1, -1, 2, -2, 8, -8], valid: pos, count: 4,
       hint: 'Doubling ' + f + ' means ' + f + ' + ' + f + '.',

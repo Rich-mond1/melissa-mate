@@ -352,10 +352,10 @@
     });
   }
   function q9TF(){
-    const n = randInt(3, 10), p = P(9, n), good = chance(0.4), claim = good ? p : p + pick([1, -1, 2, -2, 9, -9]), who = pick(NAMES);
+    const n = randInt(3, 10), p = P(9, n), good = chance(0.4), claim = good ? p : p + pick([1, -1, 2, -2, 3, -3, 4, -4])   /* never ±9: 27 → 36 still passes the digit check, so the check could not catch it */, who = pick(NAMES);
     const sums = String(claim).split('').join(' + ') + ' = ' + digitSum(claim);
     return mcq2({
-      prompt: who + ' says 9 × ' + n + ' = ' + claim + '. Use the digit check. Is ' + who + ' right?',
+      prompt: who + ' says 9 × ' + n + ' = ' + claim + '. <b>Digit check:</b> in the 9 times table, the digits of the answer add up to 9. Is ' + who + ' right?',
       correct: opt(K.bool(claim === 9 * n), claim === 9 * n ? 'Yes, that is right' : 'No, that is wrong'), other: opt(K.bool(claim !== 9 * n), claim === 9 * n ? 'No, that is wrong' : 'Yes, that is right', claim === 9 * n ? 'The digits of ' + claim + ' add up to ' + digitSum(claim) + ', so it passes the check.' : 'Try the digit check: ' + sums + '. In the 9 times table the digits add up to 9, so this does not pass.'),
       hint: 'Add the digits of ' + claim + '. Do they make 9?',
       explain: ex('Checking with digits', ['The digits of ' + claim + ' add up: ' + sums + '.', claim === 9 * n ? 'They make 9, and ' + claim + ' = 9 × ' + n + '.' : 'They do not make 9, so ' + claim + ' is not in the 9 times table.', claim === 9 * n ? 'So ' + who + ' is right. ✅' : 'The real answer is 9 × ' + n + ' = ' + p + ', so ' + who + ' is wrong. ✅']),
