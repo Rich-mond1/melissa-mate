@@ -75,7 +75,7 @@
   function explainOne(p){
     const sg = p.op === 'add' ? '+' : '−', ans = ansOf(p), u = p.unit;
     const idea = p.op === 'add' ? 'The story <b>joins</b> amounts together ("' + p.clue + '"), so we <b>add</b>.' : (p.word === 'compare' ? 'The story compares two amounts ("' + p.clue + '"), so we <b>subtract</b> (find the difference).' : 'The story <b>takes some away</b> ("' + p.clue + '"), so we <b>subtract</b>.');
-    return ex('Solving the story', [idea, 'Bar model: ' + (p.op === 'add' ? 'two parts ' + p.x + ' and ' + p.y + ' make the whole.' : 'the whole is ' + p.x + ', one part is ' + p.y + ', the other part is the answer.') + ' Sum: <b>' + p.x + ' ' + sg + ' ' + p.y + '</b>.', 'Work it out: ' + p.x + ' ' + sg + ' ' + p.y + ' = <b>' + ans + u + '</b>.', 'Check: ' + (p.op === 'add' ? ans + ' − ' + p.y + ' = ' + p.x : ans + ' + ' + p.y + ' = ' + p.x) + '. ✅']);
+    return ex('Solving the story', [idea, 'Bar model: ' + (p.op === 'add' ? 'two parts ' + p.x + ' and ' + p.y + ' make the whole.' : 'the whole is ' + p.x + ', one part is ' + p.y + ', the other part is the answer.') + ' The calculation is <b>' + p.x + ' ' + sg + ' ' + p.y + '</b>.', 'Work it out: ' + p.x + ' ' + sg + ' ' + p.y + ' = <b>' + ans + u + '</b>.', 'Check: ' + (p.op === 'add' ? ans + ' − ' + p.y + ' = ' + p.x : ans + ' + ' + p.y + ' = ' + p.x) + '. ✅']);
   }
   function hintOne(p){ return 'Read the story slowly. Is something joined together, or taken away / compared? Look at the bar model too.'; }
   function solveQ(p, showBar){
@@ -94,7 +94,7 @@
     return mcq2({ prompt: p.text + '<br>Which sum solves it?', visual: bar,
       correct: opt(K.text(p.op), right), other: opt(K.text(p.op === 'add' ? 'sub' : 'add'), wrong, p.op === 'add' ? 'The story puts amounts together ("' + p.clue + '"). That needs adding, not taking away.' : 'The story takes away or compares ("' + p.clue + '"). That needs subtracting, not adding.'),
       hint: 'Look at the bar model. If the whole is a question mark, add the parts. If the whole is known, take the known part away.',
-      explain: ex('Choosing the operation', [p.op === 'add' ? 'The bar model has a <b>?</b> for the whole, so we put the parts together: <b>add</b>.' : 'The whole is <b>' + p.x + '</b> and we need the missing part, so we <b>subtract</b>.', 'Clue words in the story: "' + p.clue + '".', 'The sum is <b>' + right + '</b>. ✅']),
+      explain: ex('Choosing the operation', [p.op === 'add' ? 'The bar model has a <b>?</b> for the whole, so we put the parts together: <b>add</b>.' : 'The whole is <b>' + p.x + '</b> and we need the missing part, so we <b>subtract</b>.', 'Clue words in the story: "' + p.clue + '".', 'The calculation is <b>' + right + '</b>. ✅']),
       truth: K.text(p.op === 'add' ? 'add' : 'sub'), decode: function(){ return K.text(barOp(bar)); } });
   }
   function sentenceWithAnswer(p){ // 3 options, each a full number sentence

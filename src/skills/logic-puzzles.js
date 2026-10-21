@@ -242,7 +242,7 @@
       return mcq({
         prompt: 'Which side is heavier?', visual: vis, correct: opt(K.text(tilt), names[tilt]), distractors: ds, keepOrder: true, count: 3,
         hint: 'Add up the weights on each side. Or look: the heavier side goes down.',
-        explain: ex('Comparing the two sides', ['Left side: ' + L.join(' + ') + ' = <b>' + sl + 'g</b>.', 'Right side: ' + Rr.join(' + ') + ' = <b>' + sr + 'g</b>.', tilt === 'level' ? 'Both are ' + sl + 'g, so <b>They weigh the same</b>. ✅' : (sl > sr ? '<b>The left side</b>' : '<b>The right side</b>') + ' is heavier, so it goes down. ✅']),
+        explain: ex('Comparing the two sides', ['Left side: ' + L.join(' + ') + ' = <b>' + sl + 'g</b>.', 'Right side: ' + Rr.join(' + ') + ' = <b>' + sr + 'g</b>.', tilt === 'level' ? 'Both are ' + sl + 'g, so <b>they weigh the same</b>. ✅' : (sl > sr ? '<b>The left side</b>' : '<b>The right side</b>') + ' is heavier, so it goes down. ✅']),
         truth: K.text(sl > sr ? 'L' : sl < sr ? 'R' : 'level'),
         decode: function(){ const d = decodeScales(vis); return K.text(d.tilt); }
       });
@@ -399,7 +399,7 @@
       const hint = o.mode === 'columns' ? 'Start with the ones column. What must the hidden digit be to make the answer end in the right digit? Watch for a carry.' : (boxes === 1 || o.mode === 'same' ? 'Use the opposite calculation to find the whole number first, then read its digits.' : 'Try the ones column first.');
       if(o.typed) return numeric({ prompt: prompt, visual: vis, answer: ans, hint: hint, explain: ex('Finding the digit', steps), truth: (function(){ let t = -1; for(let v = 0; v <= 9; v++){ const dd = D.map(function(x){ return x.slice(); }); if(solveSumWith(shown, letter, v, op)) t = v; } return t; })(), decode: decode });
       return mcqNum({ prompt: prompt, visual: vis, answer: ans, count: 4, valid: function(v){ return v >= 0 && v <= 9; }, nearby: [1, -1, 2, -2, 3, -3, 4, -4, 5, -5],
-        wrong: [{ v: ans + 1, why: 'Put it back in and check: do the calculation again — remember any carry or borrow.' }, { v: ans - 1, why: 'Put it back in and check: do the calculation again — remember any carry or borrow.' }],
+        wrong: [{ v: ans + 1, why: 'Put it back in and check: do the calculation again — remember any carry or exchange.' }, { v: ans - 1, why: 'Put it back in and check: do the calculation again — remember any carry or exchange.' }],
         hint: hint, explain: ex('Finding the digit', steps), truth: (function(){ let t = -1; for(let v = 0; v <= 9; v++) if(solveSumWith(shown, letter, v, op)) t = v; return t; })(), decode: decode });
     }
     throw new Error('sumQ failed');

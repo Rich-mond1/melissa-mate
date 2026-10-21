@@ -221,7 +221,7 @@
             wrong: [{ v: n + 1, why: 'That is one too many. Put a dot on your starting ' + (what === 'sides' ? 'side' : 'corner') + ' so you do not count it twice.' }, { v: n - 1, why: 'That is one too few. Count every ' + (what === 'sides' ? 'side' : 'corner') + ' once, going round the shape.' }],
             valid: function(v){ return v >= 3 && v <= 10; }, count: 3,
             hint: 'Touch each ' + (what === 'sides' ? 'side' : 'corner') + ' with your finger as you count, going round the shape.',
-            explain: ex('Counting the ' + what, ['Start at one ' + (what === 'sides' ? 'side' : 'corner') + ' and go round the shape.', 'Count every ' + (what === 'sides' ? 'side' : 'corner') + ' once.', 'There are <b>' + n + '</b> of them. (Every shape has the same number of sides and corners.) ✅']),
+            explain: ex('Counting the ' + what, ['Start at one ' + (what === 'sides' ? 'side' : 'corner') + ' and go round the shape.', 'Count every ' + (what === 'sides' ? 'side' : 'corner') + ' once.', 'There are <b>' + n + '</b> of them. (Every straight-sided shape has as many corners as sides.) ✅']),
             truth: LITN[name], decode: function(){ const d = V.decodePolygon(vis); return what === 'sides' ? d.sides : d.vertices; }
           });
         }

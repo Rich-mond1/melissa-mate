@@ -18,7 +18,7 @@
   function qRomanToNum(maxN){
     const n = randInt(2, maxN), r = toRoman(n), w = [];
     const sw = r.split('').reverse().join('');
-    if(sw !== r && parseRoman(sw) !== n) w.push({ v: parseRoman(sw), why: 'The order matters. A small numeral BEFORE a bigger one is taken away: ' + r + ' = ' + n + '.' });
+    if(sw !== r && parseRoman(sw) !== n) w.push({ v: parseRoman(sw), why: /IV|IX|XL|XC/.test(r) ? 'The order matters. A small numeral BEFORE a bigger one is taken away: ' + r + ' = ' + n + '.' : 'The order matters. A small numeral AFTER a bigger one is added on: ' + r + ' = ' + n + '.' });
     const add = r.split('').reduce(function(a, c){ return a + ({ I: 1, V: 5, X: 10, L: 50, C: 100 })[c]; }, 0);
     if(add !== n) w.push({ v: add, why: 'You added every symbol. When a smaller one comes BEFORE a bigger one it is subtracted.' });
     return mcqNum({

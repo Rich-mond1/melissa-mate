@@ -69,7 +69,7 @@
     return numeric({
       prompt: 'Type the missing number:  <b>' + (chance(0.5) ? a + ' + ▢ = 20' : '▢ + ' + a + ' = 20') + '</b>', answer: b,
       hint: 'Count on from ' + a + ' to 20, or use the bond to 10 first.',
-      explain: ex('Bonds to 20', ['Count on from ' + a + ' to 20' + (a < 10 ? ': first to 10 (' + (10 - a) + '), then ' + 10 + ' more.' : ': first to the next ten if you like, then on to 20.'), 'That is <b>' + b + '</b> more.', 'Check: ' + a + ' + ' + b + ' = 20. ✅']), truth: countOn(a, 20),
+      explain: ex('Bonds to 20', ['Count on from ' + a + ' to 20' + (a < 10 ? ': first to 10 (' + (10 - a) + '), then ' + 10 + ' more.' : ': count on ' + b + '.'), 'That is <b>' + b + '</b> more.', 'Check: ' + a + ' + ' + b + ' = 20. ✅']), truth: countOn(a, 20),
       wrong: function(v){ return v + a !== 20 ? 'Check by adding: ' + a + ' + ' + (v < 0 ? '(' + v + ')' : v) + ' = ' + (a + v) + ', not 20.' : ''; }
     });
   }

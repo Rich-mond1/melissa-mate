@@ -97,7 +97,7 @@
       { w: 1, k: n + 1, why: 'You counted the 1 as a step. Start counting steps AFTER the 1.' },
       { w: 1, k: n - 1, why: 'Count the steps after the 1 again — you are one short.' }
     ];
-    for(let k = 1; k < d; k++) list.push({ w: 1, k: k, why: 'Count the steps after the 1 carefully: there are ' + n + '.' });
+    for(let k = 1; k < d; k++) list.push({ w: 1, k: k, why: 'Count the steps after the 1 carefully: there ' + isAre(n) + ' ' + n + '.' });
     const ds = list.filter(function(x){ return x.k >= 1 && x.k < d; }).map(function(x){ return opt(val(x.w, x.k), mixedWords(x.w, x.k, d), x.why); });
     return mcq({
       prompt: 'The number line goes from 0 to 2. Each whole is cut into ' + d + ' equal steps. What number is the ? at?', visual: vis,

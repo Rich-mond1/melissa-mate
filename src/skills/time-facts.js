@@ -34,7 +34,7 @@
     const t = pick(T), sm = t.small, bg = t.big;
     return mcqNum({
       prompt: 'How many <b>' + sm + 's</b> are there in <b>1 ' + bg + '</b>?', answer: t.a,
-      wrong: [{ v: 100, why: 'It is not 100 — time does not use tens. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 12, why: '12 is the number of months in a year. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 30, why: '30 is half of 60, and only half a ' + bg + '.' }, { v: 10, why: 'Time does not count in tens. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }],
+      wrong: [{ v: 100, why: 'It is not 100 — time does not use tens. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 12, why: '12 is the number of months in a year. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 30, why: '30 is not ' + t.a + '. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 10, why: 'Time does not count in tens. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }],
       nearby: [1, -1, 6, -6, 10, -10], valid: function(v){ return v > 0 && v <= 100; }, count: 4, hint: t.hint,
       explain: ex('Units of time', ['<b>1 ' + bg + ' = ' + t.a + ' ' + sm + 's</b>.', 'Remember it: 60 seconds = 1 minute, 60 minutes = 1 hour, 24 hours = 1 day, 7 days = 1 week. ✅'])
     });

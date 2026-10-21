@@ -102,7 +102,7 @@
       correct: opt(K.text(heavier), 'The ' + heavier),
       other: opt(K.text(lighter), 'The ' + lighter, 'Read both dials: the ' + lighter + ' show ' + Math.min(a, b) + ' g, which is less than ' + Math.max(a, b) + ' g.'),
       hint: 'Read each needle in grams. The bigger number means heavier.',
-      explain: ex('Which is heavier?', ['The ' + p[0][0] + ' show <b>' + a + ' g</b>.', 'The ' + p[1][0] + ' show <b>' + b + ' g</b>.', Math.max(a, b) + ' g is more than ' + Math.min(a, b) + ' g, so <b>The ' + heavier + '</b> is heavier. ✅']),
+      explain: ex('Which is heavier?', ['The ' + p[0][0] + ' show <b>' + a + ' g</b>.', 'The ' + p[1][0] + ' show <b>' + b + ' g</b>.', Math.max(a, b) + ' g is more than ' + Math.min(a, b) + ' g, so <b>the ' + heavier + '</b> are heavier. ✅']),
       truth: K.text([[a, p[0][0]], [b, p[1][0]]].sort(function(x, y){ return y[0] - x[0]; })[0][1]),
       decode: function(){ return K.text(dv(va, 50) > dv(vb, 50) ? p[0][0] : p[1][0]); }
     });

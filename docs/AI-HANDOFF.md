@@ -94,6 +94,7 @@ Direct pushes to `main` return 403 and GraphQL is blocked, so:
 6. Tell the user; Melissa may need to reload (close and reopen the app) on the iPad.
 
 ## 10. Known caveats and open items
+- Open wording items (not wrong answers, but clumsy for an 8-year-old) are in `docs/WORDING-BACKLOG.md`. Fix them in order of value; `tools/text-lint.js` and `tools/text-math-check.js` guard against regressions.
 - iPad/WebKit, offline and PWA install are unverified by automation (touch test = Chromium only).
 - Economy and prices untested with a child; pet-clothes placement only checked in Chromium screenshots.
 - Curriculum: 2 known order conflicts (see `curriculum.json → knownOrderConflicts`), content not validated by a teacher.

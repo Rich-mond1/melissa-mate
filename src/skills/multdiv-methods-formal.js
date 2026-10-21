@@ -38,7 +38,7 @@
   function resultOf(c){ return String(c.m.rh > 0 ? c.m.rh : '') + String(c.m.rt) + String(c.m.ro); }
   function workings(c){
     const m = c.m, st = ['<b>Ones first:</b> ' + m.o + ' × ' + c.b + ' = ' + m.po + (m.c1 ? '. Write <b>' + m.ro + '</b> in the ones and carry <b>' + m.c1 + '</b> to the tens.' : '. Write <b>' + m.ro + '</b> in the ones.')];
-    st.push('<b>Then the tens:</b> ' + m.t + ' tens × ' + c.b + ' = ' + m.t * c.b + (m.c1 ? ', and add the carried ' + m.c1 + ': ' + m.pt + '.' : '.') + ' Write <b>' + m.pt + '</b> in the tens' + (m.rh ? ' and hundreds.' : '.'));
+    st.push('<b>Then the tens:</b> ' + m.t + (m.t === 1 ? ' ten' : ' tens') + ' × ' + c.b + ' = ' + m.t * c.b + (m.c1 ? ', and add the carried ' + m.c1 + ': ' + m.pt + '.' : '.') + ' Write <b>' + m.pt + '</b> in the tens' + (m.rh ? ' and hundreds.' : '.'));
     st.push(c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>. ✅'); return st;
   }
   function wrongs(c){
@@ -86,7 +86,7 @@
       prompt: 'Here is a finished column multiplication. What is <b>' + c.a + ' × ' + c.b + '</b>?', visual: vis, answer: c.a * c.b,
       wrong: wrongs(c), nearby: NEAR, valid: pos, count: 3,
       hint: 'Read the digits of the answer row from left to right.',
-      explain: ex('Reading the column', ['The answer row shows <b>' + resultOf(c) + '</b>.', 'Check: ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + ' and ' + c.m.t + ' tens × ' + c.b + ' = ' + c.m.pt + ' tens.', c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>. ✅']),
+      explain: ex('Reading the column', ['The answer row shows <b>' + resultOf(c) + '</b>.', 'Check: ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + ' and ' + c.m.t + (c.m.t === 1 ? ' ten' : ' tens') + ' × ' + c.b + ' = ' + c.m.pt + (c.m.pt === 1 ? ' ten.' : ' tens.'), c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>. ✅']),
       truth: c.a * c.b, decode: function(){ return parseInt(readRow(vis, 'dr'), 10); }
     });
   }

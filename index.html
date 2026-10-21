@@ -1413,7 +1413,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return numeric({
       prompt: 'Type the missing number:  <b>' + (chance(0.5) ? a + ' + ▢ = 20' : '▢ + ' + a + ' = 20') + '</b>', answer: b,
       hint: 'Count on from ' + a + ' to 20, or use the bond to 10 first.',
-      explain: ex('Bonds to 20', ['Count on from ' + a + ' to 20' + (a < 10 ? ': first to 10 (' + (10 - a) + '), then ' + 10 + ' more.' : ': first to the next ten if you like, then on to 20.'), 'That is <b>' + b + '</b> more.', 'Check: ' + a + ' + ' + b + ' = 20. ✅']), truth: countOn(a, 20),
+      explain: ex('Bonds to 20', ['Count on from ' + a + ' to 20' + (a < 10 ? ': first to 10 (' + (10 - a) + '), then ' + 10 + ' more.' : ': count on ' + b + '.'), 'That is <b>' + b + '</b> more.', 'Check: ' + a + ' + ' + b + ' = 20. ✅']), truth: countOn(a, 20),
       wrong: function(v){ return v + a !== 20 ? 'Check by adding: ' + a + ' + ' + (v < 0 ? '(' + v + ')' : v) + ' = ' + (a + v) + ', not 20.' : ''; }
     });
   }
@@ -2363,7 +2363,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function explainOne(p){
     const sg = p.op === 'add' ? '+' : '−', ans = ansOf(p), u = p.unit;
     const idea = p.op === 'add' ? 'The story <b>joins</b> amounts together ("' + p.clue + '"), so we <b>add</b>.' : (p.word === 'compare' ? 'The story compares two amounts ("' + p.clue + '"), so we <b>subtract</b> (find the difference).' : 'The story <b>takes some away</b> ("' + p.clue + '"), so we <b>subtract</b>.');
-    return ex('Solving the story', [idea, 'Bar model: ' + (p.op === 'add' ? 'two parts ' + p.x + ' and ' + p.y + ' make the whole.' : 'the whole is ' + p.x + ', one part is ' + p.y + ', the other part is the answer.') + ' Sum: <b>' + p.x + ' ' + sg + ' ' + p.y + '</b>.', 'Work it out: ' + p.x + ' ' + sg + ' ' + p.y + ' = <b>' + ans + u + '</b>.', 'Check: ' + (p.op === 'add' ? ans + ' − ' + p.y + ' = ' + p.x : ans + ' + ' + p.y + ' = ' + p.x) + '. ✅']);
+    return ex('Solving the story', [idea, 'Bar model: ' + (p.op === 'add' ? 'two parts ' + p.x + ' and ' + p.y + ' make the whole.' : 'the whole is ' + p.x + ', one part is ' + p.y + ', the other part is the answer.') + ' The calculation is <b>' + p.x + ' ' + sg + ' ' + p.y + '</b>.', 'Work it out: ' + p.x + ' ' + sg + ' ' + p.y + ' = <b>' + ans + u + '</b>.', 'Check: ' + (p.op === 'add' ? ans + ' − ' + p.y + ' = ' + p.x : ans + ' + ' + p.y + ' = ' + p.x) + '. ✅']);
   }
   function hintOne(p){ return 'Read the story slowly. Is something joined together, or taken away / compared? Look at the bar model too.'; }
   function solveQ(p, showBar){
@@ -2382,7 +2382,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return mcq2({ prompt: p.text + '<br>Which sum solves it?', visual: bar,
       correct: opt(K.text(p.op), right), other: opt(K.text(p.op === 'add' ? 'sub' : 'add'), wrong, p.op === 'add' ? 'The story puts amounts together ("' + p.clue + '"). That needs adding, not taking away.' : 'The story takes away or compares ("' + p.clue + '"). That needs subtracting, not adding.'),
       hint: 'Look at the bar model. If the whole is a question mark, add the parts. If the whole is known, take the known part away.',
-      explain: ex('Choosing the operation', [p.op === 'add' ? 'The bar model has a <b>?</b> for the whole, so we put the parts together: <b>add</b>.' : 'The whole is <b>' + p.x + '</b> and we need the missing part, so we <b>subtract</b>.', 'Clue words in the story: "' + p.clue + '".', 'The sum is <b>' + right + '</b>. ✅']),
+      explain: ex('Choosing the operation', [p.op === 'add' ? 'The bar model has a <b>?</b> for the whole, so we put the parts together: <b>add</b>.' : 'The whole is <b>' + p.x + '</b> and we need the missing part, so we <b>subtract</b>.', 'Clue words in the story: "' + p.clue + '".', 'The calculation is <b>' + right + '</b>. ✅']),
       truth: K.text(p.op === 'add' ? 'add' : 'sub'), decode: function(){ return K.text(barOp(bar)); } });
   }
   function sentenceWithAnswer(p){ // 3 options, each a full number sentence
@@ -4179,7 +4179,7 @@ if(typeof module !== 'undefined') module.exports = V;
       { n: n, d: d - n, why: 'You compared coloured with white. The bottom number must count ALL the ' + unit + ', coloured and white.' }
     ];
     const same = [], other = [];
-    for(let k = 1; k < d; k++) same.push({ n: k, d: d, why: 'Count the coloured ' + unit + ' carefully: there are ' + n + ', not ' + k + '.' });
+    for(let k = 1; k < d; k++) same.push({ n: k, d: d, why: 'Count the coloured ' + unit + ' carefully: there ' + isAre(n) + ' ' + n + ', not ' + k + '.' });
     shuffle(DENS).sort(function(a, b){ return Math.abs(a - d) - Math.abs(b - d); }).forEach(function(dd){ if(dd !== d) for(let k = 1; k < dd; k++) other.push({ n: k, d: dd, why: 'Count ALL the ' + unit + ' for the bottom number: there are ' + d + '.' }); });
     return w.concat(shuffle(same), shuffle(other)).filter(function(x){
       if(x.d < 2 || x.n < 1 || x.n === x.d) return false;
@@ -4436,7 +4436,7 @@ if(typeof module !== 'undefined') module.exports = V;
       { w: 1, k: n + 1, why: 'You counted the 1 as a step. Start counting steps AFTER the 1.' },
       { w: 1, k: n - 1, why: 'Count the steps after the 1 again — you are one short.' }
     ];
-    for(let k = 1; k < d; k++) list.push({ w: 1, k: k, why: 'Count the steps after the 1 carefully: there are ' + n + '.' });
+    for(let k = 1; k < d; k++) list.push({ w: 1, k: k, why: 'Count the steps after the 1 carefully: there ' + isAre(n) + ' ' + n + '.' });
     const ds = list.filter(function(x){ return x.k >= 1 && x.k < d; }).map(function(x){ return opt(val(x.w, x.k), mixedWords(x.w, x.k, d), x.why); });
     return mcq({
       prompt: 'The number line goes from 0 to 2. Each whole is cut into ' + d + ' equal steps. What number is the ? at?', visual: vis,
@@ -5255,7 +5255,7 @@ if(typeof module !== 'undefined') module.exports = V;
             wrong: [{ v: n + 1, why: 'That is one too many. Put a dot on your starting ' + (what === 'sides' ? 'side' : 'corner') + ' so you do not count it twice.' }, { v: n - 1, why: 'That is one too few. Count every ' + (what === 'sides' ? 'side' : 'corner') + ' once, going round the shape.' }],
             valid: function(v){ return v >= 3 && v <= 10; }, count: 3,
             hint: 'Touch each ' + (what === 'sides' ? 'side' : 'corner') + ' with your finger as you count, going round the shape.',
-            explain: ex('Counting the ' + what, ['Start at one ' + (what === 'sides' ? 'side' : 'corner') + ' and go round the shape.', 'Count every ' + (what === 'sides' ? 'side' : 'corner') + ' once.', 'There are <b>' + n + '</b> of them. (Every shape has the same number of sides and corners.) ✅']),
+            explain: ex('Counting the ' + what, ['Start at one ' + (what === 'sides' ? 'side' : 'corner') + ' and go round the shape.', 'Count every ' + (what === 'sides' ? 'side' : 'corner') + ' once.', 'There are <b>' + n + '</b> of them. (Every straight-sided shape has as many corners as sides.) ✅']),
             truth: LITN[name], decode: function(){ const d = V.decodePolygon(vis); return what === 'sides' ? d.sides : d.vertices; }
           });
         }
@@ -5542,7 +5542,7 @@ if(typeof module !== 'undefined') module.exports = V;
       correct: opt(K.bool(isTrue), isTrue ? 'True' : 'False'),
       other: opt(K.bool(!isTrue), isTrue ? 'False' : 'True', isTrue ? 'Count again: ' + art(name) + ' really does have ' + real + ' ' + (real === 1 ? singular : pl) + '.' : 'Count again: ' + art(name) + ' has ' + real + ' ' + (real === 1 ? singular : pl) + ', not ' + shown + '.'),
       hint: 'Count the ' + pl + ' on the picture yourself, then compare with the number in the sentence.',
-      explain: ex('Checking a statement', ['Count the ' + pl + ' on ' + art(name) + ': there are <b>' + real + '</b>.', 'The sentence says <b>' + shown + '</b>.', isTrue ? 'They match, so the statement is <b>True</b>. ✅' : 'They do not match, so the statement is <b>False</b>. ✅']),
+      explain: ex('Checking a statement', ['Count the ' + pl + ' on ' + art(name) + ': there ' + isAre(real) + ' <b>' + real + '</b>.', 'The sentence says <b>' + shown + '</b>.', isTrue ? 'They match, so the statement is <b>True</b>. ✅' : 'They do not match, so the statement is <b>False</b>. ✅']),
       truth: K.bool(V.FACTS3D[name][key] === shown), decode: function(){ return K.bool(V.FACTS3D[kind3D(vis)][key] === shown); }
     });
   }
@@ -5709,7 +5709,7 @@ if(typeof module !== 'undefined') module.exports = V;
       prompt: 'It is ' + h + ' o’clock. Look at the small angle between the two hands. Is it ' + (bridge ? 'acute, right or obtuse?' : 'smaller than, bigger than, or a right angle?'), visual: vis,
       correct: opt(K.text(cat), labs[cat]), distractors: ds, count: 3,
       hint: 'At 3 o’clock the hands make a perfect square corner. Is ' + h + ' o’clock closer together than that, or further apart?',
-      explain: ex('Angle between clock hands', ['Each hour on a clock is one twelfth of a turn, so the hands at ' + h + ' o’clock are ' + plural(Math.min(h, 12 - h), 'hour-gap') + ' apart.', 'At 3 o’clock there are 3 gaps and the angle is a right angle.', Math.min(h, 12 - h) === 3 ? 'Here there are 3 gaps too.' : 'Here there are ' + (Math.min(h, 12 - h) < 3 ? 'fewer' : 'more') + ' gaps.', 'So the angle is <b>' + labs[cat] + '</b>' + (bridge ? ' (Year 4 words: acute = smaller, obtuse = bigger)' : '') + '. ✅']),
+      explain: ex('Angle between clock hands', ['Each hour on a clock is one twelfth of a turn, so the hands at ' + h + ' o’clock are ' + plural(Math.min(h, 12 - h), 'hour-gap') + ' apart (the shorter way round).', 'At 3 o’clock there are 3 gaps and the angle is a right angle.', Math.min(h, 12 - h) === 3 ? 'Here there are 3 gaps too.' : 'Here there are ' + (Math.min(h, 12 - h) < 3 ? 'fewer' : 'more') + ' gaps.', 'So the angle is <b>' + labs[cat] + '</b>' + (bridge ? ' (acute = smaller than a right angle, obtuse = bigger)' : '') + '. ✅']),
       truth: K.text(degCat(Math.min(30 * h, 360 - 30 * h))), decode: function(){ const d = V.decodeClock(vis); const hh = d.h % 12; return K.text(degCat(Math.min(30 * hh, 360 - 30 * hh))); }
     });
   }
@@ -5718,10 +5718,10 @@ if(typeof module !== 'undefined') module.exports = V;
     const labs = { smaller: 'acute angle', right: 'right angle', bigger: 'obtuse angle' };
     const ds = CATS.filter(function(c){ return c !== cat; }).map(function(c){ return opt(K.text(c), labs[c], 'The word ' + (c === 'smaller' ? 'acute' : (c === 'bigger' ? 'obtuse' : 'right')) + ' means ' + LAB[c] + '. This angle is ' + LAB[cat] + '.'); });
     return mcq({
-      prompt: '<b>Year 4 words:</b> acute means smaller than a right angle, obtuse means bigger than a right angle (but less than a straight line). What type of angle is this?', visual: vis,
+      prompt: '<b>Acute</b> means smaller than a right angle, obtuse means bigger than a right angle (but less than a straight line). What type of angle is this?', visual: vis,
       correct: opt(K.text(cat), labs[cat]), distractors: ds, count: 3,
       hint: 'First decide: is it smaller than, the same as, or bigger than a square corner? Then pick the matching word.',
-      explain: ex('Acute, right or obtuse? (a Year 4 bridge question)', ['Compare with a right angle (a square corner).', 'This angle is <b>' + LAB[cat] + '</b>.', 'Smaller = acute, exactly square = right angle, bigger = obtuse. So it is <b>' + art(labs[cat]) + '</b>. ✅']),
+      explain: ex('Acute, right or obtuse?', ['Compare with a right angle (a square corner).', 'This angle is <b>' + LAB[cat] + '</b>.', 'Smaller = acute, exactly square = right angle, bigger = obtuse. So it is <b>' + art(labs[cat]) + '</b>. ✅']),
       truth: K.text(degCat(deg)), decode: function(){ return K.text(degCat(V.decodeAngle(vis))); }
     });
   }
@@ -6066,7 +6066,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const q = mcq({
       prompt: 'Which one is a <b>' + o + '</b> line?', visual: '', correct: opt(K.text(items[o]), items[o]), distractors: ds, count: 3,
       hint: o === 'horizontal' ? 'Horizontal = flat, side to side, like the horizon.' : 'Vertical = straight up and down, like a flagpole.',
-      explain: ex('Lines around us', [o === 'horizontal' ? 'Horizontal lines are <b>flat</b>, going side to side.' : 'Vertical lines go <b>straight up and down</b>.', 'The answer is <b>' + items[o] + '</b>: it is ' + o + '.', 'The others lean or go the other way. ✅']),
+      explain: ex('Lines around us', [o === 'horizontal' ? 'Horizontal lines are <b>flat</b>, going side to side.' : 'Vertical lines go <b>straight up and down</b>.', 'The answer is <b>' + items[o] + '</b>: it is ' + o + '.', 'The others are not ' + o + '. ✅']),
       truth: 'pending'
     });
     const ok2 = q.options.filter(function(x){ return Object.keys(OBJL).some(function(c){ return c === o && OBJL[c].some(function(it){ return K.text(it) === x.key; }); }); });
@@ -6075,7 +6075,7 @@ if(typeof module !== 'undefined') module.exports = V;
   }
   function pairQ(seeds, kinds, count){
     const kind = pick(kinds), seed = pick(seeds), vis = V.linePair(kind, seed);
-    const ds = kinds.filter(function(x){ return x !== kind; }).map(function(x){ return opt(K.text(x), PLAB[x], 'These lines are ' + PEXP[kind] + '. ' + cap(PLAB[x]) + ' lines are ' + PEXP[x] + '.'); });
+    const ds = kinds.filter(function(x){ return x !== kind; }).map(function(x){ return opt(K.text(x), PLAB[x], 'These lines are ' + PEXP[kind] + '. ' + (x === 'neither' ? 'A pair that is neither parallel nor perpendicular is not side by side and does not meet at a right angle.' : cap(PLAB[x]) + ' lines are ' + PEXP[x] + '.')); });
     return mcq({
       prompt: 'Look at the two lines. Are they <b>' + kinds.map(function(k){ return PLAB[k]; }).join('</b>, <b>').replace(/, ([^,]*)$/, ' or $1') + '</b>?', visual: vis,
       correct: opt(K.text(kind), PLAB[kind]), distractors: ds, keepOrder: true, count: count,
@@ -6087,7 +6087,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function objPairQ(){
     const target = pick(['parallel', 'perpendicular']);
     const items = {}; Object.keys(OBJP).forEach(function(c){ items[c] = pick(OBJP[c]); });
-    const ds = Object.keys(OBJP).filter(function(c){ return c !== target; }).map(function(c){ return opt(K.text(items[c]), items[c], cap(items[c]) + ' is ' + PLAB[c] + ': ' + PEXP[c] + '.'); });
+    const ds = Object.keys(OBJP).filter(function(c){ return c !== target; }).map(function(c){ return opt(K.text(items[c]), items[c], cap(items[c]) + (/^(railway tracks|the stripes|the two |the rungs|the lines|the hands|the post and)/.test(items[c]) ? ' are ' : ' is ') + PLAB[c] + ': ' + PEXP[c] + '.'); });
     const q = mcq({
       prompt: 'Which one shows <b>' + PLAB[target] + '</b> lines?', visual: '', correct: opt(K.text(items[target]), items[target]), distractors: ds, count: 3,
       hint: target === 'parallel' ? 'Parallel lines run side by side and never meet, like train tracks.' : 'Perpendicular lines meet at a right angle, like the corner of a book.',
@@ -6533,7 +6533,7 @@ if(typeof module !== 'undefined') module.exports = V;
       const needCw = (DIRS.indexOf(d) - DIRS.indexOf(start) + 4) % 4;
       let why;
       if(d === start) why = 'That is where it started. It has turned, so it must be pointing somewhere new.';
-      else if(d === steps.wrongWay) why = 'You turned the wrong way round. ' + cap(cwWord(!steps.cw)) + ' goes the other way: think of the way clock hands go for clockwise.';
+      else if(d === steps.wrongWay) why = 'You turned the wrong way round. ' + (steps.cw ? 'The question says clockwise, which is the way clock hands go.' : 'The question says anticlockwise, which is the opposite way to clock hands.');
       else why = DNAME[d] + ' is ' + TNAME[needCw] + ' clockwise from ' + DNAME[start] + ', but the turn in the question is different.';
       return opt(K.text(d), DNAME[d], why);
     });
@@ -6732,6 +6732,7 @@ if(typeof module !== 'undefined') module.exports = V;
    Pictures are generated from the rule and decoded from the DRAWING (shape geometry + fill, number cards, stick lines). */
 (function(){
   const INK = 'var(--vis-ink,#1B1B2F)';
+  function ordSuffix(n){ const t = n % 100, u = n % 10; return n + ((t >= 11 && t <= 13) ? 'th' : (u === 1 ? 'st' : (u === 2 ? 'nd' : (u === 3 ? 'rd' : 'th')))); }
   function r2(n){ return Math.round(n * 100) / 100; }
   function attr(tag, name){ const m = new RegExp(' ' + name + '="([^"]*)"').exec(tag); return m ? m[1] : null; }
   const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom', 'Aisha', 'Kai', 'Mei', 'Leo'];
@@ -6975,10 +6976,10 @@ if(typeof module !== 'undefined') module.exports = V;
         { name: shown[n - 1], why: 'That is just the last shape in the picture. The pattern carries on from there.' }
       ];
       const q = mcq({
-        prompt: 'The pattern carries on and on. What is the ' + N + 'th shape?', visual: vis,
+        prompt: 'The pattern carries on and on. What is the ' + ordSuffix(N) + ' shape?', visual: vis,
         correct: tokOpt(correct), keepOrder: true, count: 4, distractors: pools(wrongs),
         hint: 'Count how many shapes are in ONE repeat. Then jump along in whole repeats and count on the rest.',
-        explain: ex('The ' + N + 'th shape', [
+        explain: ex('The ' + ordSuffix(N) + ' shape', [
           'One repeat has <b>' + L + '</b> shapes: ' + unitText(unit) + '.',
           'Shape ' + N + ' is ' + Math.floor((N - 1) / L) + ' whole repeat' + (Math.floor((N - 1) / L) === 1 ? '' : 's') + ' (that is ' + Math.floor((N - 1) / L) * L + ' shapes) and ' + (((N - 1) % L) + 1) + ' more.',
           'The ' + (((N - 1) % L) + 1) + (((N - 1) % L) + 1 === 1 ? 'st' : ((N - 1) % L) + 1 === 2 ? 'nd' : ((N - 1) % L) + 1 === 3 ? 'rd' : 'th') + ' shape of the repeat is <b>' + truthName + '</b>. ✅'
@@ -7005,7 +7006,7 @@ if(typeof module !== 'undefined') module.exports = V;
         hint: 'How many ' + target + 's are in ONE repeat? Then see how many whole repeats fit into ' + N + '.',
         explain: ex('Counting the ' + target + 's', [
           'One repeat has <b>' + L + '</b> shapes and <b>' + perUnit + '</b> of them ' + (perUnit === 1 ? (/^[aeiou]/.test(target) ? 'is an ' : 'is a ') : 'are ') + target + (perUnit === 1 ? '' : 's') + '.',
-          N + ' shapes is ' + Math.floor(N / L) + ' whole repeats' + (N % L ? ' plus ' + (N % L) + ' extra shapes (' + unit.slice(0, N % L).join(', ') + ')' : '') + '.',
+          N + ' shapes is ' + plural(Math.floor(N / L), 'whole repeat') + (N % L ? ' plus ' + plural(N % L, 'extra shape') + ' (' + unit.slice(0, N % L).join(', ') + ')' : '') + '.',
           'Altogether there are <b>' + cnt + '</b> ' + target + (cnt === 1 ? '' : 's') + '. ✅'
         ]),
         truth: (function(){ const p = minPeriod(decodeRow(vis)), row = decodeRow(vis); let c = 0; for(let i = 0; i < N; i++) if(row[i % p] === target) c++; return c; })(),
@@ -7522,7 +7523,7 @@ if(typeof module !== 'undefined') module.exports = V;
       return mcq({
         prompt: 'Which side is heavier?', visual: vis, correct: opt(K.text(tilt), names[tilt]), distractors: ds, keepOrder: true, count: 3,
         hint: 'Add up the weights on each side. Or look: the heavier side goes down.',
-        explain: ex('Comparing the two sides', ['Left side: ' + L.join(' + ') + ' = <b>' + sl + 'g</b>.', 'Right side: ' + Rr.join(' + ') + ' = <b>' + sr + 'g</b>.', tilt === 'level' ? 'Both are ' + sl + 'g, so <b>They weigh the same</b>. ✅' : (sl > sr ? '<b>The left side</b>' : '<b>The right side</b>') + ' is heavier, so it goes down. ✅']),
+        explain: ex('Comparing the two sides', ['Left side: ' + L.join(' + ') + ' = <b>' + sl + 'g</b>.', 'Right side: ' + Rr.join(' + ') + ' = <b>' + sr + 'g</b>.', tilt === 'level' ? 'Both are ' + sl + 'g, so <b>they weigh the same</b>. ✅' : (sl > sr ? '<b>The left side</b>' : '<b>The right side</b>') + ' is heavier, so it goes down. ✅']),
         truth: K.text(sl > sr ? 'L' : sl < sr ? 'R' : 'level'),
         decode: function(){ const d = decodeScales(vis); return K.text(d.tilt); }
       });
@@ -7679,7 +7680,7 @@ if(typeof module !== 'undefined') module.exports = V;
       const hint = o.mode === 'columns' ? 'Start with the ones column. What must the hidden digit be to make the answer end in the right digit? Watch for a carry.' : (boxes === 1 || o.mode === 'same' ? 'Use the opposite calculation to find the whole number first, then read its digits.' : 'Try the ones column first.');
       if(o.typed) return numeric({ prompt: prompt, visual: vis, answer: ans, hint: hint, explain: ex('Finding the digit', steps), truth: (function(){ let t = -1; for(let v = 0; v <= 9; v++){ const dd = D.map(function(x){ return x.slice(); }); if(solveSumWith(shown, letter, v, op)) t = v; } return t; })(), decode: decode });
       return mcqNum({ prompt: prompt, visual: vis, answer: ans, count: 4, valid: function(v){ return v >= 0 && v <= 9; }, nearby: [1, -1, 2, -2, 3, -3, 4, -4, 5, -5],
-        wrong: [{ v: ans + 1, why: 'Put it back in and check: do the calculation again — remember any carry or borrow.' }, { v: ans - 1, why: 'Put it back in and check: do the calculation again — remember any carry or borrow.' }],
+        wrong: [{ v: ans + 1, why: 'Put it back in and check: do the calculation again — remember any carry or exchange.' }, { v: ans - 1, why: 'Put it back in and check: do the calculation again — remember any carry or exchange.' }],
         hint: hint, explain: ex('Finding the digit', steps), truth: (function(){ let t = -1; for(let v = 0; v <= 9; v++) if(solveSumWith(shown, letter, v, op)) t = v; return t; })(), decode: decode });
     }
     throw new Error('sumQ failed');
@@ -7892,7 +7893,7 @@ if(typeof module !== 'undefined') module.exports = V;
   const AXPAIRS = [['par', 'm5'], ['par', 'big'], ['m5', 'big'], ['m10', 'big']];
   function sat(id, n){ return R[id].fn(n); }
   function failWhy(n, id){ return n + ' is ' + R[R[id].comp].label + ', so it does not go under "' + cap(R[id].label) + '".'; }
-  function asks(n, id){ return 'Is ' + n + ' ' + R[id].label + '? ' + (sat(id, n) ? 'Yes ✅' : 'No ❌'); }
+  function asks(n, id){ return 'Is ' + n + ' ' + (id === 'le50' ? 'equal to 50, or less' : R[id].label) + '? ' + (sat(id, n) ? 'Yes ✅' : 'No ❌'); }
 
   /* ------------------------------------------------------------ pictures: number cards */
   function cardsHTML(nums){
@@ -7976,7 +7977,7 @@ if(typeof module !== 'undefined') module.exports = V;
         prompt: prompt, visual: vis, count: o.count || 4,
         correct: opt(K.num(target), String(target)),
         distractors: nums.filter(function(n){ return n !== target; }).map(function(n){
-          return opt(K.num(n), String(n), form === 'not' ? n + ' IS ' + label + ', so it belongs with the others. Look for the one that does not.' : n + ' is ' + R[rule.comp].label + ', not ' + label + '. ' + rule.how);
+          return opt(K.num(n), String(n), form === 'not' ? n + ' IS ' + label + ', so it belongs with the others. Look for the one that does not.' : (R[rule.comp].label === label ? n + ' does not fit this box. ' : n + ' is ' + R[rule.comp].label + ', not ' + label + '. ') + rule.how);
         }),
         hint: rule.how + ' Test every number.',
         explain: ex('Testing every number', [rule.how].concat(lines).concat(['So the answer is <b>' + target + '</b>. ✅'])),
@@ -8478,7 +8479,7 @@ if(typeof module !== 'undefined') module.exports = V;
       const first = three ? '' : 'Take the first ' + cx.a[2] + ': it can go with each of the ' + B + ' ' + cx.b[1] + ', so that is ' + B + ' ' + cx.pl + '.';
       const steps = three
         ? ['<b>Make a list</b>, one choice at a time. Pair each of the ' + A + ' ' + cx.a[1] + ' with each of the ' + B + ' ' + cx.b[1] + ': ' + A + ' × ' + B + ' = ' + A * B + ' pairs.', 'Each pair can go with any of the ' + Cn + ' ' + cx.c[1] + ': ' + A * B + ' × ' + Cn + '.', 'There are <b>' + ans + '</b> different ways. ✅']
-        : ['Strategy: <b>make a list</b>. ' + first, 'Do the same for each of the ' + A + ' ' + cx.a[1] + ': ' + A + ' groups of ' + B + '.', A + ' × ' + B + ' = <b>' + ans + '</b> different ' + cx.what + 's. ✅'];
+        : ['Strategy: <b>make a list</b>. ' + first, 'Do the same for each of the ' + A + ' ' + cx.a[1] + ': ' + A + ' groups of ' + B + '.', A + ' × ' + B + ' = <b>' + ans + '</b> different ' + (cx.pl || cx.what + 's') + '. ✅'];
       const decode = function(){ return decodeSets(vis).reduce(function(t, n){ return t * n; }, 1); };
       const hint = 'Make an organised list: take the first one and pair it with every choice from the other group. Then do the next one.';
       const wrong = [{ v: A + B + (three ? Cn : 0), why: 'That adds the numbers. Each choice from one group goes with EVERY choice from the other, so multiply.' }, { v: three ? A * B + Cn : A * B - 1, why: 'You missed some. Check every pairing.' }, { v: three ? A * B : A * (B + 1), why: 'Check your list: it needs every choice from ALL the groups.' }];
@@ -9060,7 +9061,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return numeric({
       prompt: nm + ' needs 1 litre of ' + pick(LIQ) + '. How many more millilitres must ' + nm + ' pour into the jug?', visual: vis, answer: d, unit: 'ml',
       hint: '1 litre = 1000 ml. Read the jug first, then count up to 1000.',
-      explain: ex('Filling to 1 litre', ['The jug has <b>' + val + ' ml</b>.', '1 litre = 1000 ml. Count up: ' + val + ' → ' + (Math.ceil(val / 100) * 100) + ' (' + (Math.ceil(val / 100) * 100 - val) + ' ml) → 1000 (' + (1000 - Math.ceil(val / 100) * 100) + ' ml).', 'Total needed: 1000 − ' + val + ' = <b>' + d + ' ml</b>. ✅']),
+      explain: ex('Filling to 1 litre', ['The jug has <b>' + val + ' ml</b>.', '1 litre = 1000 ml. ' + (val % 100 === 0 ? 'Count up from ' + val + ' to 1000.' : 'Count up: ' + val + ' → ' + (Math.ceil(val / 100) * 100) + ' (' + (Math.ceil(val / 100) * 100 - val) + ' ml) → 1000 (' + (1000 - Math.ceil(val / 100) * 100) + ' ml).'), 'Total needed: 1000 − ' + val + ' = <b>' + d + ' ml</b>. ✅']),
       truth: (1000 - 50) - (val - 50), decode: function(){ return 1000 - dj(vis, 50); },
       wrong: function(v){ return v === val ? 'That is how much is already in the jug. Find how much MORE is needed.' : v === 1 - val / 1000 ? 'Use millilitres: 1 litre = 1000 ml.' : ''; }
     });
@@ -9237,7 +9238,7 @@ if(typeof module !== 'undefined') module.exports = V;
       correct: opt(K.text(longer[0]), 'The ' + longer[0]),
       other: opt(K.text(shorter[0]), 'The ' + shorter[0], 'Read both rulers: the ' + shorter[0] + ' is the shorter one (' + Math.min(a, b) + ' cm, not ' + Math.max(a, b) + ' cm).'),
       hint: 'Read each ruler at the end of the object. The bigger number is the longer object.',
-      explain: ex('Comparing lengths', ['The ' + o[0][0] + ' is <b>' + a + ' cm</b>.', 'The ' + o[1][0] + ' is <b>' + b + ' cm</b>.', Math.max(a, b) + ' is more than ' + Math.min(a, b) + ', so <b>The ' + longer[0] + '</b> is longer. ✅']),
+      explain: ex('Comparing lengths', ['The ' + o[0][0] + ' is <b>' + a + ' cm</b>.', 'The ' + o[1][0] + ' is <b>' + b + ' cm</b>.', Math.max(a, b) + ' is more than ' + Math.min(a, b) + ', so <b>the ' + longer[0] + '</b> is longer. ✅']),
       truth: K.text([[a, o[0][0]], [b, o[1][0]]].sort(function(x, y){ return y[0] - x[0]; })[0][1]),
       decode: function(){ return K.text(lenOf(va) > lenOf(vb) ? o[0][0] : o[1][0]); }
     });
@@ -9285,7 +9286,7 @@ if(typeof module !== 'undefined') module.exports = V;
       correct: opt(K.text(longer[0]), 'The ' + longer[0]),
       other: opt(K.text(shorter[0]), 'The ' + shorter[0], 'They are close! Read each to the half cm: the ' + shorter[0] + ' is ' + halfTxt(Math.min(a, b)) + ', the other is ' + halfTxt(Math.max(a, b)) + '.'),
       hint: 'Read each ruler carefully to the nearest half cm, then compare the two numbers.',
-      explain: ex('Comparing lengths', ['The ' + o[0][0] + ' is <b>' + halfTxt(a) + '</b>.', 'The ' + o[1][0] + ' is <b>' + halfTxt(b) + '</b>.', halfTxt(Math.max(a, b)) + ' is longer than ' + halfTxt(Math.min(a, b)) + ', so <b>The ' + longer[0] + '</b> is longer. ✅']),
+      explain: ex('Comparing lengths', ['The ' + o[0][0] + ' is <b>' + halfTxt(a) + '</b>.', 'The ' + o[1][0] + ' is <b>' + halfTxt(b) + '</b>.', halfTxt(Math.max(a, b)) + ' is longer than ' + halfTxt(Math.min(a, b)) + ', so <b>the ' + longer[0] + '</b> is longer. ✅']),
       truth: K.text(a * 2 > b * 2 ? o[0][0] : o[1][0]),
       decode: function(){ return K.text(lenOf(va) > lenOf(vb) ? o[0][0] : o[1][0]); }
     });
@@ -9544,7 +9545,7 @@ if(typeof module !== 'undefined') module.exports = V;
       correct: opt(K.text(heavier), 'The ' + heavier),
       other: opt(K.text(lighter), 'The ' + lighter, 'Read both dials: the ' + lighter + ' show ' + Math.min(a, b) + ' g, which is less than ' + Math.max(a, b) + ' g.'),
       hint: 'Read each needle in grams. The bigger number means heavier.',
-      explain: ex('Which is heavier?', ['The ' + p[0][0] + ' show <b>' + a + ' g</b>.', 'The ' + p[1][0] + ' show <b>' + b + ' g</b>.', Math.max(a, b) + ' g is more than ' + Math.min(a, b) + ' g, so <b>The ' + heavier + '</b> is heavier. ✅']),
+      explain: ex('Which is heavier?', ['The ' + p[0][0] + ' show <b>' + a + ' g</b>.', 'The ' + p[1][0] + ' show <b>' + b + ' g</b>.', Math.max(a, b) + ' g is more than ' + Math.min(a, b) + ' g, so <b>the ' + heavier + '</b> are heavier. ✅']),
       truth: K.text([[a, p[0][0]], [b, p[1][0]]].sort(function(x, y){ return y[0] - x[0]; })[0][1]),
       decode: function(){ return K.text(dv(va, 50) > dv(vb, 50) ? p[0][0] : p[1][0]); }
     });
@@ -10325,8 +10326,8 @@ if(typeof module !== 'undefined') module.exports = V;
       prompt: 'All the sides of this ' + SHAPE_NAME[n] + ' are the same length. What is its perimeter?', visual: vis, answer: P, fmt: amt('cm'),
       wrong: [
         { v: n + s, why: 'You added the number of sides and the length. Multiply: ' + n + ' sides of ' + s + ' cm.' },
-        { v: (n - 1) * s, why: 'You missed one side. A ' + SHAPE_NAME[n] + ' has ' + n + ' sides.' },
-        { v: (n + 1) * s, why: 'You counted one side too many. A ' + SHAPE_NAME[n] + ' has ' + n + ' sides.' },
+        { v: (n - 1) * s, why: 'You missed one side. ' + (/^[aeiou]/.test(SHAPE_NAME[n]) ? 'An ' : 'A ') + SHAPE_NAME[n] + ' has ' + n + ' sides.' },
+        { v: (n + 1) * s, why: 'You counted one side too many. ' + (/^[aeiou]/.test(SHAPE_NAME[n]) ? 'An ' : 'A ') + SHAPE_NAME[n] + ' has ' + n + ' sides.' },
         { v: 2 * s, why: 'You added only two sides. Count all ' + n + '.' }
       ],
       nearby: [s, -s, 2, -2],
@@ -10580,7 +10581,7 @@ if(typeof module !== 'undefined') module.exports = V;
       nearby: [1000, 100, 10],
       valid: function(v){ return v > 0; },
       hint: c.f === 1000 ? 'Think: ' + (c.big === 'l' ? 'milli' : 'kilo') + ' is all about a thousand. Is the answer a thousand?' : 'A ' + c.bigName + ' is much bigger than a ' + c.smallName + '. How many fit in?',
-      explain: ex('A key fact', [fact(c) + '.', c.f === 1000 ? (c.big === 'l' ? '“Milli” means a thousandth, so 1000 ml make 1 litre.' : '“Kilo” means a thousand.') : (c.f === 100 ? '“Centi” means a hundred.' : 'A centimetre is split into 10 tiny millimetres.'), 'So there are <b>' + c.f + ' ' + c.small + '</b>. ✅']),
+      explain: ex('A key fact', [fact(c) + '.', c.f === 1000 ? (c.big === 'l' ? '“Milli” means a thousandth, so 1000 ml make 1 litre.' : '“Kilo” means a thousand.') : (c.f === 100 ? '“Centi” means a hundredth, so 100 cm make 1 m.' : 'A centimetre is split into 10 tiny millimetres.'), 'So there are <b>' + c.f + ' ' + c.small + '</b>. ✅']),
       truth: Math.pow(10, String(c.f).length - 1)
     });
   }
@@ -10941,7 +10942,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return mcq2({
       prompt: who + ' has ' + m + ' ' + it + ' and shares them equally between 2 friends. Is there an equal share with none left over?', correct: opt(K.bool(even), even ? 'Yes, they share equally' : 'No, one is left over'), other: opt(K.bool(!even), even ? 'No, one is left over' : 'Yes, they share equally', even ? m + ' is even: ' + m / 2 + ' + ' + m / 2 + ' = ' + m + '.' : m + ' is odd, so one is left over after sharing.'),
       hint: 'Even numbers end in 0, 2, 4, 6 or 8. They halve exactly.',
-      explain: ex('Even or odd?', [m + ' ends in ' + (m % 10) + ', so it is ' + (even ? '<b>even</b>' : '<b>odd</b>') + '.', even ? 'Half of ' + m + ' is ' + m / 2 + ', with none left over.' : 'Half of ' + (m - 1) + ' is ' + (m - 1) / 2 + ', with 1 left over.', even ? 'So they share equally. ✅' : 'So one is left over. ✅']), truth: K.bool(shareOut(m) !== -1)
+      explain: ex('Even or odd?', [m + ' ends in ' + (m % 10) + ', so it is ' + (even ? '<b>even</b>' : '<b>odd</b>') + '.', even ? 'Half of ' + m + ' is ' + m / 2 + ', with none left over.' : 'Share ' + m + ' between 2: each gets ' + (m - 1) / 2 + ' and 1 is left over.', even ? 'So they share equally. ✅' : 'So one is left over. ✅']), truth: K.bool(shareOut(m) !== -1)
     });
   }
   /* ---- tier 3: two-digit, typed ---- */
@@ -11372,7 +11373,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function resultOf(c){ return String(c.m.rh > 0 ? c.m.rh : '') + String(c.m.rt) + String(c.m.ro); }
   function workings(c){
     const m = c.m, st = ['<b>Ones first:</b> ' + m.o + ' × ' + c.b + ' = ' + m.po + (m.c1 ? '. Write <b>' + m.ro + '</b> in the ones and carry <b>' + m.c1 + '</b> to the tens.' : '. Write <b>' + m.ro + '</b> in the ones.')];
-    st.push('<b>Then the tens:</b> ' + m.t + ' tens × ' + c.b + ' = ' + m.t * c.b + (m.c1 ? ', and add the carried ' + m.c1 + ': ' + m.pt + '.' : '.') + ' Write <b>' + m.pt + '</b> in the tens' + (m.rh ? ' and hundreds.' : '.'));
+    st.push('<b>Then the tens:</b> ' + m.t + (m.t === 1 ? ' ten' : ' tens') + ' × ' + c.b + ' = ' + m.t * c.b + (m.c1 ? ', and add the carried ' + m.c1 + ': ' + m.pt + '.' : '.') + ' Write <b>' + m.pt + '</b> in the tens' + (m.rh ? ' and hundreds.' : '.'));
     st.push(c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>. ✅'); return st;
   }
   function wrongs(c){
@@ -11420,7 +11421,7 @@ if(typeof module !== 'undefined') module.exports = V;
       prompt: 'Here is a finished column multiplication. What is <b>' + c.a + ' × ' + c.b + '</b>?', visual: vis, answer: c.a * c.b,
       wrong: wrongs(c), nearby: NEAR, valid: pos, count: 3,
       hint: 'Read the digits of the answer row from left to right.',
-      explain: ex('Reading the column', ['The answer row shows <b>' + resultOf(c) + '</b>.', 'Check: ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + ' and ' + c.m.t + ' tens × ' + c.b + ' = ' + c.m.pt + ' tens.', c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>. ✅']),
+      explain: ex('Reading the column', ['The answer row shows <b>' + resultOf(c) + '</b>.', 'Check: ' + c.m.o + ' × ' + c.b + ' = ' + c.m.po + ' and ' + c.m.t + (c.m.t === 1 ? ' ten' : ' tens') + ' × ' + c.b + ' = ' + c.m.pt + (c.m.pt === 1 ? ' ten.' : ' tens.'), c.a + ' × ' + c.b + ' = <b>' + c.a * c.b + '</b>. ✅']),
       truth: c.a * c.b, decode: function(){ return parseInt(readRow(vis, 'dr'), 10); }
     });
   }
@@ -11814,7 +11815,7 @@ if(typeof module !== 'undefined') module.exports = V;
           return numeric({
             prompt: 'The same number multiplies both parts of ' + n + '. What is the missing number on the side?', visual: vis, answer: mm,
             hint: 'Look at the tens box. What do you multiply ' + s.t + ' by to get ' + s.t * mm + '?',
-            explain: ex('Working backwards', ['The tens box says <b>' + s.t * mm + '</b> and the top says <b>' + s.t + '</b>.', s.t * mm + ' ÷ ' + s.t + ' = <b>' + mm + '</b> (check: ' + s.o + ' × ' + mm + ' = ' + s.o * mm + ' ✓).', 'The missing number is <b>' + mm + '</b>. ✅']),
+            explain: ex('Working backwards', ['The tens box says <b>' + s.t * mm + '</b> and the top says <b>' + s.t + '</b>.', s.t * mm + ' ÷ ' + s.t + ' = <b>' + mm + '</b> (check: ' + s.t + ' × ' + mm + ' = ' + s.t * mm + ').', 'The missing number is <b>' + mm + '</b>. ✅']),
             truth: mm, decode: function(){ const d = V.decodeAreaModel(vis); return d.cellT / d.tens; },
             wrong: function(v){ return v === s.t * mm ? 'That is the number in the tens box. We want the number on the side.' : (v === s.o * mm ? 'That is the number in the ones box. We want the number on the side.' : ''); }
           });
@@ -11898,7 +11899,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const m = make(5, true), it = pick(ITEMS), vis = V.groups(m.q, m.d);
     return mcqNum({
       prompt: 'There are ' + m.n + ' ' + it[0] + '. They go into ' + it[1] + ' of ' + m.d + '. The picture shows the FULL ' + it[1] + '. How many full ' + it[1] + ' are there?', visual: vis, answer: m.q,
-      wrong: [{ v: m.q + 1, why: 'The ' + m.r + ' left over do not fill another ' + it[1].replace(/s$/, '') + ', so they do not count.' }, { v: m.d, why: m.d + ' is how many are in each. Count the full groups in the picture.' }, { v: m.n, why: m.n + ' is how many ' + it[0] + ' there are altogether. Count the full groups.' }, { v: m.q - 1, why: 'Count the groups in the picture again.' }],
+      wrong: [{ v: m.q + 1, why: 'The ' + m.r + ' left over ' + (m.r === 1 ? 'does not fill another ' : 'do not fill another ') + singular(it[1]) + ', so ' + (m.r === 1 ? 'it does' : 'they do') + ' not count.' }, { v: m.d, why: m.d + ' is how many are in each. Count the full groups in the picture.' }, { v: m.n, why: m.n + ' is how many ' + it[0] + ' there are altogether. Count the full groups.' }, { v: m.q - 1, why: 'Count the groups in the picture again.' }],
       nearby: [1, -1, 2], valid: pos, count: 3,
       hint: 'Each ring is one full group of ' + m.d + '. Count the rings.',
       explain: ex('Full groups', ['Each full group holds <b>' + m.d + '</b>.', 'Count in ' + m.d + 's: ' + countIn(m.d, m.q) + '. That is <b>' + m.q + '</b> full groups.', 'There are ' + m.q + ' full ' + it[1] + ' and ' + m.r + ' left over. ✅']),
@@ -11930,7 +11931,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qChooseAnswer(){
     const m = make(8, true), good = lbl(m.q, m.r), ds = [];
     const add = function(q, r, why){ const l = r === 0 ? String(q) : q + ' remainder ' + r; if(l !== good && !ds.some(function(d){ return d.label === l; }) && q >= 0) ds.push(opt(K.text(l), l, why)); };
-    add(m.q + 1, 0, 'You rounded up. The ' + m.r + ' left over do not make another full group, so we write them as a remainder.');
+    add(m.q + 1, 0, 'You rounded up. The ' + m.r + ' left over ' + (m.r === 1 ? 'does not make another full group, so we write it' : 'do not make another full group, so we write them') + ' as a remainder.');
     if(m.d - m.r !== m.r) add(m.q, m.d - m.r, 'You found how many MORE are needed to make another group. The remainder is what is LEFT: ' + m.n + ' − ' + m.d * m.q + ' = ' + m.r + '.');
     if(m.r !== m.q) add(m.r, m.q, 'You swapped the two numbers. The number of full groups comes first (' + m.q + '), then the remainder (' + m.r + ').');
     add(m.q - 1, m.r + m.d, 'A remainder of ' + (m.r + m.d) + ' is too big: another group of ' + m.d + ' fits. The remainder must be smaller than ' + m.d + '.');
@@ -11998,7 +11999,7 @@ if(typeof module !== 'undefined') module.exports = V;
     return numeric({
       prompt: who + ' has ' + m.n + ' ' + it[0] + ' to put away. Each of the ' + it[1] + ' holds ' + m.d + '. How many ' + it[1] + ' are needed to hold ALL of them?', answer: m.q + 1,
       hint: 'First find how many full ones. Then think about the ones left over: they still need somewhere to go!',
-      explain: ex('Do not forget the left over ones', ['Full ' + it[1] + ': ' + countIn(m.d, m.q) + ' → <b>' + m.q + '</b> full, with <b>' + m.r + '</b> left over.', 'The ' + m.r + ' left over still need a home, so we need <b>one more</b>.', m.q + ' + 1 = <b>' + (m.q + 1) + '</b> ' + it[1] + '. ✅']),
+      explain: ex('Do not forget the left over ones', ['Full ' + it[1] + ': ' + countIn(m.d, m.q) + ' → <b>' + m.q + '</b> full, with <b>' + m.r + '</b> left over.', 'The ' + m.r + ' left over still ' + (m.r === 1 ? 'needs' : 'need') + ' a home, so we need <b>one more</b>.', m.q + ' + 1 = <b>' + (m.q + 1) + '</b> ' + it[1] + '. ✅']),
       truth: divmod(m.n, m.d).q + (divmod(m.n, m.d).r > 0 ? 1 : 0),
       wrong: function(v){ return v === m.q ? m.q + ' leaves ' + nnoun(m.r, it[0]) + ' with nowhere to go. Do they need another one?' : ''; }
     });
@@ -17091,7 +17092,7 @@ if(typeof module !== 'undefined') module.exports = V;
   function qRomanToNum(maxN){
     const n = randInt(2, maxN), r = toRoman(n), w = [];
     const sw = r.split('').reverse().join('');
-    if(sw !== r && parseRoman(sw) !== n) w.push({ v: parseRoman(sw), why: 'The order matters. A small numeral BEFORE a bigger one is taken away: ' + r + ' = ' + n + '.' });
+    if(sw !== r && parseRoman(sw) !== n) w.push({ v: parseRoman(sw), why: /IV|IX|XL|XC/.test(r) ? 'The order matters. A small numeral BEFORE a bigger one is taken away: ' + r + ' = ' + n + '.' : 'The order matters. A small numeral AFTER a bigger one is added on: ' + r + ' = ' + n + '.' });
     const add = r.split('').reduce(function(a, c){ return a + ({ I: 1, V: 5, X: 10, L: 50, C: 100 })[c]; }, 0);
     if(add !== n) w.push({ v: add, why: 'You added every symbol. When a smaller one comes BEFORE a bigger one it is subtracted.' });
     return mcqNum({
@@ -17477,9 +17478,9 @@ if(typeof module !== 'undefined') module.exports = V;
     const h = to24(h12, ap), out = [];
     if(h12 === 12){
       if(ap === 'pm'){
-        out.push(o24(0, m, '12 pm is NOON (the middle of the day), not midnight. At noon the 24-hour clock shows 12.'));
-        out.push(o24(24, m, 'Do not add 12 to the 12! At noon the 24-hour clock shows 12:' + pad2(m) + '. There is no 24:' + pad2(m) + '.'));
-        out.push(o24(13, m, '13:' + pad2(m) + ' is 1:' + pad2(m) + ' pm. At noon it shows 12.'));
+        out.push(o24(0, m, '12 pm is NOON (the middle of the day), not midnight. Just after noon the 24-hour clock still shows 12.'));
+        out.push(o24(24, m, 'Do not add 12 to the 12! Just after noon the 24-hour clock shows 12:' + pad2(m) + '. There is no 24:' + pad2(m) + '.'));
+        out.push(o24(13, m, '13:' + pad2(m) + ' is 1:' + pad2(m) + ' pm. Just after noon it still shows 12.'));
       } else {
         out.push(o24(12, m, '12 am is MIDNIGHT, the start of the day. 12:' + pad2(m) + ' on the 24-hour clock is noon.'));
         out.push(o24(24, m, 'There is no 24:' + pad2(m) + ' on a clock. After 23:59 the 24-hour clock goes back to 00:00.'));
@@ -17504,9 +17505,9 @@ if(typeof module !== 'undefined') module.exports = V;
   function wrong12(h, m){
     const out = [], h12 = h % 12 || 12, ap = h < 12 ? 'am' : 'pm', op = ap === 'am' ? 'pm' : 'am';
     if(h === 12){
-      out.push(o12(12, m, 'am', '12:' + pad2(m) + ' is NOON, which is 12 pm. 12 am is midnight.'));
+      out.push(o12(12, m, 'am', '12:' + pad2(m) + ' is just after noon, so it is pm, not am. 12 am is midnight.'));
       out.push(o12(1, m, 'pm', 'Only take 12 away from times AFTER 12:59. At 12:' + pad2(m) + ' the 12-hour clock also shows 12.'));
-      out.push(o12(11, m, 'am', '12:' + pad2(m) + ' is just after 11:' + pad2(m) + ' am. It is noon, 12 pm.'));
+      out.push(o12(11, m, 'am', '12:' + pad2(m) + ' is just after noon, not just after 11 am. It is 12 pm.'));
     } else if(h === 0){
       out.push(o12(12, m, 'pm', '00:' + pad2(m) + ' is just after MIDNIGHT, so it is am. 12 pm is noon.'));
       out.push(o12(1, m, 'am', '00 is 12 on the 12-hour clock (midnight). 1 am is 01:' + pad2(m) + '.'));
@@ -17838,11 +17839,11 @@ if(typeof module !== 'undefined') module.exports = V;
 
   /* ---- facts ---- */
   const F1 = [
-    { q: 'How many seconds are there in 1 minute?', a: 60, w: [{ v: 100, why: 'A minute is 60 seconds, not 100. Clocks count in 60s.' }, { v: 30, why: '30 seconds is only HALF a minute.' }, { v: 24, why: '24 is the hours in a day.' }], tr: function(){ return 6 * 10; }, ex: 'A minute has <b>60 seconds</b>. The second hand goes all the way round in 60 seconds.' },
-    { q: 'How many minutes are there in 1 hour?', a: 60, w: [{ v: 100, why: 'An hour is 60 minutes, not 100.' }, { v: 30, why: '30 minutes is only HALF an hour.' }, { v: 24, why: '24 is the hours in a day.' }], tr: function(){ return 12 * 5; }, ex: 'The long hand goes round the clock once in an hour: 12 numbers × 5 = <b>60 minutes</b>.' },
-    { q: 'How many hours are there in 1 day?', a: 24, w: [{ v: 12, why: 'The clock face shows 12, but a whole day goes round the clock TWICE: 12 + 12.' }, { v: 60, why: '60 is the minutes in an hour.' }, { v: 7, why: '7 is the days in a week.' }], tr: function(){ return 12 + 12; }, ex: 'The short hand goes round twice in a day (am and pm): 12 + 12 = <b>24 hours</b>.' },
-    { q: 'How many days are there in 1 week?', a: 7, w: [{ v: 5, why: '5 is just the school days. A week has the weekend too.' }, { v: 12, why: '12 is the months in a year.' }, { v: 10, why: 'A week is 7 days, not 10.' }], tr: function(){ return 5 + 2; }, ex: 'Monday to Friday is 5 days, plus Saturday and Sunday: <b>7 days</b>.' },
-    { q: 'How many months are there in 1 year?', a: 12, w: [{ v: 10, why: 'There are 12 months, January to December.' }, { v: 7, why: '7 is the days in a week.' }, { v: 52, why: '52 is the WEEKS in a year.' }], tr: function(){ return 4 * 3; }, ex: 'January to December is <b>12 months</b>.' },
+    { q: 'How many seconds are there in 1 minute?', a: 60, w: [{ v: 100, why: 'A minute is 60 seconds, not 100. Clocks count in 60s.' }, { v: 30, why: '30 seconds is only HALF a minute.' }, { v: 24, why: '24 is the number of hours in a day.' }], tr: function(){ return 6 * 10; }, ex: 'A minute has <b>60 seconds</b>. The second hand goes all the way round in 60 seconds.' },
+    { q: 'How many minutes are there in 1 hour?', a: 60, w: [{ v: 100, why: 'An hour is 60 minutes, not 100.' }, { v: 30, why: '30 minutes is only HALF an hour.' }, { v: 24, why: '24 is the number of hours in a day.' }], tr: function(){ return 12 * 5; }, ex: 'The long hand goes round the clock once in an hour: 12 numbers × 5 = <b>60 minutes</b>.' },
+    { q: 'How many hours are there in 1 day?', a: 24, w: [{ v: 12, why: 'The clock face shows 12, but a whole day goes round the clock TWICE: 12 + 12.' }, { v: 60, why: '60 is the number of minutes in an hour.' }, { v: 7, why: '7 is the number of days in a week.' }], tr: function(){ return 12 + 12; }, ex: 'The short hand goes round twice in a day (am and pm): 12 + 12 = <b>24 hours</b>.' },
+    { q: 'How many days are there in 1 week?', a: 7, w: [{ v: 5, why: '5 is just the school days. A week has the weekend too.' }, { v: 12, why: '12 is the number of months in a year.' }, { v: 10, why: 'A week is 7 days, not 10.' }], tr: function(){ return 5 + 2; }, ex: 'Monday to Friday is 5 days, plus Saturday and Sunday: <b>7 days</b>.' },
+    { q: 'How many months are there in 1 year?', a: 12, w: [{ v: 10, why: 'There are 12 months, January to December.' }, { v: 7, why: '7 is the number of days in a week.' }, { v: 52, why: '52 is the number of WEEKS in a year.' }], tr: function(){ return 4 * 3; }, ex: 'January to December is <b>12 months</b>.' },
     { q: 'How many minutes are there in half an hour?', a: 30, w: [{ v: 15, why: '15 minutes is a QUARTER of an hour.' }, { v: 60, why: '60 minutes is a WHOLE hour.' }, { v: 45, why: '45 minutes is three quarters of an hour.' }], tr: function(){ return 60 / 2; }, ex: 'An hour is 60 minutes, so half an hour is 60 ÷ 2 = <b>30 minutes</b>.' }
   ];
   const F2 = [
@@ -17850,7 +17851,7 @@ if(typeof module !== 'undefined') module.exports = V;
     { q: 'How many days are there in a normal year?', a: 365, w: [{ v: 366, why: '366 is a LEAP year, which comes only every 4 years.' }, { v: 360, why: 'It is a little more than 360: 365 days.' }, { v: 350, why: 'A year has 365 days.' }], tr: function(){ return 7 * 52 + 1; }, ex: 'A normal year has <b>365 days</b> (366 in a leap year).' },
     { q: 'How many hours are there in half a day?', a: 12, w: [{ v: 6, why: '6 hours is a QUARTER of a day.' }, { v: 24, why: '24 hours is a WHOLE day.' }, { v: 10, why: 'Half of 24 is 12.' }], tr: function(){ return 24 / 2; }, ex: 'A day is 24 hours, so half a day is 24 ÷ 2 = <b>12 hours</b>.' },
     { q: 'A fortnight is 2 weeks. How many days is that?', a: 14, w: [{ v: 12, why: '2 weeks is 7 + 7, not 6 + 6.' }, { v: 7, why: '7 is ONE week.' }, { v: 10, why: '10 would be 2 school weeks of 5 days. A week has 7 days.' }], tr: function(){ return 7 + 7; }, ex: 'One week is 7 days, so 2 weeks is 7 + 7 = <b>14 days</b>.' },
-    { q: 'How many weeks are there in a year?', a: 52, w: [{ v: 12, why: '12 is the MONTHS in a year.' }, { v: 50, why: 'It is a little more than 50: 52 weeks.' }, { v: 365, why: '365 is the DAYS in a year.' }], tr: function(){ return 4 * 13; }, ex: 'A year has <b>52 weeks</b> (52 × 7 = 364 days, plus 1 spare day).' }
+    { q: 'How many weeks are there in a year?', a: 52, w: [{ v: 12, why: '12 is the number of MONTHS in a year.' }, { v: 50, why: 'It is a little more than 50: 52 weeks.' }, { v: 365, why: '365 is the number of DAYS in a year.' }], tr: function(){ return 4 * 13; }, ex: 'A year has <b>52 weeks</b> (52 × 7 = 364 days, plus 1 spare day).' }
   ];
   function factQ(F){
     const f = pick(F);
@@ -17908,7 +17909,7 @@ if(typeof module !== 'undefined') module.exports = V;
       steps: [
         { say: 'To find <b>how long</b> something lasts, count on from the start time to the finish time. From 3 o’clock to 4 o’clock is 1 hour, and to 5 o’clock is 2 hours. So this film lasts <b>2 hours</b>.', vis: { kind: 'clockPair', args: [3, 0, 5, 0] } },
         { say: 'Handy time facts: <b>60 seconds</b> = 1 minute, <b>60 minutes</b> = 1 hour, <b>24 hours</b> = 1 day, <b>7 days</b> = 1 week, <b>12 months</b> = 1 year.', vis: { kind: 'html', args: ['<table style="border-collapse:collapse;margin:0 auto;font-weight:800;color:var(--vis-ink,#1B1B2F)"><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">60 seconds</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 minute</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">60 minutes</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 hour</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">24 hours</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 day</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">7 days</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 week</td></tr><tr><td style="border:2px solid #1B1B2F;padding:5px 10px">12 months</td><td style="border:2px solid #1B1B2F;padding:5px 10px">1 year</td></tr></table>'] },
-          quiz: { prompt: 'How many minutes are there in 1 hour?', options: [{ label: '60', ok: true }, { label: '100', ok: false }, { label: '24', ok: false }], right: 'Yes! 60 minutes make 1 hour.', wrong: 'An hour is 60 minutes (12 numbers × 5). Not 100, and 24 is the hours in a day.' } },
+          quiz: { prompt: 'How many minutes are there in 1 hour?', options: [{ label: '60', ok: true }, { label: '100', ok: false }, { label: '24', ok: false }], right: 'Yes! 60 minutes make 1 hour.', wrong: 'An hour is 60 minutes (12 numbers × 5). Not 100, and 24 is the number of hours in a day.' } },
         { say: 'Half hours: from 3:30 to 4:00 is <b>30 minutes</b>. From 4:00 to 5:00 is <b>1 hour</b>. So 3:30 to 5:00 is <b>1 hour 30 minutes</b>.', vis: { kind: 'clockPair', args: [3, 30, 5, 0] } },
         { say: 'Across the hour, jump to the next o’clock first. A film starts at <b>3:40</b> and ends at <b>4:15</b>. The line counts minutes after 3 o’clock, and the dot is 3:40. Jump 20 minutes to 4:00, then 15 more: <b>35 minutes</b>.', vis: { kind: 'numberLine', args: [{ min: 0, max: 75, minor: 5, major: 15, width: 348, marks: [{ value: 40, kind: 'dot' }] }] },
           quiz: { prompt: 'A cartoon starts at 5:50 and ends at 6:20. How long is it?', options: [{ label: '30 minutes', ok: true }, { label: '70 minutes', ok: false }, { label: '40 minutes', ok: false }], right: 'Yes! 5:50 to 6:00 is 10 minutes, and 6:00 to 6:20 is 20 more: 30 minutes.', wrong: 'Jump to the o’clock: 5:50 to 6:00 is 10 minutes. Then 6:00 to 6:20 is 20. 10 + 20 = 30 minutes.' } },
@@ -18067,7 +18068,7 @@ if(typeof module !== 'undefined') module.exports = V;
     const t = pick(T), sm = t.small, bg = t.big;
     return mcqNum({
       prompt: 'How many <b>' + sm + 's</b> are there in <b>1 ' + bg + '</b>?', answer: t.a,
-      wrong: [{ v: 100, why: 'It is not 100 — time does not use tens. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 12, why: '12 is the number of months in a year. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 30, why: '30 is half of 60, and only half a ' + bg + '.' }, { v: 10, why: 'Time does not count in tens. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }],
+      wrong: [{ v: 100, why: 'It is not 100 — time does not use tens. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 12, why: '12 is the number of months in a year. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 30, why: '30 is not ' + t.a + '. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 10, why: 'Time does not count in tens. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }],
       nearby: [1, -1, 6, -6, 10, -10], valid: function(v){ return v > 0 && v <= 100; }, count: 4, hint: t.hint,
       explain: ex('Units of time', ['<b>1 ' + bg + ' = ' + t.a + ' ' + sm + 's</b>.', 'Remember it: 60 seconds = 1 minute, 60 minutes = 1 hour, 24 hours = 1 day, 7 days = 1 week. ✅'])
     });
@@ -18237,7 +18238,7 @@ if(typeof module !== 'undefined') module.exports = V;
     if(m === 15) out.push({ h: h, m: 45, why: 'Long hand on the 3 is quarter PAST, not quarter to. Quarter to is when it is on the 9.' });
     if(m > 30 && m !== 45) out.push({ h: nx(h), m: 60 - m, why: 'Careful! “' + spoken(h, m) + '” means ' + (60 - m) + ' minutes BEFORE ' + nx(h) + ', so it is ' + dig(h, m) + ', not ' + dig(nx(h), 60 - m) + '.' });
     if(m === 45) out.push({ h: nx(h), m: 15, why: 'Quarter to ' + nx(h) + ' is BEFORE ' + nx(h) + ' o’clock, so it is ' + dig(h, 45) + ', not ' + dig(nx(h), 15) + '.' });
-    if(m > 30) out.push({ h: pv(h), m: m, why: 'For “to” times the short hand is nearly at the NEXT hour. Here it is nearly at ' + nx(h) + ', so say ' + nx(h) + ' for “to” — the hour hand has passed ' + h + '.' });
+    if(m > 30) out.push({ h: pv(h), m: m, why: 'For “to” times the short hand is nearly at the NEXT hour. Here it is nearly at ' + nx(h) + ', so the hour you say is ' + nx(h) + '.' });
     else if(m > 0) out.push({ h: nx(h), m: m, why: 'The short hand has only just passed ' + h + ' — it has not reached ' + nx(h) + ' yet.' });
     if(m > 30) out.push({ h: nx(h), m: m, why: 'The short hand has not reached ' + nx(h) + ' yet, so the hour is still ' + h + '.' });
     else if(m > 0) out.push({ h: pv(h), m: m, why: 'The short hand is just past ' + h + ', not ' + pv(h) + '.' });

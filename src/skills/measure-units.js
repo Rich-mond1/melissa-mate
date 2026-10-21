@@ -107,7 +107,7 @@
       nearby: [1000, 100, 10],
       valid: function(v){ return v > 0; },
       hint: c.f === 1000 ? 'Think: ' + (c.big === 'l' ? 'milli' : 'kilo') + ' is all about a thousand. Is the answer a thousand?' : 'A ' + c.bigName + ' is much bigger than a ' + c.smallName + '. How many fit in?',
-      explain: ex('A key fact', [fact(c) + '.', c.f === 1000 ? (c.big === 'l' ? '“Milli” means a thousandth, so 1000 ml make 1 litre.' : '“Kilo” means a thousand.') : (c.f === 100 ? '“Centi” means a hundred.' : 'A centimetre is split into 10 tiny millimetres.'), 'So there are <b>' + c.f + ' ' + c.small + '</b>. ✅']),
+      explain: ex('A key fact', [fact(c) + '.', c.f === 1000 ? (c.big === 'l' ? '“Milli” means a thousandth, so 1000 ml make 1 litre.' : '“Kilo” means a thousand.') : (c.f === 100 ? '“Centi” means a hundredth, so 100 cm make 1 m.' : 'A centimetre is split into 10 tiny millimetres.'), 'So there are <b>' + c.f + ' ' + c.small + '</b>. ✅']),
       truth: Math.pow(10, String(c.f).length - 1)
     });
   }

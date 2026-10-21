@@ -23,7 +23,7 @@
     const m = make(5, true), it = pick(ITEMS), vis = V.groups(m.q, m.d);
     return mcqNum({
       prompt: 'There are ' + m.n + ' ' + it[0] + '. They go into ' + it[1] + ' of ' + m.d + '. The picture shows the FULL ' + it[1] + '. How many full ' + it[1] + ' are there?', visual: vis, answer: m.q,
-      wrong: [{ v: m.q + 1, why: 'The ' + m.r + ' left over do not fill another ' + it[1].replace(/s$/, '') + ', so they do not count.' }, { v: m.d, why: m.d + ' is how many are in each. Count the full groups in the picture.' }, { v: m.n, why: m.n + ' is how many ' + it[0] + ' there are altogether. Count the full groups.' }, { v: m.q - 1, why: 'Count the groups in the picture again.' }],
+      wrong: [{ v: m.q + 1, why: 'The ' + m.r + ' left over ' + (m.r === 1 ? 'does not fill another ' : 'do not fill another ') + singular(it[1]) + ', so ' + (m.r === 1 ? 'it does' : 'they do') + ' not count.' }, { v: m.d, why: m.d + ' is how many are in each. Count the full groups in the picture.' }, { v: m.n, why: m.n + ' is how many ' + it[0] + ' there are altogether. Count the full groups.' }, { v: m.q - 1, why: 'Count the groups in the picture again.' }],
       nearby: [1, -1, 2], valid: pos, count: 3,
       hint: 'Each ring is one full group of ' + m.d + '. Count the rings.',
       explain: ex('Full groups', ['Each full group holds <b>' + m.d + '</b>.', 'Count in ' + m.d + 's: ' + countIn(m.d, m.q) + '. That is <b>' + m.q + '</b> full groups.', 'There are ' + m.q + ' full ' + it[1] + ' and ' + m.r + ' left over. ✅']),
@@ -55,7 +55,7 @@
   function qChooseAnswer(){
     const m = make(8, true), good = lbl(m.q, m.r), ds = [];
     const add = function(q, r, why){ const l = r === 0 ? String(q) : q + ' remainder ' + r; if(l !== good && !ds.some(function(d){ return d.label === l; }) && q >= 0) ds.push(opt(K.text(l), l, why)); };
-    add(m.q + 1, 0, 'You rounded up. The ' + m.r + ' left over do not make another full group, so we write them as a remainder.');
+    add(m.q + 1, 0, 'You rounded up. The ' + m.r + ' left over ' + (m.r === 1 ? 'does not make another full group, so we write it' : 'do not make another full group, so we write them') + ' as a remainder.');
     if(m.d - m.r !== m.r) add(m.q, m.d - m.r, 'You found how many MORE are needed to make another group. The remainder is what is LEFT: ' + m.n + ' − ' + m.d * m.q + ' = ' + m.r + '.');
     if(m.r !== m.q) add(m.r, m.q, 'You swapped the two numbers. The number of full groups comes first (' + m.q + '), then the remainder (' + m.r + ').');
     add(m.q - 1, m.r + m.d, 'A remainder of ' + (m.r + m.d) + ' is too big: another group of ' + m.d + ' fits. The remainder must be smaller than ' + m.d + '.');
@@ -123,7 +123,7 @@
     return numeric({
       prompt: who + ' has ' + m.n + ' ' + it[0] + ' to put away. Each of the ' + it[1] + ' holds ' + m.d + '. How many ' + it[1] + ' are needed to hold ALL of them?', answer: m.q + 1,
       hint: 'First find how many full ones. Then think about the ones left over: they still need somewhere to go!',
-      explain: ex('Do not forget the left over ones', ['Full ' + it[1] + ': ' + countIn(m.d, m.q) + ' → <b>' + m.q + '</b> full, with <b>' + m.r + '</b> left over.', 'The ' + m.r + ' left over still need a home, so we need <b>one more</b>.', m.q + ' + 1 = <b>' + (m.q + 1) + '</b> ' + it[1] + '. ✅']),
+      explain: ex('Do not forget the left over ones', ['Full ' + it[1] + ': ' + countIn(m.d, m.q) + ' → <b>' + m.q + '</b> full, with <b>' + m.r + '</b> left over.', 'The ' + m.r + ' left over still ' + (m.r === 1 ? 'needs' : 'need') + ' a home, so we need <b>one more</b>.', m.q + ' + 1 = <b>' + (m.q + 1) + '</b> ' + it[1] + '. ✅']),
       truth: divmod(m.n, m.d).q + (divmod(m.n, m.d).r > 0 ? 1 : 0),
       wrong: function(v){ return v === m.q ? m.q + ' leaves ' + nnoun(m.r, it[0]) + ' with nowhere to go. Do they need another one?' : ''; }
     });

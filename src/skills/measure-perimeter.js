@@ -231,8 +231,8 @@
       prompt: 'All the sides of this ' + SHAPE_NAME[n] + ' are the same length. What is its perimeter?', visual: vis, answer: P, fmt: amt('cm'),
       wrong: [
         { v: n + s, why: 'You added the number of sides and the length. Multiply: ' + n + ' sides of ' + s + ' cm.' },
-        { v: (n - 1) * s, why: 'You missed one side. A ' + SHAPE_NAME[n] + ' has ' + n + ' sides.' },
-        { v: (n + 1) * s, why: 'You counted one side too many. A ' + SHAPE_NAME[n] + ' has ' + n + ' sides.' },
+        { v: (n - 1) * s, why: 'You missed one side. ' + (/^[aeiou]/.test(SHAPE_NAME[n]) ? 'An ' : 'A ') + SHAPE_NAME[n] + ' has ' + n + ' sides.' },
+        { v: (n + 1) * s, why: 'You counted one side too many. ' + (/^[aeiou]/.test(SHAPE_NAME[n]) ? 'An ' : 'A ') + SHAPE_NAME[n] + ' has ' + n + ' sides.' },
         { v: 2 * s, why: 'You added only two sides. Count all ' + n + '.' }
       ],
       nearby: [s, -s, 2, -2],

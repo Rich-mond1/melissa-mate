@@ -170,7 +170,7 @@
       const first = three ? '' : 'Take the first ' + cx.a[2] + ': it can go with each of the ' + B + ' ' + cx.b[1] + ', so that is ' + B + ' ' + cx.pl + '.';
       const steps = three
         ? ['<b>Make a list</b>, one choice at a time. Pair each of the ' + A + ' ' + cx.a[1] + ' with each of the ' + B + ' ' + cx.b[1] + ': ' + A + ' × ' + B + ' = ' + A * B + ' pairs.', 'Each pair can go with any of the ' + Cn + ' ' + cx.c[1] + ': ' + A * B + ' × ' + Cn + '.', 'There are <b>' + ans + '</b> different ways. ✅']
-        : ['Strategy: <b>make a list</b>. ' + first, 'Do the same for each of the ' + A + ' ' + cx.a[1] + ': ' + A + ' groups of ' + B + '.', A + ' × ' + B + ' = <b>' + ans + '</b> different ' + cx.what + 's. ✅'];
+        : ['Strategy: <b>make a list</b>. ' + first, 'Do the same for each of the ' + A + ' ' + cx.a[1] + ': ' + A + ' groups of ' + B + '.', A + ' × ' + B + ' = <b>' + ans + '</b> different ' + (cx.pl || cx.what + 's') + '. ✅'];
       const decode = function(){ return decodeSets(vis).reduce(function(t, n){ return t * n; }, 1); };
       const hint = 'Make an organised list: take the first one and pair it with every choice from the other group. Then do the next one.';
       const wrong = [{ v: A + B + (three ? Cn : 0), why: 'That adds the numbers. Each choice from one group goes with EVERY choice from the other, so multiply.' }, { v: three ? A * B + Cn : A * B - 1, why: 'You missed some. Check every pairing.' }, { v: three ? A * B : A * (B + 1), why: 'Check your list: it needs every choice from ALL the groups.' }];

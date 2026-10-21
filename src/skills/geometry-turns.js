@@ -86,7 +86,7 @@
       const needCw = (DIRS.indexOf(d) - DIRS.indexOf(start) + 4) % 4;
       let why;
       if(d === start) why = 'That is where it started. It has turned, so it must be pointing somewhere new.';
-      else if(d === steps.wrongWay) why = 'You turned the wrong way round. ' + cap(cwWord(!steps.cw)) + ' goes the other way: think of the way clock hands go for clockwise.';
+      else if(d === steps.wrongWay) why = 'You turned the wrong way round. ' + (steps.cw ? 'The question says clockwise, which is the way clock hands go.' : 'The question says anticlockwise, which is the opposite way to clock hands.');
       else why = DNAME[d] + ' is ' + TNAME[needCw] + ' clockwise from ' + DNAME[start] + ', but the turn in the question is different.';
       return opt(K.text(d), DNAME[d], why);
     });
