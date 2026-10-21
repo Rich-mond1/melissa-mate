@@ -18006,6 +18006,175 @@ if(typeof module !== 'undefined') module.exports = V;
   });
 })();
 
+/* ===== src/skills/time-facts.js ===== */
+/* time-facts — seconds in a minute, days in each month, days in a year and a leap year (Year 3 statutory: know the number of seconds in a minute and the number of days in each month, year and leap year). */
+(function(){
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const NAMES = ['Ana', 'Marcus', 'Sophie', 'Ivan', 'Lucy', 'Diego', 'Ellen', 'Tom'];
+  /* independent truth: ask the calendar itself (Date), never a hand-typed table */
+  function daysIn(mi, leap){ return new Date(leap ? 2024 : 2025, mi + 1, 0).getDate(); }
+  function isLeap(y){ return new Date(y, 1, 29).getMonth() === 1; }
+  function daysInYear(y){ return Math.round((Date.UTC(y + 1, 0, 1) - Date.UTC(y, 0, 1)) / 86400000); }
+  const MS = { sec: 1000, min: 60000, hour: 3600000, day: 86400000, week: 7 * 86400000 };
+  function ratio(big, small){ return MS[big] / MS[small]; }
+
+  /* ---- picture: the 12 months with their days (V.extra.monthstrip) ---- */
+  function strip(leap, hi){
+    let s = '<svg viewBox="0 0 360 200" class="vis" role="img" aria-label="Calendar: days in each month">';
+    for(let i = 0; i < 12; i++){
+      const x = 6 + (i % 4) * 88, y = 6 + Math.floor(i / 4) * 66, on = hi === i;
+      s += '<g class="mo" data-m="' + i + '"><rect x="' + x + '" y="' + y + '" width="82" height="58" rx="10" fill="' + (on ? '#FFE27A' : '#EEF1FB') + '" stroke="' + (on ? '#E8A33D' : '#C8CEEA') + '" stroke-width="' + (on ? 3 : 1.5) + '"/>' +
+        '<text x="' + (x + 41) + '" y="' + (y + 22) + '" text-anchor="middle" font-size="14" font-weight="800" fill="#3a2a55">' + MONTHS[i].slice(0, 3) + '</text>' +
+        '<text class="dd" x="' + (x + 41) + '" y="' + (y + 47) + '" text-anchor="middle" font-size="22" font-weight="900" fill="' + (leap && i === 1 ? '#C2185B' : '#2B3A67') + '">' + daysIn(i, leap) + '</text></g>';
+    }
+    return s + '</svg>';
+  }
+  function stripDecode(html){ const out = {}, re = /<g class="mo" data-m="(\d+)">[\s\S]*?<text class="dd"[^>]*>(\d+)<\/text>/g; let r; while((r = re.exec(html))) out[+r[1]] = +r[2]; return out; }
+  V.extra.monthstrip = { render: strip, verify: function(a, html){ const d = stripDecode(html); for(let i = 0; i < 12; i++) if(d[i] !== daysIn(i, !!a[0])) return 'calendar draws ' + d[i] + ' for month ' + i; return (html.match(/class="mo"/g) || []).length === 12 ? '' : 'calendar must have 12 months'; } };
+
+  /* ---- tier 1 ---- */
+  function qUnit(){
+    const T = [
+      { big: 'minute', small: 'second', a: ratio('min', 'sec'), hint: 'Think of the clock: the second hand goes all the way round in one minute.' },
+      { big: 'hour', small: 'minute', a: ratio('hour', 'min'), hint: 'The long hand goes all the way round the clock in one hour.' },
+      { big: 'day', small: 'hour', a: ratio('day', 'hour'), hint: 'A day is one full day and night: 12 hours of day and 12 of night.' },
+      { big: 'week', small: 'day', a: ratio('week', 'day'), hint: 'Monday, Tuesday, Wednesday … count the days of the week.' }
+    ];
+    const t = pick(T), sm = t.small, bg = t.big;
+    return mcqNum({
+      prompt: 'How many <b>' + sm + 's</b> are there in <b>1 ' + bg + '</b>?', answer: t.a,
+      wrong: [{ v: 100, why: 'It is not 100 — time does not use tens. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 12, why: '12 is the number of months in a year. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }, { v: 30, why: '30 is half of 60, and only half a ' + bg + '.' }, { v: 10, why: 'Time does not count in tens. 1 ' + bg + ' = ' + t.a + ' ' + sm + 's.' }],
+      nearby: [1, -1, 6, -6, 10, -10], valid: function(v){ return v > 0 && v <= 100; }, count: 4, hint: t.hint,
+      explain: ex('Units of time', ['<b>1 ' + bg + ' = ' + t.a + ' ' + sm + 's</b>.', 'Remember it: 60 seconds = 1 minute, 60 minutes = 1 hour, 24 hours = 1 day, 7 days = 1 week. ✅'])
+    });
+  }
+  function qYearUnit(){
+    const T = [{ q: 'How many <b>months</b> are there in a year?', a: new Set(Array.from({ length: 366 }, function(_, i){ return new Date(2025, 0, 1 + i).getMonth(); })).size, w: [{ v: 52, why: '52 is the number of WEEKS in a year.' }, { v: 365, why: '365 is the number of DAYS in a year.' }, { v: 10, why: 'Count them: January to December is 12.' }], u: 'months' },
+      { q: 'How many <b>days</b> are there in a normal year?', a: daysInYear(2025), w: [{ v: 360, why: 'Close, but a year has 365 days (366 in a leap year).' }, { v: 366, why: '366 is for a LEAP year. A normal year has 365.' }, { v: 12, why: '12 is the number of months.' }], u: 'days' },
+      { q: 'How many <b>days</b> are there in a <b>leap year</b>?', a: daysInYear(2024), w: [{ v: 365, why: '365 is a normal year. A leap year has ONE extra day: 366.' }, { v: 367, why: 'Only one extra day, so 366.' }, { v: 364, why: 'It is one MORE than 365, not one fewer.' }], u: 'days' },
+      { q: 'How many <b>weeks</b> are there in a year (about)?', a: Math.floor(365 / 7), w: [{ v: 12, why: '12 is the number of months.' }, { v: 365, why: '365 is the number of days.' }, { v: 50, why: 'Close: 365 ÷ 7 is just over 52.' }], u: 'weeks' }];
+    const t = pick(T);
+    return mcqNum({ prompt: t.q, answer: t.a, wrong: t.w, nearby: [1, -1, 2, -2, 10, -10], valid: function(v){ return v > 0; }, count: 4,
+      hint: t.u === 'months' ? 'Say the months in order: January, February … December.' : 'Normal year 365 days; leap year 366 days; 52 weeks; 12 months.',
+      explain: ex('Time in a year', ['<b>12 months</b> · <b>52 weeks</b> · <b>365 days</b> in a normal year · <b>366 days</b> in a leap year.', 'So the answer is <b>' + t.a + '</b> ' + t.u + '. ✅']) });
+  }
+  function qReadMonth(){
+    const mi = randInt(0, 11), leap = mi === 1 && chance(0.5), vis = strip(leap, mi);
+    return mcqNum({
+      prompt: 'Look at the calendar. How many days does <b>' + MONTHS[mi] + '</b>' + (leap ? ' have in a <b>leap year</b>' : ' have') + '?', visual: vis, answer: daysIn(mi, leap),
+      wrong: [{ v: 30, why: 'Look at the yellow box for ' + MONTHS[mi] + ': it says ' + daysIn(mi, leap) + '.' }, { v: 31, why: 'Look at the yellow box for ' + MONTHS[mi] + ': it says ' + daysIn(mi, leap) + '.' }, { v: 28, why: 'Look at the yellow box for ' + MONTHS[mi] + ': it says ' + daysIn(mi, leap) + '.' }, { v: 29, why: 'Look at the yellow box for ' + MONTHS[mi] + ': it says ' + daysIn(mi, leap) + '.' }],
+      nearby: [1, -1, 2, -2], valid: function(v){ return v >= 27 && v <= 32; }, count: 4, hint: 'Find ' + MONTHS[mi].slice(0, 3) + ' in the yellow box and read the big number.',
+      explain: ex('Reading the calendar', ['The yellow box is <b>' + MONTHS[mi] + '</b>.', 'The big number says <b>' + daysIn(mi, leap) + '</b> days. ✅']), truth: daysIn(mi, leap),
+      decode: function(){ return stripDecode(vis)[mi]; }
+    });
+  }
+  /* ---- tier 2 ---- */
+  function qWhichMonth(){
+    const want = pick([30, 31, 28]), pool = MONTHS.map(function(m, i){ return { m: m, d: daysIn(i, false) }; });
+    const right = pick(pool.filter(function(x){ return x.d === want; })), others = pool.filter(function(x){ return x.d !== want; });
+    return mcq({
+      prompt: 'Which month has <b>' + want + ' days</b>' + (want === 28 ? ' in a normal year' : '') + '?', correct: opt(K.text(right.m), right.m),
+      distractors: shuffle(others).slice(0, 5).map(function(x){ return opt(K.text(x.m), x.m, x.m + ' has ' + x.d + ' days' + (x.m === 'February' ? ' (29 in a leap year)' : '') + '.'); }), count: 4,
+      hint: want === 28 ? 'Only one month is shorter than all the others.' : 'Remember the rhyme: “Thirty days hath September, April, June and November.”',
+      explain: ex('Days in each month', ['<b>30 days:</b> April, June, September, November.', '<b>28 days</b> (29 in a leap year): February. <b>31 days:</b> all the others.', right.m + ' has <b>' + want + '</b> days. ✅']), truth: K.text(right.m)
+    });
+  }
+  function qLeapPick(){
+    const base = randInt(2004, 2096), leapY = base - (base % 4), keep = [leapY];
+    const cand = [leapY + 1, leapY + 2, leapY + 3, leapY - 1, leapY - 2, leapY - 3, leapY + 5, leapY - 5].filter(function(y){ return y > 2000 && y < 2100 && !isLeap(y); });
+    const ds = shuffle(cand).slice(0, 3);
+    return mcq({
+      prompt: 'Which of these years is a <b>leap year</b>?', correct: opt(K.num(leapY), String(leapY)),
+      distractors: ds.map(function(y){ return opt(K.num(y), String(y), y + ' is not a leap year: February has only 28 days. Leap years come every 4 years (e.g. 2024, 2028).'); }), count: 4,
+      hint: 'A leap year comes every 4 years. 2024 was a leap year, then 2028, 2032 …',
+      explain: ex('Leap years', ['A leap year has <b>366 days</b>: February gets an extra day (29).', 'They come <b>every 4 years</b>: …, 2024, 2028, 2032 …', leapY + ' is in that pattern. ✅']), truth: K.num(isLeap(leapY) ? leapY : -1)
+    });
+  }
+  function qLeapFeb(){
+    const y = pick([2024, 2028, 2032, 2036]), leapQ = chance(0.5), yy = leapQ ? y : y + pick([1, 2, 3]), a = isLeap(yy) ? 29 : 28;
+    return mcqNum({
+      prompt: 'How many days does <b>February</b> have in the year <b>' + yy + '</b>?<br><small>(Leap years: 2024, 2028, 2032, 2036 …)</small>', answer: a,
+      wrong: [{ v: a === 29 ? 28 : 29, why: a === 29 ? yy + ' is a leap year, so February has an EXTRA day: 29.' : yy + ' is not a leap year, so February has 28 days.' }, { v: 30, why: 'February is the shortest month: 28 or 29 days.' }, { v: 31, why: 'February is the shortest month: 28 or 29 days.' }],
+      nearby: [1, -1], valid: function(v){ return v >= 27 && v <= 31; }, count: 3, hint: 'Is ' + yy + ' in the list of leap years?',
+      explain: ex('February', [yy + (isLeap(yy) ? ' <b>is</b> a leap year' : ' is <b>not</b> a leap year') + '.', 'February has <b>' + a + '</b> days. ✅'])
+    });
+  }
+  function qLongest(){
+    const pairs = [[0, 1], [3, 6], [8, 11], [2, 3], [1, 10], [6, 7], [4, 5], [9, 8]], p = pick(pairs), a = daysIn(p[0], false), b = daysIn(p[1], false);
+    if(a === b) return qWhichMonth();
+    const ask = chance(0.5) ? 'more' : 'fewer', ans = ask === 'more' ? (a > b ? p[0] : p[1]) : (a < b ? p[0] : p[1]);
+    return mcq2({
+      prompt: 'Which month has <b>' + ask + ' days</b> (in a normal year): <b>' + MONTHS[p[0]] + '</b> or <b>' + MONTHS[p[1]] + '</b>?', correct: opt(K.text(MONTHS[ans]), MONTHS[ans]),
+      other: opt(K.text(MONTHS[ans === p[0] ? p[1] : p[0]]), MONTHS[ans === p[0] ? p[1] : p[0]], MONTHS[p[0]] + ' has ' + a + ' days and ' + MONTHS[p[1]] + ' has ' + b + '.'),
+      hint: 'Work out how many days each month has, then compare.', explain: ex('Comparing months', [MONTHS[p[0]] + ' = <b>' + a + '</b> days, ' + MONTHS[p[1]] + ' = <b>' + b + '</b> days.', MONTHS[ans] + ' has ' + ask + ' days. ✅']), truth: K.text(MONTHS[ans])
+    });
+  }
+  /* ---- tier 3: typed ---- */
+  function qConvert(){
+    const T = [['minutes', 'seconds', 'min', 'sec', 2, 6], ['hours', 'minutes', 'hour', 'min', 2, 5], ['days', 'hours', 'day', 'hour', 2, 4], ['weeks', 'days', 'week', 'day', 2, 8]];
+    const t = pick(T), n = randInt(t[4], t[5]), k = ratio(t[2], t[3]), a = n * k;
+    return numeric({
+      prompt: 'Type the answer: how many <b>' + t[1] + '</b> are there in <b>' + n + ' ' + t[0] + '</b>?', answer: a,
+      hint: '1 ' + t[2].replace('min', 'minute').replace('sec', 'second') + ' = ' + k + ' ' + t[1] + '. So multiply ' + k + ' by ' + n + '.',
+      explain: ex('Changing units of time', ['1 ' + t[0].slice(0, -1) + ' = ' + k + ' ' + t[1] + '.', n + ' × ' + k + ' = <b>' + a + '</b> ' + t[1] + '. ✅']),
+      wrong: function(v){ return v === k ? 'That is for ONE ' + t[0].slice(0, -1) + '. Multiply by ' + n + '.' : v === n + k ? 'You added. Changing units is a multiplication: ' + n + ' × ' + k + '.' : ''; }
+    });
+  }
+  function qTwoMonths(){
+    let i = randInt(0, 11), j = randInt(0, 11); if(i === j) j = (i + 5) % 12; const vis = strip(false, -1), a = daysIn(i, false) + daysIn(j, false);
+    return numeric({
+      prompt: 'Use the calendar. How many days are there in <b>' + MONTHS[i] + '</b> and <b>' + MONTHS[j] + '</b> together?', visual: vis, answer: a,
+      hint: 'Read each month, then add the two numbers.', explain: ex('Adding months', [MONTHS[i] + ' = <b>' + daysIn(i, false) + '</b> days, ' + MONTHS[j] + ' = <b>' + daysIn(j, false) + '</b> days.', daysIn(i, false) + ' + ' + daysIn(j, false) + ' = <b>' + a + '</b>. ✅']),
+      decode: function(){ const d = stripDecode(vis); return d[i] + d[j]; },
+      wrong: function(v){ return v === daysIn(i, false) || v === daysIn(j, false) ? 'That is just one month. Add both.' : ''; }
+    });
+  }
+  function qDaysLeft(){
+    const mi = pick([0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]), day = randInt(5, 27), who = pick(NAMES), left = Math.round((new Date(2025, mi + 1, 1) - new Date(2025, mi, day + 1)) / 86400000);
+    return numeric({
+      prompt: 'Today is <b>' + day + ' ' + MONTHS[mi] + '</b>. How many days are left until the <b>end of ' + MONTHS[mi] + '</b>?', answer: left,
+      hint: MONTHS[mi] + ' has ' + daysIn(mi, false) + ' days. Take away the days already gone.', explain: ex('Days left in the month', [MONTHS[mi] + ' has <b>' + daysIn(mi, false) + '</b> days.', daysIn(mi, false) + ' − ' + day + ' = <b>' + left + '</b>. ✅']),
+      wrong: function(v){ return v === daysIn(mi, false) ? 'That is the whole month. Subtract today’s date.' : v === left + 1 ? 'Check: ' + daysIn(mi, false) + ' − ' + day + ' = ' + left + '.' : ''; }
+    });
+  }
+  function qFourYears(){
+    const a = daysInYear(2025) * 3 + daysInYear(2024);
+    return numeric({
+      prompt: 'Three years have 365 days and one leap year has 366. How many days is that <b>altogether</b>?', answer: a, truth: (Date.UTC(2025, 0, 1) - Date.UTC(2021, 0, 1)) / 86400000,
+      hint: 'Do 3 × 365 first, then add 366.', explain: ex('Four years with a leap year', ['3 × 365 = <b>1095</b>.', '1095 + 366 = <b>' + a + '</b>. ✅']),
+      wrong: function(v){ return v === 4 * 365 ? 'You gave all four years 365 days. One of them is a leap year with 366.' : ''; }
+    });
+  }
+
+  registerSkill({
+    id: 'time-facts', strand: 'time', name: 'Time facts: seconds, months, leap years', emoji: '📅', year: 3, order: 565, prereq: ['time-minutes'],
+    lesson: {
+      title: 'Facts about time',
+      steps: [
+        { say: 'Some time facts are worth knowing by heart. <b>60 seconds = 1 minute</b>, and <b>60 minutes = 1 hour</b>. The long hand goes once round the clock in one hour.', vis: { kind: 'clock', args: [3, 0] },
+          quiz: { prompt: 'How many seconds are there in 1 minute?', options: [{ label: '60', ok: true }, { label: '100', ok: false }, { label: '30', ok: false }], right: 'Yes! 60 seconds = 1 minute.', wrong: 'Time counts in 60s: 60 seconds make 1 minute.' } },
+        { say: '<b>24 hours = 1 day</b>, <b>7 days = 1 week</b>, <b>12 months = 1 year</b>, and a normal year has <b>365 days</b> (52 weeks and 1 day).', vis: { kind: 'monthstrip', args: [false] },
+          quiz: { prompt: 'How many months are there in a year?', options: [{ label: '12', ok: true }, { label: '10', ok: false }, { label: '52', ok: false }], right: 'Yes! 12 months.', wrong: 'Count the boxes on the calendar: there are 12 months.' } },
+        { say: 'Months have different lengths. <b>30 days</b>: April, June, September, November. <b>31 days</b>: the rest. <b>February</b> is the short one: <b>28</b> days.', vis: { kind: 'monthstrip', args: [false] },
+          quiz: { prompt: 'Which month has 28 days in a normal year?', options: [{ label: 'February', ok: true }, { label: 'April', ok: false }, { label: 'March', ok: false }], right: 'Yes! February is the shortest month.', wrong: 'Look for the box with 28: it is February.' } },
+        { say: 'Every <b>4 years</b> there is a <b>leap year</b>: February gets one extra day, so it has <b>29</b> days and the year has <b>366</b> days. 2024 and 2028 are leap years.', vis: { kind: 'monthstrip', args: [true] },
+          quiz: { prompt: 'How many days are there in a leap year?', options: [{ label: '366', ok: true }, { label: '365', ok: false }, { label: '364', ok: false }], right: 'Yes! One extra day: 366.', wrong: 'A leap year has ONE extra day: 365 + 1 = 366.' } }
+      ]
+    },
+    trick: {
+      title: 'The month rhyme',
+      say: '“<b>Thirty days hath September, April, June and November.</b> All the rest have thirty-one, except February: 28 days, and 29 in a leap year.”',
+      vis: { kind: 'monthstrip', args: [false] },
+      example: 'Leap years come every 4 years: 2024 → 2028 → 2032 &nbsp;·&nbsp; Leap year = <b>366</b> days'
+    },
+    gen: {
+      1: function(){ return pick([qUnit, qUnit, qYearUnit, qReadMonth, qReadMonth])(); },
+      2: function(){ return pick([qWhichMonth, qWhichMonth, qLeapPick, qLeapFeb, qLongest, qYearUnit])(); },
+      3: function(){ return pick([qConvert, qConvert, qTwoMonths, qDaysLeft, qDaysLeft, qFourYears])(); }
+    }
+  });
+})();
+
 /* ===== src/skills/time-five-minutes.js ===== */
 /* time-five-minutes — read the clock to the nearest 5 minutes, with past/to words. */
 (function(){
@@ -18959,7 +19128,7 @@ function defaultState(){
   return {
     v: 4, name: 'Melissa', onboardingDone: false, theme: 'unicorn',
     prefs: { likes: [], dislikes: [], voice: false, sound: true },
-    placement: { done: false, started: false, strandIdx: 0, asked: 0, misses: 0, queue: [], results: {} },
+    placement: { done: false, started: false, strandIdx: 0, asked: 0, misses: 0, queue: [], results: {}, paid: 0 },
     skills: {}, errors: {}, evidence: [], diag: null,
     totalStars: 0, starBalance: 0, xp: 0, level: 1,
     stickers: [], packs: 0, tricks: [], badges: [],
@@ -18967,7 +19136,7 @@ function defaultState(){
     timer: { mode: 'free', minutes: 20, debtSeconds: 0 },
     streak: { count: 0, lastPlayDate: null },
     sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 },
-    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: []
+    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false
   };
 }
 /* ---------- evidence (one dated record per answered question; capped so localStorage stays small) ---------- */
@@ -19036,8 +19205,18 @@ function parentMetrics(state, today){
     fluency: fluency,
     week: { days: Object.keys(days).length, questions: w1.length, minutes: minutes, strong: strong, weak: weak },
     attention: { wobbly: wobbly, stuck: stuck, repeated: repeatedErrors(state, today), gold: goldWaiting(state).map(function(s){ return s.id; }) },
+    stars: starEconomy(state),
     backup: { last: state.lastBackup || null, daysAgo: since, overdue: hasProgress && (since === null || since >= BACKUP_DAYS), hasProgress: hasProgress }
   };
+}
+/* star economy: how fast she earns, how much she has spent, how long until the cheapest thing she does not own yet */
+function starEconomy(state){
+  const days = {}; (state.sessionLog || []).forEach(function(l){ if(l.kind !== 'legacy') days[l.date] = 1; });
+  const active = Object.keys(days).length, earned = state.totalStars || 0, balance = state.starBalance || 0, spent = Math.max(0, earned - balance);
+  let cheapest = null; Object.keys(AV_ITEMS).forEach(function(slot){ AV_ITEMS[slot].forEach(function(r){ if(r[2] > 0 && !avOwns(state, slot, r[0]) && (cheapest === null || r[2] < cheapest)) cheapest = r[2]; }); });
+  const perDay = active ? earned / active : null;
+  const wait = (cheapest === null || balance >= cheapest) ? 0 : (perDay ? Math.ceil((cheapest - balance) / perDay) : null);
+  return { earned: earned, spent: spent, balance: balance, activeDays: active, perDay: perDay === null ? null : Math.round(perDay * 10) / 10, owned: (state.owned || []).length, cheapest: cheapest, daysToCheapest: wait };
 }
 function pct0(x){ return x === null || x === undefined ? '—' : Math.round(x * 100) + '%'; }
 /* the weekly summary as plain Spanish text (copied or shared from the parent panel) */
@@ -19051,6 +19230,7 @@ function summaryText(state, today){
   if(m.week.strong.length) L.push('Mejor esta semana: ' + m.week.strong.map(function(x){ return nm(x.id) + ' (' + pct0(x.indep) + ')'; }).join(', ') + '.');
   if(m.week.weak.length) L.push('A reforzar: ' + m.week.weak.map(function(x){ return nm(x.id) + ' (' + pct0(x.indep) + ')'; }).join(', ') + '.');
   if(m.attention.repeated.length) L.push('Mismo error repetido: ' + m.attention.repeated.slice(0, 3).map(function(e){ return nm(e.skill) + ' — ' + e.why + ' (' + e.n + ' veces)'; }).join('; ') + '.');
+  if(m.stars.activeDays) L.push('Estrellas: ' + m.stars.earned + ' ganadas, ' + m.stars.spent + ' gastadas, ' + m.stars.balance + ' disponibles' + (m.stars.perDay !== null ? ' (unas ' + m.stars.perDay + ' por día de juego)' : '') + '.');
   if(m.attention.stuck.length) L.push('Atascada (dos sesiones seguidas bajas): ' + m.attention.stuck.map(nm).join(', ') + '. La app propone repasar el paso anterior.');
   if(m.attention.gold.length) L.push('Oro pendiente de repaso: ' + m.attention.gold.map(nm).join(', ') + '.');
   return L.join('\n');
@@ -19069,6 +19249,7 @@ function mergeState(loaded){
   m.daily = Object.assign({}, d.daily, L.daily || {});
   m.skills = L.skills || {}; m.errors = L.errors || {};
   m.evidence = cleanEvidence(L.evidence);
+  m.placement.paid = Math.max(0, Math.min(40, Number(m.placement.paid) | 0)); m.welcomeGift = !!L.welcomeGift;
   m.owned = cleanOwned(L.owned); m.avatar = cleanAvatar(L.avatar, m.owned); m.met = cleanMet(L.met);
   m.lastBackup = (typeof L.lastBackup === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(L.lastBackup)) ? L.lastBackup : null;
   m.diag = (L.diag && typeof L.diag === 'object' && !Array.isArray(L.diag) && L.diag.strands && L.diag.results) ? L.diag : null;
@@ -19131,7 +19312,7 @@ function levelFromXp(xp){ let n = 1; while(xp >= xpForLevel(n + 1)) n++; return 
 function levelTitle(n){ return LEVEL_TITLES[Math.min(LEVEL_TITLES.length - 1, Math.floor((n - 1) / 2))]; }
 
 /* SCHOOL-ORDER:BEGIN (generated by tools/curriculum-export.js from curriculum/curriculum.json - do not edit) */
-const SCHOOL_SEQ = {"addsub-add-column":5,"addsub-bonds":0,"addsub-difference":9,"addsub-mental-3d":2,"addsub-missing-inverse":9,"addsub-sub-column":9,"addsub-word":9,"data-bar-charts":14,"data-line-graphs":20,"data-pictograms":14,"data-tally-tables":14,"data-two-step":14,"frac-add-sub":11,"frac-compare-order":11,"frac-equivalent":11,"frac-nonunit":11,"frac-number-line":11,"frac-of-quantity":11,"frac-read":11,"frac-tenths":11,"geo-2d-shapes":10,"geo-3d-shapes":10,"geo-angles":7,"geo-coordinates":20,"geo-lines":7,"geo-symmetry":20,"geo-turns":7,"logic-patterns":null,"logic-puzzles":null,"logic-sorting":null,"logic-strategies":null,"measure-area":20,"measure-capacity":13,"measure-length":6,"measure-mass":13,"measure-money":13,"measure-perimeter":6,"measure-units":13,"multdiv-10-100":20,"multdiv-2-5-10":3,"multdiv-2digit-partition":8.5,"multdiv-3":4,"multdiv-4":3,"multdiv-6-9":8,"multdiv-8":3,"multdiv-arrays-groups":8.5,"multdiv-bridge-tables":20,"multdiv-division-facts":8.5,"multdiv-doubles-halves":0,"multdiv-formal-mult":8.5,"multdiv-mult-3d":20,"multdiv-remainders":8.5,"multdiv-word":8.5,"number-10-100-more-less":1,"number-4-digit":20,"number-compare-order":1,"number-count-steps":1,"number-decimals":20,"number-line-3digit":1,"number-negative":20,"number-place-value":1,"number-pv-counters":1,"number-roman-100":20,"number-round":20,"number-round-1000":20,"time-24h-ampm":12,"time-duration":12,"time-five-minutes":12,"time-minutes":12,"time-quarters":12,"time-roman":12};   // unit position in the school sequence; null = reasoning stream that runs alongside every unit
+const SCHOOL_SEQ = {"addsub-add-column":5,"addsub-bonds":0,"addsub-difference":9,"addsub-mental-3d":2,"addsub-missing-inverse":9,"addsub-sub-column":9,"addsub-word":9,"data-bar-charts":14,"data-line-graphs":20,"data-pictograms":14,"data-tally-tables":14,"data-two-step":14,"frac-add-sub":11,"frac-compare-order":11,"frac-equivalent":11,"frac-nonunit":11,"frac-number-line":11,"frac-of-quantity":11,"frac-read":11,"frac-tenths":11,"geo-2d-shapes":10,"geo-3d-shapes":10,"geo-angles":7,"geo-coordinates":20,"geo-lines":7,"geo-symmetry":20,"geo-turns":7,"logic-patterns":null,"logic-puzzles":null,"logic-sorting":null,"logic-strategies":null,"measure-area":20,"measure-capacity":13,"measure-length":6,"measure-mass":13,"measure-money":13,"measure-perimeter":6,"measure-units":13,"multdiv-10-100":20,"multdiv-2-5-10":3,"multdiv-2digit-partition":8.5,"multdiv-3":4,"multdiv-4":3,"multdiv-6-9":8,"multdiv-8":3,"multdiv-arrays-groups":8.5,"multdiv-bridge-tables":20,"multdiv-division-facts":8.5,"multdiv-doubles-halves":0,"multdiv-formal-mult":8.5,"multdiv-mult-3d":20,"multdiv-remainders":8.5,"multdiv-word":8.5,"number-10-100-more-less":1,"number-4-digit":20,"number-compare-order":1,"number-count-steps":1,"number-decimals":20,"number-line-3digit":1,"number-negative":20,"number-place-value":1,"number-pv-counters":1,"number-roman-100":20,"number-round":20,"number-round-1000":20,"time-24h-ampm":12,"time-duration":12,"time-facts":12,"time-five-minutes":12,"time-minutes":12,"time-quarters":12,"time-roman":12};   // unit position in the school sequence; null = reasoning stream that runs alongside every unit
 /* SCHOOL-ORDER:END */
 
 /* ---------- planning ---------- */
@@ -19322,6 +19503,20 @@ function placementRecord(state, skillId, credit){
   else { P.misses++; }
 }
 function placementDone(state){ if(state.diag) return state.diag.done ? true : diagNextItem(state) === null; return placementNextItem(state) === null; }
+/* Explorer's Quest rewards: a welcome gift (so there is something to spend in "Me" from day one) and +3 stars for every land finished. */
+const WELCOME_STARS = 20, LAND_STARS = 3;
+function claimWelcome(state){ if(state.welcomeGift) return 0; state.welcomeGift = true; state.starBalance += WELCOME_STARS; state.totalStars += WELCOME_STARS; return WELCOME_STARS; }
+function questLands(state){
+  const total = placementOrder().length; let done = 0;
+  if(state.diag){ const st = state.diag.strands || {}; Object.keys(st).forEach(function(k){ if(st[k] && st[k].done) done++; }); if(state.diag.done) done = total; }
+  else { placementNextItem(state); done = Math.min(total, state.placement.strandIdx); }
+  return { done: Math.min(done, total), total: total };
+}
+/* pays any land finished but not yet paid. Idempotent. Returns the stars just paid. */
+function questPay(state){
+  const L = questLands(state), due = Math.max(0, L.done - (state.placement.paid || 0)); if(!due) return 0;
+  state.placement.paid = L.done; const st = due * LAND_STARS; state.starBalance += st; state.totalStars += st; return st;
+}
 function placementSummary(state){
   const known = [], learn = [];
   strandsWithSkills().forEach(function(str){
@@ -19623,7 +19818,8 @@ SCREENS.hub = function(){
   const d = S.daily;
   let h = '<div class="hero"><div class="mascot" data-act="cycleFriend">' + mascot() + '</div><div class="grow"><b style="font-size:20px">' + nick() + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
     '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + liveStreak() + '</div></div>';
-  if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
+  if(!S.welcomeGift) h += '<div class="card quest" style="margin-top:12px"><h3>🎁 A welcome gift for you!</h3><p class="muted">' + WELCOME_STARS + ' ⭐ to spend on clothes and hats for your avatar.</p><div class="gap"></div><button class="btn good block" data-act="claimWelcome">Open my gift</button></div>';
+  if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map. Every land you finish gives you +' + LAND_STARS + ' ⭐ — and you can stop any time and carry on later.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
   else {
     h += '<div class="gap"></div>';
     if(MISSION) h += '<button class="btn block" data-act="missionNext" style="font-size:20px">🚀 Continue today’s mission</button><div class="gap"></div><button class="btn small block" style="background:#ffffffcc;color:var(--ink)" data-act="missionStop">End mission</button><div class="gap"></div>';
@@ -19811,7 +20007,7 @@ function sessionDots(){
 SCREENS.question = function(){
   const q = SESS.q; const sk = skillById(SESS.skillId_); const placing = SESS.kind === 'placement'; const fb = SESS.phase === 'fb';
   let h = '<div class="topbar"><button class="icon-btn" data-act="quit">✕</button><h2 class="white grow center">' +
-    (placing ? '🗺️ ' + esc(strandMeta(sk.strand).name) : esc(sk.emoji + ' ' + (SESS.kind === 'review' ? 'Brain boost' : sk.name))) + '</h2><span class="pill nobtn">' + (placing ? '#' + (S.placement.asked + 1) : (SESS.idx + 1) + '/' + SESS.items.length) + '</span></div>' + sessionDots();
+    (placing ? '🗺️ ' + esc(strandMeta(sk.strand).name) : esc(sk.emoji + ' ' + (SESS.kind === 'review' ? 'Brain boost' : sk.name))) + '</h2><span class="pill nobtn">' + (placing ? (function(){ const L = questLands(S); return 'Land ' + Math.min(L.total, L.done + 1) + '/' + L.total; })() : (SESS.idx + 1) + '/' + SESS.items.length) + '</span></div>' + sessionDots();
   h += '<div class="card qcard">' + (q.visual ? '<div class="qvis">' + q.visual + '</div>' : '') + '<div class="qprompt">' + q.prompt + '</div><button class="speak" data-act="sayq">🔊</button>';
   const lock = fb;
   if(q.type === 'mcq'){
@@ -19905,7 +20101,8 @@ function endQuestion(credit, ok, skipped){
   (SESS.by[sk.id] = SESS.by[sk.id] || []).push(credit);
   SESS.phase = 'fb';
   if(SESS.kind === 'placement'){
-    if(S.diag) diagRecord(S, sk.id, credit >= 1); else placementRecord(S, sk.id, credit >= 1 ? 1 : 0); save();
+    if(S.diag) diagRecord(S, sk.id, credit >= 1); else placementRecord(S, sk.id, credit >= 1 ? 1 : 0);
+    const landStars = questPay(S); save(); if(landStars) toast('Land finished! +' + landStars + ' ⭐');
     SESS.fbHTML = '<div class="feedback ' + (ok ? 'ok' : '') + '">' + (skipped ? 'No problem — I will teach you this one. 🌱' : (ok ? 'Got it! ✅' : 'Thanks! I will help you with this one. 🌱')) + '</div>';
     if(skipped){ ACT.qnext(); return; } render(); return;
   }
@@ -19930,7 +20127,7 @@ ACT.qnext = function(){
 
 /* ---------------- placement finish ---------------- */
 function finishPlacement(){
-  S.placement.done = true; S.daily.warmup = false; save();
+  S.placement.done = true; S.daily.warmup = false; questPay(S); save();
   if(S.diag){ const d = diagSummary(S); return go('placementDone', { known: d.known, learn: Math.max(0, SKILLS.length - d.known) }); }
   const sum = placementSummary(S);
   go('placementDone', { known: sum.known.length, learn: sum.learn.length });
@@ -20050,6 +20247,7 @@ SCREENS.results = function(p){
   R(h);
   if(p.stars > 0 || p.medals.length) confetti(p.medals.length ? 70 : 30);
 };
+ACT.claimWelcome = function(){ const n = claimWelcome(S); if(n){ save(); confetti(50); toast('+' + n + ' ⭐ — go and dress up in Me! 🧑‍🎤'); } render(); };
 ACT.mood = function(d){
   for(let i = S.sessionLog.length - 1; i >= 0 && i >= S.sessionLog.length - 6; i--) if(S.sessionLog[i].date === todayStr() && !S.sessionLog[i].mood) S.sessionLog[i].mood = d.v;
   save(); const f = document.getElementById('moodfb'); if(f) f.innerHTML = '<p class="muted" style="margin-top:8px">Thanks for telling me! 💜</p>';
@@ -20152,6 +20350,10 @@ SCREENS.parent = function(){
     row('Rapidez (14 días)', m.fluency.n ? 'mitad en ' + m.fluency.medianSec + ' s o menos · ' + pct(m.fluency.fastShare) + ' en ≤ 15 s' : 'sin datos') +
     '<p class="muted" style="margin-top:6px">El tiempo incluye leer la pregunta. Mira la tendencia, no un número suelto.</p></div><div class="gap"></div>';
   const LV = ['Sin empezar', 'Aprendiendo', 'Practicando', 'Asentada', 'Dominada'];
+  { const e = m.stars; h += '<div class="card"><h3>⭐ Estrellas y premios</h3><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Ganadas / gastadas / disponibles</span><b>' + e.earned + ' / ' + e.spent + ' / ' + e.balance + '</b></div>' +
+    '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Ritmo (por día de juego)</span><b>' + (e.perDay === null ? '—' : e.perDay + ' ⭐') + '</b></div>' +
+    '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Prendas compradas</span><b>' + e.owned + '</b></div>' +
+    '<p class="muted" style="margin-top:6px">' + (e.cheapest === null ? 'Ya tiene todo el vestuario.' : (e.daysToCheapest === 0 ? 'Ya puede comprar la prenda más barata que le falta (' + e.cheapest + ' ⭐).' : (e.daysToCheapest === null ? 'Aún no hay ritmo para estimar.' : 'Con su ritmo, la prenda más barata que le falta (' + e.cheapest + ' ⭐) llega en unos ' + e.daysToCheapest + ' día(s) de juego.'))) + ' Si tarda demasiado se desmotiva; si compra todo en un día, no hay meta: si ves cualquiera de las dos, avísame y ajusto los precios.</p></div><div class="gap"></div>'; }
   h += '<div class="card"><h3>🏅 Dominio</h3><p class="muted" style="margin-bottom:6px">Asentada = plata con buen acierto sin ayuda. Dominada = oro tras un repaso otro día.</p>' + [4, 3, 2, 1, 0].map(function(k){ return row(LV[k], m.levels[k] + ' habilidades'); }).join('') + '</div><div class="gap"></div>';
   h += '<div class="card"><h3>¿Está aprendiendo de verdad?</h3>' +
     row('Repasos superados (días después)', revN ? pct(revC / revN) + ' de ' + revN : 'sin datos aún') +

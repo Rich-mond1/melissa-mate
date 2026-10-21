@@ -69,7 +69,7 @@ function sessionDots(){
 SCREENS.question = function(){
   const q = SESS.q; const sk = skillById(SESS.skillId_); const placing = SESS.kind === 'placement'; const fb = SESS.phase === 'fb';
   let h = '<div class="topbar"><button class="icon-btn" data-act="quit">✕</button><h2 class="white grow center">' +
-    (placing ? '🗺️ ' + esc(strandMeta(sk.strand).name) : esc(sk.emoji + ' ' + (SESS.kind === 'review' ? 'Brain boost' : sk.name))) + '</h2><span class="pill nobtn">' + (placing ? '#' + (S.placement.asked + 1) : (SESS.idx + 1) + '/' + SESS.items.length) + '</span></div>' + sessionDots();
+    (placing ? '🗺️ ' + esc(strandMeta(sk.strand).name) : esc(sk.emoji + ' ' + (SESS.kind === 'review' ? 'Brain boost' : sk.name))) + '</h2><span class="pill nobtn">' + (placing ? (function(){ const L = questLands(S); return 'Land ' + Math.min(L.total, L.done + 1) + '/' + L.total; })() : (SESS.idx + 1) + '/' + SESS.items.length) + '</span></div>' + sessionDots();
   h += '<div class="card qcard">' + (q.visual ? '<div class="qvis">' + q.visual + '</div>' : '') + '<div class="qprompt">' + q.prompt + '</div><button class="speak" data-act="sayq">🔊</button>';
   const lock = fb;
   if(q.type === 'mcq'){
@@ -163,7 +163,8 @@ function endQuestion(credit, ok, skipped){
   (SESS.by[sk.id] = SESS.by[sk.id] || []).push(credit);
   SESS.phase = 'fb';
   if(SESS.kind === 'placement'){
-    if(S.diag) diagRecord(S, sk.id, credit >= 1); else placementRecord(S, sk.id, credit >= 1 ? 1 : 0); save();
+    if(S.diag) diagRecord(S, sk.id, credit >= 1); else placementRecord(S, sk.id, credit >= 1 ? 1 : 0);
+    const landStars = questPay(S); save(); if(landStars) toast('Land finished! +' + landStars + ' ⭐');
     SESS.fbHTML = '<div class="feedback ' + (ok ? 'ok' : '') + '">' + (skipped ? 'No problem — I will teach you this one. 🌱' : (ok ? 'Got it! ✅' : 'Thanks! I will help you with this one. 🌱')) + '</div>';
     if(skipped){ ACT.qnext(); return; } render(); return;
   }
@@ -188,7 +189,7 @@ ACT.qnext = function(){
 
 /* ---------------- placement finish ---------------- */
 function finishPlacement(){
-  S.placement.done = true; S.daily.warmup = false; save();
+  S.placement.done = true; S.daily.warmup = false; questPay(S); save();
   if(S.diag){ const d = diagSummary(S); return go('placementDone', { known: d.known, learn: Math.max(0, SKILLS.length - d.known) }); }
   const sum = placementSummary(S);
   go('placementDone', { known: sum.known.length, learn: sum.learn.length });
@@ -308,6 +309,7 @@ SCREENS.results = function(p){
   R(h);
   if(p.stars > 0 || p.medals.length) confetti(p.medals.length ? 70 : 30);
 };
+ACT.claimWelcome = function(){ const n = claimWelcome(S); if(n){ save(); confetti(50); toast('+' + n + ' ⭐ — go and dress up in Me! 🧑‍🎤'); } render(); };
 ACT.mood = function(d){
   for(let i = S.sessionLog.length - 1; i >= 0 && i >= S.sessionLog.length - 6; i--) if(S.sessionLog[i].date === todayStr() && !S.sessionLog[i].mood) S.sessionLog[i].mood = d.v;
   save(); const f = document.getElementById('moodfb'); if(f) f.innerHTML = '<p class="muted" style="margin-top:8px">Thanks for telling me! 💜</p>';
@@ -410,6 +412,10 @@ SCREENS.parent = function(){
     row('Rapidez (14 días)', m.fluency.n ? 'mitad en ' + m.fluency.medianSec + ' s o menos · ' + pct(m.fluency.fastShare) + ' en ≤ 15 s' : 'sin datos') +
     '<p class="muted" style="margin-top:6px">El tiempo incluye leer la pregunta. Mira la tendencia, no un número suelto.</p></div><div class="gap"></div>';
   const LV = ['Sin empezar', 'Aprendiendo', 'Practicando', 'Asentada', 'Dominada'];
+  { const e = m.stars; h += '<div class="card"><h3>⭐ Estrellas y premios</h3><div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Ganadas / gastadas / disponibles</span><b>' + e.earned + ' / ' + e.spent + ' / ' + e.balance + '</b></div>' +
+    '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Ritmo (por día de juego)</span><b>' + (e.perDay === null ? '—' : e.perDay + ' ⭐') + '</b></div>' +
+    '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Prendas compradas</span><b>' + e.owned + '</b></div>' +
+    '<p class="muted" style="margin-top:6px">' + (e.cheapest === null ? 'Ya tiene todo el vestuario.' : (e.daysToCheapest === 0 ? 'Ya puede comprar la prenda más barata que le falta (' + e.cheapest + ' ⭐).' : (e.daysToCheapest === null ? 'Aún no hay ritmo para estimar.' : 'Con su ritmo, la prenda más barata que le falta (' + e.cheapest + ' ⭐) llega en unos ' + e.daysToCheapest + ' día(s) de juego.'))) + ' Si tarda demasiado se desmotiva; si compra todo en un día, no hay meta: si ves cualquiera de las dos, avísame y ajusto los precios.</p></div><div class="gap"></div>'; }
   h += '<div class="card"><h3>🏅 Dominio</h3><p class="muted" style="margin-bottom:6px">Asentada = plata con buen acierto sin ayuda. Dominada = oro tras un repaso otro día.</p>' + [4, 3, 2, 1, 0].map(function(k){ return row(LV[k], m.levels[k] + ' habilidades'); }).join('') + '</div><div class="gap"></div>';
   h += '<div class="card"><h3>¿Está aprendiendo de verdad?</h3>' +
     row('Repasos superados (días después)', revN ? pct(revC / revN) + ' de ' + revN : 'sin datos aún') +

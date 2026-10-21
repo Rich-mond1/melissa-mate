@@ -17,6 +17,14 @@ ok(E.avBuy(s, 'hat', 'crown') === 'owned' && s.starBalance === 10, 'no double ch
 ok(E.avEquip(s, 'hat', '') && s.avatar.hat === '' && E.avEquip(s, 'hat', 'crown'), 'owned item can be taken off and put on again free');
 ok(E.avEquip(s, 'top', 'navy') && s.avatar.top === 'navy', 'free items equip');
 let min = 1e9, tot = 0, cnt = 0; Object.keys(E.AV_ITEMS).forEach(k => E.AV_ITEMS[k].forEach(r => { cnt++; if(r[2] > 0) { min = Math.min(min, r[2]); tot += r[2]; } })); ok(min >= 4 && tot < 700, 'prices sane (cheapest ' + min + ', whole wardrobe ' + tot + ' stars, ' + cnt + ' items)');
+console.log('▶ quest rewards + star economy');
+let q = E.mergeState({}); ok(q.welcomeGift === false && q.placement.paid === 0, 'defaults'); ok(E.claimWelcome(q) === 20 && q.starBalance === 20 && q.totalStars === 20 && q.welcomeGift, 'welcome gift: 20 stars once'); ok(E.claimWelcome(q) === 0 && q.starBalance === 20, 'welcome gift cannot be claimed twice'); ok(E.mergeState(JSON.parse(JSON.stringify(q))).welcomeGift === true, 'flag survives a save');
+q = E.mergeState({}); q.placement.started = true; q.placement.strandIdx = 2; ok(E.questPay(q) === 2 * E.LAND_STARS && q.starBalance === 6, 'two lands finished pay 2 x 3'); ok(E.questPay(q) === 0 && q.starBalance === 6, 'paying is idempotent'); q.placement.strandIdx = 3; ok(E.questPay(q) === 3, 'next land pays 3');
+const lands = E.questLands(q).total; q.placement.strandIdx = 999; E.questPay(q); ok(q.placement.paid === lands && q.starBalance === lands * 3, 'never pays more than one per land (' + lands + ' lands)');
+q = E.mergeState({}); E.diagStart(q); const strs = q.diag.strands; ['number', 'addsub'].forEach(id => { strs[id] = { lowPass: 1, highFail: 2, blocks: 1, done: true }; }); ok(E.questLands(q).done === 2 && E.questPay(q) === 6, 'adaptive diagnostic: finished strands pay too');
+ok(E.mergeState({ placement: { paid: 9999 } }).placement.paid === 40 && E.mergeState({ placement: { paid: 'x' } }).placement.paid === 0, 'paid is clamped');
+const eco0 = E.starEconomy(E.mergeState({})); ok(eco0.earned === 0 && eco0.perDay === null && eco0.cheapest === 4 && eco0.daysToCheapest === null, 'economy of a new player: no rate yet, cheapest item 4 stars');
+const eq = E.mergeState({ totalStars: 40, starBalance: 10, sessionLog: [{ date: '2026-10-19', kind: 'practice', total: 5, correct: 5, credit: 5 }, { date: '2026-10-20', kind: 'practice', total: 5, correct: 5, credit: 5 }] }); const eco = E.starEconomy(eq); ok(eco.spent === 30 && eco.perDay === 20 && eco.daysToCheapest === 0, 'economy: spent = earned - balance, rate per active day');
 console.log('▶ friends');
 let f = E.mergeState({}); const got = []; ok(E.meetFriend(f, 0) && f.met.length === 1, 'first meeting is guaranteed even at p=0'); ok(E.meetFriend(f, 0) === null && f.met.length === 1, 'p=0 meets nobody after the first');
 for(let i = 0; i < 100; i++){ const x = E.meetFriend(f, 1); if(x) got.push(x.id); } ok(f.met.length === E.FRIENDS.length && new Set(f.met).size === f.met.length, 'meets all ' + E.FRIENDS.length + ' exactly once'); ok(E.meetFriend(f, 1) === null, 'nobody left -> null');
@@ -47,6 +55,17 @@ let bad = 0; Object.keys(E.AV_ITEMS).forEach(k => E.AV_ITEMS[k].forEach(r => { c
   await p.evaluate(() => { ACT.meItem({ k: 'hat', id: 'bow' }); ACT.meBuy(); ACT.meSlot({ k: 'top' }); ACT.meItem({ k: 'top', id: 'jacket' }); }); ok(await p.evaluate(() => S.starBalance === 14 && ME.prev && ME.prev.id === 'jacket'), 'second purchase ok; 25-star jacket only previews with 14');
   await p.evaluate(() => go('hub')); ok(await p.evaluate(() => ME.prev === null), 'leaving Me drops any preview');
   await p.reload(); await p.evaluate(() => { window.__noGuard = true; go('me'); }); ok(await p.evaluate(() => S.avatar.hat === 'bow' && S.owned.length === 2), 'wardrobe survives a reload');
+  console.log('▶ welcome gift and quest in the real screens');
+  await p.evaluate(() => { localStorage.clear(); S = mergeState({ onboardingDone: true, placement: { started: true, strandIdx: 0, asked: 0 } }); save(); go('hub'); }); await p.waitForTimeout(150);
+  t = await text(); ok(/welcome gift/i.test(t) && /Finish your Explorer/.test(t) && /\+3 ⭐/.test(t), 'hub offers the gift and explains the +3 per land');
+  await p.evaluate(() => ACT.claimWelcome()); await p.waitForTimeout(100); t = await text(); ok(await p.evaluate(() => S.starBalance === 20) && !/welcome gift/i.test(t), 'claiming gives 20 stars and removes the card');
+  await p.evaluate(() => ACT.claimWelcome()); ok(await p.evaluate(() => S.starBalance === 20), 'tapping again gives nothing');
+  await p.evaluate(() => ACT.placementGo()); await p.waitForTimeout(200); t = await text(); ok(/Land 1\/\d+/.test(t), 'question header shows "Land 1/N"');
+  const b0 = await p.evaluate(() => S.starBalance);
+  for(let i = 0; i < 12; i++){ if(await p.evaluate(() => scr.name) !== 'question') break; await p.evaluate(() => { if(SESS.phase === 'ask'){ const q = SESS.q; if(q.type === 'order') submit('o:' + q.model.items.map(i => i.key).join('|')); else submit(q.correctKey); } }); await p.evaluate(() => ACT.qnext()); await p.waitForTimeout(20); if(await p.evaluate(() => S.starBalance) > b0) break; }
+  ok(await p.evaluate(b => S.starBalance === b + 3 && S.placement.paid === 1, b0), 'finishing the first land paid exactly +3 stars');
+  console.log('▶ parent panel shows the star economy');
+  await p.evaluate(() => { PARENT_OK = true; go('parent'); }); await p.waitForTimeout(150); t = await text(); ok(/Estrellas y premios/.test(t) && /Ganadas \/ gastadas/.test(t), 'parent card present');
   console.log('▶ friends appear on the way');
   await p.evaluate(() => { S.met = []; S.packs = 1; save(); go('friends'); }); t = await text(); ok(/0 of 8/.test(t) && (t.match(/\?\?\?/g) || []).length === 8, 'all 8 are hidden as ??? at first');
   await p.evaluate(() => { ACT.openPack(); }); await p.waitForTimeout(150); t = await text(); ok(await p.evaluate(() => scr.name === 'reveal' && S.met.length === 1), 'the first pack brings the first friend'); ok(/You met a new friend/.test(t), 'reveal shows the friend card'); ok(await p.evaluate(() => document.querySelector('.friendcard img').naturalWidth > 100), 'friend picture really loads');
