@@ -107,7 +107,8 @@ SCREENS.hub = function(){
   const d = S.daily;
   let h = '<div class="hero"><div class="mascot" data-act="cycleFriend">' + mascot() + '</div><div class="grow"><b style="font-size:20px">' + nick() + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
     '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + liveStreak() + '</div></div>';
-  if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
+  if(!S.welcomeGift) h += '<div class="card quest" style="margin-top:12px"><h3>🎁 A welcome gift for you!</h3><p class="muted">' + WELCOME_STARS + ' ⭐ to spend on clothes and hats for your avatar.</p><div class="gap"></div><button class="btn good block" data-act="claimWelcome">Open my gift</button></div>';
+  if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map. Every land you finish gives you +' + LAND_STARS + ' ⭐ — and you can stop any time and carry on later.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
   else {
     h += '<div class="gap"></div>';
     if(MISSION) h += '<button class="btn block" data-act="missionNext" style="font-size:20px">🚀 Continue today’s mission</button><div class="gap"></div><button class="btn small block" style="background:#ffffffcc;color:var(--ink)" data-act="missionStop">End mission</button><div class="gap"></div>';
