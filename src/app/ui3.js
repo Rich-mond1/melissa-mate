@@ -9,7 +9,7 @@ SCREENS.friends = function(){
   let h = topbar('🤝 Friends', 'hub') + '<div class="card center"><p class="qprompt">' + S.met.length + ' of ' + FRIENDS.length + ' friends met</p><p class="muted">Finish missions and open sticker packs — new friends turn up on the way!</p></div><div class="gap"></div><div class="fgrid">';
   FRIENDS.forEach(function(f){
     const met = S.met.indexOf(f.id) > -1;
-    h += met ? '<button class="fcard" data-act="friendOpen" data-id="' + f.id + '">' + friendPic(f.id) + '<b>' + esc(f.name) + '</b></button>' : '<div class="fcard locked">' + friendPic(f.id, 'fimg shadow') + '<b>???</b></div>';
+    h += met ? '<button class="fcard" data-act="friendOpen" data-id="' + f.id + '">' + friendPic(f.id) + '<b>' + esc(f.name) + '</b></button>' : '<div class="fcard locked"><div class="fimg qmark">❓</div><b>???</b></div>';
   });
   R(h + '</div>');
 };

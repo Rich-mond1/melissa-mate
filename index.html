@@ -170,8 +170,8 @@ h1,h2,h3,p{margin:0;}
 
 /* avatar + friends */
 .avbig{width:min(62vw,300px); aspect-ratio:2/3; margin:8px auto 12px; border-radius:22px; box-shadow:0 8px 24px rgba(0,0,0,.25); overflow:hidden;}
-.avtabs{display:flex; gap:6px; overflow-x:auto; padding:4px 2px 10px; -webkit-overflow-scrolling:touch;}
-.avtab{flex:0 0 auto; min-width:74px; min-height:56px; border:none; border-radius:16px; background:#ffffff26; color:#fff; font-weight:900; font-size:13px; font-family:inherit; padding:8px 10px;}
+.avtabs{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; padding:4px 2px 10px;}
+.avtab{flex:0 0 auto; min-width:70px; min-height:56px; border:none; border-radius:16px; background:#ffffff26; color:#fff; font-weight:900; font-size:13px; font-family:inherit; padding:8px 10px;}
 .avtab span{display:block; font-size:22px;} .avtab.on{background:#fff; color:var(--ink);}
 .avgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
 .avitem{border:3px solid transparent; background:var(--card); border-radius:18px; padding:8px 6px; font-family:inherit; color:var(--ink); display:flex; flex-direction:column; align-items:center; gap:2px; min-height:120px;}
@@ -182,7 +182,7 @@ h1,h2,h3,p{margin:0;}
 .fgrid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px;}
 .fcard{border:none; background:var(--card); border-radius:20px; padding:10px; font-family:inherit; color:var(--ink); display:flex; flex-direction:column; align-items:center; gap:4px; font-size:14px;}
 .fimg{width:100%; max-width:200px; aspect-ratio:1/1; object-fit:contain; border-radius:14px; background:#fff; display:block;} .fimg.big{max-width:230px;} .fimg.huge{max-width:340px; margin:0 auto;}
-.fimg.shadow{filter:brightness(0) opacity(.22);} .fcard.locked{opacity:.85;}
+.fimg.qmark{display:flex; align-items:center; justify-content:center; font-size:64px; background:#d9d2ec; color:#8b7fb3;} .fcard.locked{opacity:.85;}
 .friendcard h3{margin-top:6px;}
 
 </style></head><body><div id="app"></div>
@@ -20290,7 +20290,7 @@ SCREENS.friends = function(){
   let h = topbar('🤝 Friends', 'hub') + '<div class="card center"><p class="qprompt">' + S.met.length + ' of ' + FRIENDS.length + ' friends met</p><p class="muted">Finish missions and open sticker packs — new friends turn up on the way!</p></div><div class="gap"></div><div class="fgrid">';
   FRIENDS.forEach(function(f){
     const met = S.met.indexOf(f.id) > -1;
-    h += met ? '<button class="fcard" data-act="friendOpen" data-id="' + f.id + '">' + friendPic(f.id) + '<b>' + esc(f.name) + '</b></button>' : '<div class="fcard locked">' + friendPic(f.id, 'fimg shadow') + '<b>???</b></div>';
+    h += met ? '<button class="fcard" data-act="friendOpen" data-id="' + f.id + '">' + friendPic(f.id) + '<b>' + esc(f.name) + '</b></button>' : '<div class="fcard locked"><div class="fimg qmark">❓</div><b>???</b></div>';
   });
   R(h + '</div>');
 };
