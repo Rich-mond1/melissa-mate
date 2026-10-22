@@ -20707,7 +20707,7 @@ ACT.undoImport = function(){
 /* ---------------- boot ---------------- */
 function boot(){
   load(); applyTheme();
-  let lastClick = 0, lastFire = 0, tStart = null;
+  let lastClick = 0, lastFire = 0;
   function fire(el){
     if(!el || el.disabled) return;
     const dt = Date.now() - LAST_GO;
@@ -20716,14 +20716,27 @@ function boot(){
     const f = ACT[el.dataset.act];
     try { if(f) f(el.dataset, el); } catch(err){ try { toast('Oops — let’s go back'); console.error(err); go('hub'); } catch(e2){} }
   }
-  document.addEventListener('click', function(e){ lastClick = Date.now(); const el = e.target.closest && e.target.closest('[data-act]'); fire(el); });
-  // iOS sometimes swallows the click after a tap: if a short, still touch produced no click, run the tap ourselves
-  document.addEventListener('touchstart', function(e){ const t = e.touches[0]; tStart = t ? { x: t.clientX, y: t.clientY, t: Date.now() } : null; }, { passive: true });
+  // Touch handling is tracked PER FINGER (identifier), so a resting palm or a second finger can never be mistaken for the tap:
+  // a short, still touch is a tap (and, if iOS swallows its click, we run it ourselves); a long or moving touch that overlapped a tap on
+  // another button (a resting palm) is NOT a tap, and the click it leaves behind on release is ignored.
+  const touches = {}; let ignoreEl = null, ignoreUntil = 0, lastTap = null;
+  document.addEventListener('click', function(e){
+    const el = e.target.closest && e.target.closest('[data-act]');
+    if(el && el === ignoreEl && Date.now() < ignoreUntil) return;   // click left behind by a resting palm / drag
+    lastClick = Date.now(); fire(el);
+  });
+  document.addEventListener('touchstart', function(e){
+    for(let i = 0; i < e.changedTouches.length; i++){ const c = e.changedTouches[i]; touches[c.identifier] = { x: c.clientX, y: c.clientY, t: Date.now(), el: c.target && c.target.closest ? c.target.closest('[data-act]') : null }; }
+  }, { passive: true });
+  document.addEventListener('touchcancel', function(e){ for(let i = 0; i < e.changedTouches.length; i++) delete touches[e.changedTouches[i].identifier]; }, { passive: true });
   document.addEventListener('touchend', function(e){
-    const s = tStart; tStart = null; if(!s || Date.now() - s.t > 600) return;
-    const c = e.changedTouches[0]; if(!c || Math.abs(c.clientX - s.x) > 10 || Math.abs(c.clientY - s.y) > 10) return;
-    const el = e.target.closest && e.target.closest('[data-act]'); if(!el) return; const t0 = Date.now();
-    setTimeout(function(){ if(lastClick < t0) fire(el); }, 150);
+    for(let i = 0; i < e.changedTouches.length; i++){
+      const c = e.changedTouches[i]; const s = touches[c.identifier]; delete touches[c.identifier]; if(!s || !s.el) continue;
+      const tap = Date.now() - s.t <= 600 && Math.abs(c.clientX - s.x) <= 10 && Math.abs(c.clientY - s.y) <= 10;
+      if(!tap){ if(lastTap && lastTap.t >= s.t && lastTap.el !== s.el){ ignoreEl = s.el; ignoreUntil = Date.now() + 500; } continue; }   // a long touch that overlapped a tap elsewhere = resting palm
+      const el = s.el, t0 = Date.now(); lastTap = { el: el, t: t0 };
+      setTimeout(function(){ if(lastClick < t0) fire(el); }, 150);
+    }
   }, { passive: true });
   window.addEventListener('error', function(){ try { toast('Oops — let’s go back'); } catch(e){} });
   document.addEventListener('change', function(e){
