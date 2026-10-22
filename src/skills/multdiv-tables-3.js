@@ -176,6 +176,19 @@
       wrong: function(v){ return v === p ? p + ' is the whole answer. The question asks for the missing number in the box.' : v === p - t ? 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' : (v === n + 1 || v === n - 1) ? 'So close! Check it: ' + v + ' × ' + t + ' = ' + v * t + ', not ' + p + '.' : ''; }
     });
   }
+  /* missing factor as multiple choice (tier 2): the product is on offer as the tempting wrong answer, as in the school test "▢ × 5 = 35" */
+  function qMissingMcq(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), p = P(t, n), left = chance(0.5);
+    const sentence = left ? '▢ × ' + t + ' = ' + p : t + ' × ▢ = ' + p;
+    return mcqNum({
+      prompt: 'Which number goes in the box?  <b>' + sentence + '</b>', answer: n,
+      wrong: [{ v: p, why: p + ' is the whole answer, the number AFTER the = sign. The box is how many ' + t + 's make ' + p + '.' }, { v: p - t, why: 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' }, { v: n + 1, why: 'So close! Check it: ' + (n + 1) + ' × ' + t + ' = ' + (n + 1) * t + ', not ' + p + '.' }, { v: n - 1, why: 'So close! Check it: ' + (n - 1) + ' × ' + t + ' = ' + (n - 1) * t + ', not ' + p + '.' }, { v: p + t, why: 'That is too big. Count in ' + t + 's up to ' + p + ' and stop there.' }],
+      nearby: [1, -1, 2, -2], valid: pos, count: 3,
+      hint: 'Count in ' + t + 's until you reach ' + p + '. How many jumps did you make?',
+      explain: ex('Finding the missing factor', ['Count in ' + t + 's until you reach ' + p + ': ' + skipHTML(t, n) + '.', 'It takes <b>' + n + '</b> jumps of ' + t + ' to get to ' + p + '.', 'Check: ' + n + ' × ' + t + ' = ' + p + ', so the box is <b>' + n + '</b>. ✅']),
+      truth: p / t
+    });
+  }
   function qDiv(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), p = P(t, n), form = randInt(0, 2), who = pick(NAMES), it = pick(SHARE_ITEMS);
     let prompt;
@@ -286,7 +299,7 @@
     ]).concat(cfg.extra1 || []);
     const L2 = weighted([
       [f(function(){ return qRecall(cfg, cfg.n2, chance(0.3) ? 3 : 4); }), 4], [f(function(){ return qWord(cfg, cfg.n2); }), 2], [f(function(){ return qSeqGap(cfg); }), 1],
-      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1]
+      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1], [f(function(){ return qMissingMcq(cfg, cfg.n2); }), 2]
     ]).concat(cfg.extra2 || []);
     const L3 = weighted([
       [f(function(){ return qMissing(cfg, cfg.n3); }), 3], [f(function(){ return qDiv(cfg, cfg.n3); }), 3], [f(function(){ return qTypedFact(cfg, cfg.n3); }), 2],
