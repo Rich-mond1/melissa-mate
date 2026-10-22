@@ -12776,6 +12776,19 @@ if(typeof module !== 'undefined') module.exports = V;
       wrong: function(v){ return v === p ? p + ' is the whole answer. The question asks for the missing number in the box.' : v === p - t ? 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' : (v === n + 1 || v === n - 1) ? 'So close! Check it: ' + v + ' × ' + t + ' = ' + v * t + ', not ' + p + '.' : ''; }
     });
   }
+  /* missing factor as multiple choice (tier 2): the product is on offer as the tempting wrong answer, as in the school test "▢ × 5 = 35" */
+  function qMissingMcq(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), p = P(t, n), left = chance(0.5);
+    const sentence = left ? '▢ × ' + t + ' = ' + p : t + ' × ▢ = ' + p;
+    return mcqNum({
+      prompt: 'Which number goes in the box?  <b>' + sentence + '</b>', answer: n,
+      wrong: [{ v: p, why: p + ' is the whole answer, the number AFTER the = sign. The box is how many ' + t + 's make ' + p + '.' }, { v: p - t, why: 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' }, { v: n + 1, why: 'So close! Check it: ' + (n + 1) + ' × ' + t + ' = ' + (n + 1) * t + ', not ' + p + '.' }, { v: n - 1, why: 'So close! Check it: ' + (n - 1) + ' × ' + t + ' = ' + (n - 1) * t + ', not ' + p + '.' }, { v: p + t, why: 'That is too big. Count in ' + t + 's up to ' + p + ' and stop there.' }],
+      nearby: [1, -1, 2, -2], valid: pos, count: 3,
+      hint: 'Count in ' + t + 's until you reach ' + p + '. How many jumps did you make?',
+      explain: ex('Finding the missing factor', ['Count in ' + t + 's until you reach ' + p + ': ' + skipHTML(t, n) + '.', 'It takes <b>' + n + '</b> jumps of ' + t + ' to get to ' + p + '.', 'Check: ' + n + ' × ' + t + ' = ' + p + ', so the box is <b>' + n + '</b>. ✅']),
+      truth: p / t
+    });
+  }
   function qDiv(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), p = P(t, n), form = randInt(0, 2), who = pick(NAMES), it = pick(SHARE_ITEMS);
     let prompt;
@@ -12886,7 +12899,7 @@ if(typeof module !== 'undefined') module.exports = V;
     ]).concat(cfg.extra1 || []);
     const L2 = weighted([
       [f(function(){ return qRecall(cfg, cfg.n2, chance(0.3) ? 3 : 4); }), 4], [f(function(){ return qWord(cfg, cfg.n2); }), 2], [f(function(){ return qSeqGap(cfg); }), 1],
-      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1]
+      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1], [f(function(){ return qMissingMcq(cfg, cfg.n2); }), 2]
     ]).concat(cfg.extra2 || []);
     const L3 = weighted([
       [f(function(){ return qMissing(cfg, cfg.n3); }), 3], [f(function(){ return qDiv(cfg, cfg.n3); }), 3], [f(function(){ return qTypedFact(cfg, cfg.n3); }), 2],
@@ -13153,6 +13166,19 @@ if(typeof module !== 'undefined') module.exports = V;
       wrong: function(v){ return v === p ? p + ' is the whole answer. The question asks for the missing number in the box.' : v === p - t ? 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' : (v === n + 1 || v === n - 1) ? 'So close! Check it: ' + v + ' × ' + t + ' = ' + v * t + ', not ' + p + '.' : ''; }
     });
   }
+  /* missing factor as multiple choice (tier 2): the product is on offer as the tempting wrong answer, as in the school test "▢ × 5 = 35" */
+  function qMissingMcq(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), p = P(t, n), left = chance(0.5);
+    const sentence = left ? '▢ × ' + t + ' = ' + p : t + ' × ▢ = ' + p;
+    return mcqNum({
+      prompt: 'Which number goes in the box?  <b>' + sentence + '</b>', answer: n,
+      wrong: [{ v: p, why: p + ' is the whole answer, the number AFTER the = sign. The box is how many ' + t + 's make ' + p + '.' }, { v: p - t, why: 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' }, { v: n + 1, why: 'So close! Check it: ' + (n + 1) + ' × ' + t + ' = ' + (n + 1) * t + ', not ' + p + '.' }, { v: n - 1, why: 'So close! Check it: ' + (n - 1) + ' × ' + t + ' = ' + (n - 1) * t + ', not ' + p + '.' }, { v: p + t, why: 'That is too big. Count in ' + t + 's up to ' + p + ' and stop there.' }],
+      nearby: [1, -1, 2, -2], valid: pos, count: 3,
+      hint: 'Count in ' + t + 's until you reach ' + p + '. How many jumps did you make?',
+      explain: ex('Finding the missing factor', ['Count in ' + t + 's until you reach ' + p + ': ' + skipHTML(t, n) + '.', 'It takes <b>' + n + '</b> jumps of ' + t + ' to get to ' + p + '.', 'Check: ' + n + ' × ' + t + ' = ' + p + ', so the box is <b>' + n + '</b>. ✅']),
+      truth: p / t
+    });
+  }
   function qDiv(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), p = P(t, n), form = randInt(0, 2), who = pick(NAMES), it = pick(SHARE_ITEMS);
     let prompt;
@@ -13263,7 +13289,7 @@ if(typeof module !== 'undefined') module.exports = V;
     ]).concat(cfg.extra1 || []);
     const L2 = weighted([
       [f(function(){ return qRecall(cfg, cfg.n2, chance(0.3) ? 3 : 4); }), 4], [f(function(){ return qWord(cfg, cfg.n2); }), 2], [f(function(){ return qSeqGap(cfg); }), 1],
-      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1]
+      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1], [f(function(){ return qMissingMcq(cfg, cfg.n2); }), 2]
     ]).concat(cfg.extra2 || []);
     const L3 = weighted([
       [f(function(){ return qMissing(cfg, cfg.n3); }), 3], [f(function(){ return qDiv(cfg, cfg.n3); }), 3], [f(function(){ return qTypedFact(cfg, cfg.n3); }), 2],
@@ -13524,6 +13550,19 @@ if(typeof module !== 'undefined') module.exports = V;
       wrong: function(v){ return v === p ? p + ' is the whole answer. The question asks for the missing number in the box.' : v === p - t ? 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' : (v === n + 1 || v === n - 1) ? 'So close! Check it: ' + v + ' × ' + t + ' = ' + v * t + ', not ' + p + '.' : ''; }
     });
   }
+  /* missing factor as multiple choice (tier 2): the product is on offer as the tempting wrong answer, as in the school test "▢ × 5 = 35" */
+  function qMissingMcq(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), p = P(t, n), left = chance(0.5);
+    const sentence = left ? '▢ × ' + t + ' = ' + p : t + ' × ▢ = ' + p;
+    return mcqNum({
+      prompt: 'Which number goes in the box?  <b>' + sentence + '</b>', answer: n,
+      wrong: [{ v: p, why: p + ' is the whole answer, the number AFTER the = sign. The box is how many ' + t + 's make ' + p + '.' }, { v: p - t, why: 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' }, { v: n + 1, why: 'So close! Check it: ' + (n + 1) + ' × ' + t + ' = ' + (n + 1) * t + ', not ' + p + '.' }, { v: n - 1, why: 'So close! Check it: ' + (n - 1) + ' × ' + t + ' = ' + (n - 1) * t + ', not ' + p + '.' }, { v: p + t, why: 'That is too big. Count in ' + t + 's up to ' + p + ' and stop there.' }],
+      nearby: [1, -1, 2, -2], valid: pos, count: 3,
+      hint: 'Count in ' + t + 's until you reach ' + p + '. How many jumps did you make?',
+      explain: ex('Finding the missing factor', ['Count in ' + t + 's until you reach ' + p + ': ' + skipHTML(t, n) + '.', 'It takes <b>' + n + '</b> jumps of ' + t + ' to get to ' + p + '.', 'Check: ' + n + ' × ' + t + ' = ' + p + ', so the box is <b>' + n + '</b>. ✅']),
+      truth: p / t
+    });
+  }
   function qDiv(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), p = P(t, n), form = randInt(0, 2), who = pick(NAMES), it = pick(SHARE_ITEMS);
     let prompt;
@@ -13634,7 +13673,7 @@ if(typeof module !== 'undefined') module.exports = V;
     ]).concat(cfg.extra1 || []);
     const L2 = weighted([
       [f(function(){ return qRecall(cfg, cfg.n2, chance(0.3) ? 3 : 4); }), 4], [f(function(){ return qWord(cfg, cfg.n2); }), 2], [f(function(){ return qSeqGap(cfg); }), 1],
-      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1]
+      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1], [f(function(){ return qMissingMcq(cfg, cfg.n2); }), 2]
     ]).concat(cfg.extra2 || []);
     const L3 = weighted([
       [f(function(){ return qMissing(cfg, cfg.n3); }), 3], [f(function(){ return qDiv(cfg, cfg.n3); }), 3], [f(function(){ return qTypedFact(cfg, cfg.n3); }), 2],
@@ -13892,6 +13931,19 @@ if(typeof module !== 'undefined') module.exports = V;
       wrong: function(v){ return v === p ? p + ' is the whole answer. The question asks for the missing number in the box.' : v === p - t ? 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' : (v === n + 1 || v === n - 1) ? 'So close! Check it: ' + v + ' × ' + t + ' = ' + v * t + ', not ' + p + '.' : ''; }
     });
   }
+  /* missing factor as multiple choice (tier 2): the product is on offer as the tempting wrong answer, as in the school test "▢ × 5 = 35" */
+  function qMissingMcq(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), p = P(t, n), left = chance(0.5);
+    const sentence = left ? '▢ × ' + t + ' = ' + p : t + ' × ▢ = ' + p;
+    return mcqNum({
+      prompt: 'Which number goes in the box?  <b>' + sentence + '</b>', answer: n,
+      wrong: [{ v: p, why: p + ' is the whole answer, the number AFTER the = sign. The box is how many ' + t + 's make ' + p + '.' }, { v: p - t, why: 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' }, { v: n + 1, why: 'So close! Check it: ' + (n + 1) + ' × ' + t + ' = ' + (n + 1) * t + ', not ' + p + '.' }, { v: n - 1, why: 'So close! Check it: ' + (n - 1) + ' × ' + t + ' = ' + (n - 1) * t + ', not ' + p + '.' }, { v: p + t, why: 'That is too big. Count in ' + t + 's up to ' + p + ' and stop there.' }],
+      nearby: [1, -1, 2, -2], valid: pos, count: 3,
+      hint: 'Count in ' + t + 's until you reach ' + p + '. How many jumps did you make?',
+      explain: ex('Finding the missing factor', ['Count in ' + t + 's until you reach ' + p + ': ' + skipHTML(t, n) + '.', 'It takes <b>' + n + '</b> jumps of ' + t + ' to get to ' + p + '.', 'Check: ' + n + ' × ' + t + ' = ' + p + ', so the box is <b>' + n + '</b>. ✅']),
+      truth: p / t
+    });
+  }
   function qDiv(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), p = P(t, n), form = randInt(0, 2), who = pick(NAMES), it = pick(SHARE_ITEMS);
     let prompt;
@@ -14002,7 +14054,7 @@ if(typeof module !== 'undefined') module.exports = V;
     ]).concat(cfg.extra1 || []);
     const L2 = weighted([
       [f(function(){ return qRecall(cfg, cfg.n2, chance(0.3) ? 3 : 4); }), 4], [f(function(){ return qWord(cfg, cfg.n2); }), 2], [f(function(){ return qSeqGap(cfg); }), 1],
-      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1]
+      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1], [f(function(){ return qMissingMcq(cfg, cfg.n2); }), 2]
     ]).concat(cfg.extra2 || []);
     const L3 = weighted([
       [f(function(){ return qMissing(cfg, cfg.n3); }), 3], [f(function(){ return qDiv(cfg, cfg.n3); }), 3], [f(function(){ return qTypedFact(cfg, cfg.n3); }), 2],
@@ -14311,6 +14363,19 @@ if(typeof module !== 'undefined') module.exports = V;
       wrong: function(v){ return v === p ? p + ' is the whole answer. The question asks for the missing number in the box.' : v === p - t ? 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' : (v === n + 1 || v === n - 1) ? 'So close! Check it: ' + v + ' × ' + t + ' = ' + v * t + ', not ' + p + '.' : ''; }
     });
   }
+  /* missing factor as multiple choice (tier 2): the product is on offer as the tempting wrong answer, as in the school test "▢ × 5 = 35" */
+  function qMissingMcq(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), p = P(t, n), left = chance(0.5);
+    const sentence = left ? '▢ × ' + t + ' = ' + p : t + ' × ▢ = ' + p;
+    return mcqNum({
+      prompt: 'Which number goes in the box?  <b>' + sentence + '</b>', answer: n,
+      wrong: [{ v: p, why: p + ' is the whole answer, the number AFTER the = sign. The box is how many ' + t + 's make ' + p + '.' }, { v: p - t, why: 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' }, { v: n + 1, why: 'So close! Check it: ' + (n + 1) + ' × ' + t + ' = ' + (n + 1) * t + ', not ' + p + '.' }, { v: n - 1, why: 'So close! Check it: ' + (n - 1) + ' × ' + t + ' = ' + (n - 1) * t + ', not ' + p + '.' }, { v: p + t, why: 'That is too big. Count in ' + t + 's up to ' + p + ' and stop there.' }],
+      nearby: [1, -1, 2, -2], valid: pos, count: 3,
+      hint: 'Count in ' + t + 's until you reach ' + p + '. How many jumps did you make?',
+      explain: ex('Finding the missing factor', ['Count in ' + t + 's until you reach ' + p + ': ' + skipHTML(t, n) + '.', 'It takes <b>' + n + '</b> jumps of ' + t + ' to get to ' + p + '.', 'Check: ' + n + ' × ' + t + ' = ' + p + ', so the box is <b>' + n + '</b>. ✅']),
+      truth: p / t
+    });
+  }
   function qDiv(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), p = P(t, n), form = randInt(0, 2), who = pick(NAMES), it = pick(SHARE_ITEMS);
     let prompt;
@@ -14421,7 +14486,7 @@ if(typeof module !== 'undefined') module.exports = V;
     ]).concat(cfg.extra1 || []);
     const L2 = weighted([
       [f(function(){ return qRecall(cfg, cfg.n2, chance(0.3) ? 3 : 4); }), 4], [f(function(){ return qWord(cfg, cfg.n2); }), 2], [f(function(){ return qSeqGap(cfg); }), 1],
-      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1]
+      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1], [f(function(){ return qMissingMcq(cfg, cfg.n2); }), 2]
     ]).concat(cfg.extra2 || []);
     const L3 = weighted([
       [f(function(){ return qMissing(cfg, cfg.n3); }), 3], [f(function(){ return qDiv(cfg, cfg.n3); }), 3], [f(function(){ return qTypedFact(cfg, cfg.n3); }), 2],
@@ -14684,6 +14749,19 @@ if(typeof module !== 'undefined') module.exports = V;
       wrong: function(v){ return v === p ? p + ' is the whole answer. The question asks for the missing number in the box.' : v === p - t ? 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' : (v === n + 1 || v === n - 1) ? 'So close! Check it: ' + v + ' × ' + t + ' = ' + v * t + ', not ' + p + '.' : ''; }
     });
   }
+  /* missing factor as multiple choice (tier 2): the product is on offer as the tempting wrong answer, as in the school test "▢ × 5 = 35" */
+  function qMissingMcq(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), p = P(t, n), left = chance(0.5);
+    const sentence = left ? '▢ × ' + t + ' = ' + p : t + ' × ▢ = ' + p;
+    return mcqNum({
+      prompt: 'Which number goes in the box?  <b>' + sentence + '</b>', answer: n,
+      wrong: [{ v: p, why: p + ' is the whole answer, the number AFTER the = sign. The box is how many ' + t + 's make ' + p + '.' }, { v: p - t, why: 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' }, { v: n + 1, why: 'So close! Check it: ' + (n + 1) + ' × ' + t + ' = ' + (n + 1) * t + ', not ' + p + '.' }, { v: n - 1, why: 'So close! Check it: ' + (n - 1) + ' × ' + t + ' = ' + (n - 1) * t + ', not ' + p + '.' }, { v: p + t, why: 'That is too big. Count in ' + t + 's up to ' + p + ' and stop there.' }],
+      nearby: [1, -1, 2, -2], valid: pos, count: 3,
+      hint: 'Count in ' + t + 's until you reach ' + p + '. How many jumps did you make?',
+      explain: ex('Finding the missing factor', ['Count in ' + t + 's until you reach ' + p + ': ' + skipHTML(t, n) + '.', 'It takes <b>' + n + '</b> jumps of ' + t + ' to get to ' + p + '.', 'Check: ' + n + ' × ' + t + ' = ' + p + ', so the box is <b>' + n + '</b>. ✅']),
+      truth: p / t
+    });
+  }
   function qDiv(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), p = P(t, n), form = randInt(0, 2), who = pick(NAMES), it = pick(SHARE_ITEMS);
     let prompt;
@@ -14794,7 +14872,7 @@ if(typeof module !== 'undefined') module.exports = V;
     ]).concat(cfg.extra1 || []);
     const L2 = weighted([
       [f(function(){ return qRecall(cfg, cfg.n2, chance(0.3) ? 3 : 4); }), 4], [f(function(){ return qWord(cfg, cfg.n2); }), 2], [f(function(){ return qSeqGap(cfg); }), 1],
-      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1]
+      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1], [f(function(){ return qMissingMcq(cfg, cfg.n2); }), 2]
     ]).concat(cfg.extra2 || []);
     const L3 = weighted([
       [f(function(){ return qMissing(cfg, cfg.n3); }), 3], [f(function(){ return qDiv(cfg, cfg.n3); }), 3], [f(function(){ return qTypedFact(cfg, cfg.n3); }), 2],
@@ -15094,6 +15172,19 @@ if(typeof module !== 'undefined') module.exports = V;
       wrong: function(v){ return v === p ? p + ' is the whole answer. The question asks for the missing number in the box.' : v === p - t ? 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' : (v === n + 1 || v === n - 1) ? 'So close! Check it: ' + v + ' × ' + t + ' = ' + v * t + ', not ' + p + '.' : ''; }
     });
   }
+  /* missing factor as multiple choice (tier 2): the product is on offer as the tempting wrong answer, as in the school test "▢ × 5 = 35" */
+  function qMissingMcq(cfg, rg){
+    const t = pick(cfg.tables), n = range(rg), p = P(t, n), left = chance(0.5);
+    const sentence = left ? '▢ × ' + t + ' = ' + p : t + ' × ▢ = ' + p;
+    return mcqNum({
+      prompt: 'Which number goes in the box?  <b>' + sentence + '</b>', answer: n,
+      wrong: [{ v: p, why: p + ' is the whole answer, the number AFTER the = sign. The box is how many ' + t + 's make ' + p + '.' }, { v: p - t, why: 'You took away ' + t + '. Ask instead: how many ' + t + 's make ' + p + '?' }, { v: n + 1, why: 'So close! Check it: ' + (n + 1) + ' × ' + t + ' = ' + (n + 1) * t + ', not ' + p + '.' }, { v: n - 1, why: 'So close! Check it: ' + (n - 1) + ' × ' + t + ' = ' + (n - 1) * t + ', not ' + p + '.' }, { v: p + t, why: 'That is too big. Count in ' + t + 's up to ' + p + ' and stop there.' }],
+      nearby: [1, -1, 2, -2], valid: pos, count: 3,
+      hint: 'Count in ' + t + 's until you reach ' + p + '. How many jumps did you make?',
+      explain: ex('Finding the missing factor', ['Count in ' + t + 's until you reach ' + p + ': ' + skipHTML(t, n) + '.', 'It takes <b>' + n + '</b> jumps of ' + t + ' to get to ' + p + '.', 'Check: ' + n + ' × ' + t + ' = ' + p + ', so the box is <b>' + n + '</b>. ✅']),
+      truth: p / t
+    });
+  }
   function qDiv(cfg, rg){
     const t = pick(cfg.tables), n = range(rg), p = P(t, n), form = randInt(0, 2), who = pick(NAMES), it = pick(SHARE_ITEMS);
     let prompt;
@@ -15204,7 +15295,7 @@ if(typeof module !== 'undefined') module.exports = V;
     ]).concat(cfg.extra1 || []);
     const L2 = weighted([
       [f(function(){ return qRecall(cfg, cfg.n2, chance(0.3) ? 3 : 4); }), 4], [f(function(){ return qWord(cfg, cfg.n2); }), 2], [f(function(){ return qSeqGap(cfg); }), 1],
-      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1]
+      [f(function(){ return qInTable(cfg, [2, 10]); }), 1], [f(function(){ return qEitherOr(cfg, [2, 10]); }), 1], [f(function(){ return qArrayStmt(cfg); }), 1], [f(function(){ return qMissingMcq(cfg, cfg.n2); }), 2]
     ]).concat(cfg.extra2 || []);
     const L3 = weighted([
       [f(function(){ return qMissing(cfg, cfg.n3); }), 3], [f(function(){ return qDiv(cfg, cfg.n3); }), 3], [f(function(){ return qTypedFact(cfg, cfg.n3); }), 2],
@@ -16523,6 +16614,37 @@ if(typeof module !== 'undefined') module.exports = V;
     });
   }
 
+  /* a number that sits BETWEEN two ticks (45 on a line whose ticks are 10 apart): place it (pick the right line) or read it (type it) */
+  function halfScale(){ return pick([S(0, 100, 10, 100), S(0, 100, 10, 10), S(0, 100, 10, 50), S(0, 100, 10, 100)]); }
+  function qPlaceHalf(s, count){
+    const k = randInt(0, 9), lo = s.min + k * s.minor, hi = lo + s.minor, v = lo + s.minor / 2;
+    const cands = [lo, hi, v - s.minor, v + s.minor, s.min + s.max - v].filter(function(x){ return x >= s.min && x <= s.max && x !== v; });
+    const seen = {}; seen[nk(v)] = 1; const ds = [];
+    cands.forEach(function(x){
+      if(seen[nk(x)]) return; seen[nk(x)] = 1;
+      ds.push(opt(nk(x), line(s, x, 'dot', { width: widthFor(s, 300) }), x === lo || x === hi ? 'That dot is on the tick for ' + x + '. ' + v + ' is not on a tick: it is halfway between ' + lo + ' and ' + hi + '.' : 'That dot is at ' + x + ', not ' + v + '.'));
+    });
+    const q = mcq({
+      prompt: 'Which number line has the dot at <b>' + v + '</b>?<br><span style="font-size:.8em;opacity:.8">Careful: ' + v + ' is not on a tick mark.</span>', correct: opt(nk(v), line(s, v, 'dot', { width: widthFor(s, 300) })), distractors: ds, keepOrder: true, count: count || 3,
+      hint: 'Find the two ticks that ' + v + ' is between. The dot goes exactly halfway between them.',
+      explain: ex('Between two ticks', ['The ticks are ' + s.minor + ' apart. ' + v + ' is between <b>' + lo + '</b> and <b>' + hi + '</b>.', 'Half of ' + s.minor + ' is ' + s.minor / 2 + ', and ' + lo + ' + ' + s.minor / 2 + ' = <b>' + v + '</b>.', 'So the dot goes <b>exactly halfway</b> between the ' + lo + ' tick and the ' + hi + ' tick. ✅']),
+      truth: nk(v)
+    });
+    q.optionsAreVisual = true; q.optionsWide = true;
+    q.decodeKey = function(){ for(let i = 0; i < q.options.length; i++){ if(nk(readValue(q.options[i].label)) !== q.options[i].key) return 'option ' + i + ' picture does not match its key'; } return q.options[q.correct].key; };
+    return q;
+  }
+  function qReadHalf(s){
+    const k = randInt(0, 9), lo = s.min + k * s.minor, hi = lo + s.minor, v = lo + s.minor / 2, vis = line(s, v, 'dot');
+    return numeric({
+      prompt: 'The dot is exactly <b>halfway</b> between two ticks, and the ticks are ' + s.minor + ' apart. What number is the dot at? Type the number.', visual: vis, answer: v,
+      hint: 'Find the tick just before the dot and the tick just after it. The dot is halfway between them.',
+      explain: ex('Between two ticks', ['The dot is between <b>' + lo + '</b> and <b>' + hi + '</b>.', 'Half of ' + s.minor + ' is ' + s.minor / 2 + ', and ' + lo + ' + ' + s.minor / 2 + ' = <b>' + v + '</b>. ✅']),
+      truth: v, decode: function(){ return readValue(vis); },
+      wrong: function(x){ return x === lo ? lo + ' is the tick BEFORE the dot. The dot is halfway to the next tick.' : x === hi ? hi + ' is the tick AFTER the dot. The dot has not got there yet.' : ''; }
+    });
+  }
+
   registerSkill({
     id: 'number-line-3digit', strand: 'number', name: 'Number lines to 1000', emoji: '📏', year: 3, order: 150, prereq: ['number-place-value'],
     lesson: {
@@ -16534,6 +16656,8 @@ if(typeof module !== 'undefined') module.exports = V;
           quiz: { prompt: 'The labels 100 and 150 have 5 small spaces between them. How much is each small step?', options: [{ label: '5', ok: false }, { label: '10', ok: true }, { label: '50', ok: false }], right: 'Yes! 50 ÷ 5 = 10.', wrong: 'The gap between the labels is 50. Share it between 5 spaces: 50 ÷ 5 = 10.' } },
         { say: 'Now read this one. Labels are 300, 350, 400. Each small step is 10. The dot is 6 small steps after 300, so it is on <b>360</b>.', vis: { kind: 'numberLine', args: [{ min: 300, max: 400, minor: 10, major: 50, marks: [{ value: 360 }] }] },
           quiz: { prompt: 'The dot is 6 small steps after 300 and each step is 10. What number is it?', options: [{ label: '306', ok: false }, { label: '360', ok: true }, { label: '350', ok: false }], right: 'Yes! 6 × 10 = 60, and 300 + 60 = 360.', wrong: 'Each step is 10, not 1. 6 steps = 60, and 300 + 60 = 360.' } },
+        { say: 'Some numbers do not sit on a tick at all. On this line the ticks are <b>10</b> apart and only 0 and 100 have labels. The dot is <b>45</b>: exactly <b>halfway</b> between the 40 tick and the 50 tick.', vis: { kind: 'numberLine', args: [{ min: 0, max: 100, minor: 10, major: 100, width: 370, marks: [{ value: 45 }] }] },
+          quiz: { prompt: 'Where does <b>5</b> go on a line whose ticks are 10 apart?', options: [{ label: 'On the 10 tick', ok: false }, { label: 'Halfway between 0 and 10', ok: true }, { label: 'Halfway between 10 and 20', ok: false }], right: 'Yes! Half of 10 is 5, so 5 is exactly halfway between 0 and 10.', wrong: 'Half of 10 is 5. So 5 goes exactly halfway between the 0 tick and the 10 tick.' } },
         { say: 'If the dot is <b>between</b> two ticks, find the tick it is <b>nearest</b> to. This dot is nearer to <b>60</b> than to 70.', vis: { kind: 'numberLine', args: [{ min: 0, max: 100, minor: 10, major: 10, width: 370, marks: [{ value: 63 }] }] },
           quiz: { prompt: 'Which tick is the dot nearest to?', options: [{ label: '60', ok: true }, { label: '70', ok: false }, { label: '50', ok: false }], right: 'Yes! It is only a tiny bit past 60.', wrong: 'The dot is just past 60. It is much closer to 60 than to 70.' } }
       ]
@@ -16557,9 +16681,9 @@ if(typeof module !== 'undefined') module.exports = V;
         const sc = [S(0, 100, 10, 50), S(0, 1000, 50, 100), hundredScale(10, 50), S(0, 500, 50, 100), S(0, 200, 20, 100), S(0, 100, 5, 10), hundredScale(10, 20), S(0, 1000, 100, 500)];
         switch(randInt(0, 5)){
           case 0: case 1: { const s = pick(sc); return qRead(s, pickTick(s, false), { q: chance(0.4), count: 4 }); }
-          case 2: return qPickLine(hundredScale(10, 50), 3);
-          case 3: return qHalfway();
-          case 4: { const s = pick([S(0, 100, 10, 10), hundredScale(10, 50), S(0, 500, 50, 100)]); return qNearest(s, false); }
+          case 2: return qPickLine(chance(0.5) ? S(0, 50, 5, 25) : hundredScale(10, 50), 3);
+          case 3: return chance(0.5) ? qHalfway() : qPlaceHalf(halfScale(), 3);
+          case 4: { const s = pick([S(0, 100, 10, 10), hundredScale(10, 50), S(0, 500, 50, 100)]); return chance(0.4) ? qPlaceHalf(halfScale(), 3) : qNearest(s, false); }
           default: { const s = pick([hundredScale(10, 50), S(0, 100, 10, 50), S(0, 1000, 100, 500), S(0, 200, 20, 100)]); return qStepSize(s); }
         }
       },
@@ -16570,7 +16694,8 @@ if(typeof module !== 'undefined') module.exports = V;
           case 4: { const s = pick([S(0, 1000, 50, 500), S(0, 1000, 100, 500), hundredScale(10, 100), S(0, 500, 50, 500), S(0, 1000, 100, 1000)]); return qNearest(s, false); }
           case 5: { const s = pick([hundredScale(10, 100), S(0, 1000, 100, 500), S(0, 200, 20, 100), S(0, 1000, 50, 500)]); return qPickLine(s, 3); }
           case 6: { const s = pick([hundredScale(10, 100), S(0, 1000, 100, 500), S(0, 200, 20, 100), S(0, 100, 10, 50)]); return qStepSize(s); }
-          default: return qHalfway();
+          case 7: return qReadHalf(halfScale());
+          default: return chance(0.5) ? qHalfway() : qPlaceHalf(halfScale(), 4);
         }
       }
     }
