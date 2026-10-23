@@ -53,7 +53,7 @@
     if(SW[n]) out.push({ v: SW[n], why: ROM[n] + ': ' + BUILD[n] + ' = ' + n + '. It is not ' + SW[n] + ' (that is ' + ROM[SW[n]] + ').' });
     if(n >= 6 && n !== 9 && n !== 10) out.push({ v: n - 2 * (n - (n >= 10 ? 10 : 5)), why: 'A small I AFTER a big letter means ADD: ' + BUILD[n] + ' = ' + n + '.' });
     out.push({ v: ROM[n].length, why: 'The number of letters is not the value. Work out what each letter is worth.' });
-    [1, -1, 2, -2, 3, -3, 5, -5, 10].forEach(function(d){ out.push({ v: n + d, why: 'Add up the letters carefully: ' + ROM[n] + ': ' + BUILD[n] + '.' }); });
+    [1, -1, 2, -2, 3, -3, 5, -5, 10].forEach(function(d){ out.push({ v: n + d, why: 'Read the letters one at a time: ' + ROM[n] + ': ' + BUILD[n] + (/[+−]/.test(BUILD[n]) ? ' = ' + n : '') + '.' }); });
     return out;
   }
   const FULL = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], EASY = [1, 2, 3, 5, 6, 7, 8, 10, 11, 12];
