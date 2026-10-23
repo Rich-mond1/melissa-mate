@@ -71,7 +71,7 @@ function syncMergeOne(base, rs){
   out.stickers = syncUnion(out.stickers, rs.stickers, function(s){ return s.id; }, function(a, b){ const r = syncClone(a); r.n = Math.max(a.n | 0, b.n | 0); r.date = syncDate(b.date, a.date) && [a.date, b.date].filter(Boolean).sort()[0]; return r; });
   ['badges', 'tricks', 'met', 'owned'].forEach(function(k){ out[k] = syncUnion(out[k], rs[k], function(x){ return String(x); }); });
   out.claims = syncUnion(out.claims, rs.claims, syncJ);
-  out.puzzleCur = Math.max(out.puzzleCur | 0, rs.puzzleCur | 0);
+  out.puzzleCur = Math.max(out.puzzleCur | 0, rs.puzzleCur | 0); out.puzzleBase = Math.max(Number(out.puzzleBase) || 0, Number(rs.puzzleBase) || 0);
   // notes from the grown-ups: union by id; deleted / read stay so; the later answer wins
   out.notes = syncUnion(out.notes, rs.notes, function(n){ return n.id; }, function(a, b){
     const r = syncClone(a); r.del = !!(a.del || b.del); r.read = !!(a.read || b.read || (a.reply || b.reply));
