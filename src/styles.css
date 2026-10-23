@@ -208,3 +208,13 @@ h1,h2,h3,p{margin:0;}
 .nscene.small .nme{width:46px; flex:none;} .nscene.small .npet{width:46px; flex:none;} .nscene.small{justify-content:flex-start; align-items:center; margin:4px 0;} .nscene.small .bubble{font-size:14px; max-width:none; margin-top:0;}
 .note-text{display:block; font-size:20px; line-height:1.35; text-align:center; white-space:pre-wrap; word-break:break-word;}
 @media (prefers-reduced-motion:reduce){ .nscene .npet.hop{animation:none;} }
+
+/* mascot reacting to an answer */
+.petfb{display:flex; align-items:center; gap:10px; margin-top:12px;}
+.petfb .pfp{width:64px; flex:none;} .petfb .pfp .pw{width:64px; height:64px;}
+.petfb .pfb{flex:1; min-width:0;} .petfb .feedback{margin-top:0; text-align:left; font-size:20px;}
+.petfb.ok .pfp{animation:pfhop .7s ease-out 2;} .petfb.no .pfp{animation:pfsway 1.6s ease-in-out 1;}
+.petfb .run{font-size:16px; color:#E67E22; margin-top:2px;}
+@keyframes pfhop{0%,100%{transform:translateY(0)}35%{transform:translateY(-16px) rotate(-6deg)}65%{transform:translateY(-4px) rotate(5deg)}}
+@keyframes pfsway{0%,100%{transform:rotate(0)}30%{transform:rotate(-7deg)}70%{transform:rotate(7deg)}}
+@media (prefers-reduced-motion:reduce){ .petfb .pfp{animation:none !important;} }

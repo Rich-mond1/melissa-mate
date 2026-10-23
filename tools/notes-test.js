@@ -112,6 +112,15 @@ console.log('▶ notes and prices travel between devices');
   await p.evaluate(() => { ensureDaily(S); S.daily.boss = true; save(); go('hub'); }); await p.waitForTimeout(150); ok(/Mamá left you a message/.test(await txt()), '…and appears once today’s mission is done');
   await p.evaluate(() => go('parent')); await p.click('[data-act=noteDel]'); ok(await p.evaluate(() => S.notes.filter(n => !n.del).length === 1), 'grown-up can delete a note');
   await p.evaluate(() => go('note', { id: 'ghost' })); await p.waitForTimeout(100); ok(await p.evaluate(() => scr.name === 'hub'), 'a missing note goes back to the hub');
+  console.log('▶ mascot reacts to answers');
+  await p.evaluate(() => { for(let i = 0; i < 30; i++){ startSession('practice', 'logic-sorting'); if(SESS.q && SESS.q.type === 'mcq') break; } });
+  await p.waitForTimeout(400); ok(await p.evaluate(() => SESS.q.type === 'mcq' && !document.querySelector('.petfb')), 'no mascot reaction before she answers');
+  await p.evaluate(() => { const q = SESS.q; const c = q.options.findIndex(o => o.key === q.correctKey); document.querySelector('[data-act=pick][data-k="' + c + '"]').click(); }); await p.waitForTimeout(250);
+  ok(await p.evaluate(() => !!document.querySelector('.petfb.ok .pfp .pw img') && !!document.querySelector('.petfb.ok .feedback.ok') && SESS.run === 1), 'right answer: the mascot celebrates beside the praise');
+  await p.evaluate(() => { SESS.run = 2; ACT.qnext && 0; });
+  await p.evaluate(() => { for(let i = 0; i < 30; i++){ startSession('practice', 'logic-sorting'); if(SESS.q && SESS.q.type === 'mcq') break; } }); await p.waitForTimeout(400);
+  for(let i = 0; i < 4; i++){ await p.evaluate(() => { if(SESS.phase === 'fb') return; const q = SESS.q; const ks = [...document.querySelectorAll('[data-act=pick]:not([disabled])')].map(b => Number(b.dataset.k)).filter(k => q.options[k].key !== q.correctKey); if(ks.length) document.querySelector('[data-act=pick][data-k="' + ks[0] + '"]').click(); }); await p.waitForTimeout(250); }
+  ok(await p.evaluate(() => !!document.querySelector('.petfb') && !document.querySelector('.petfb.ok') && !!document.querySelector('.petfb.no .pfp .pw img') && SESS.run === 0), 'wrong answer: the mascot stays with her and the streak resets');
   ok(errs.length === 0, 'no console errors: ' + errs.join(' | ')); await b.close();
   console.log(fails ? '\n❌ NOTES TEST FAILED (' + fails + ' of ' + checks + ')' : '\n✅ NOTES TEST PASSED (' + checks + ' checks)'); process.exit(fails ? 1 : 0);
 })();
