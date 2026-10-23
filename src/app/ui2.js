@@ -331,6 +331,7 @@ SCREENS.stickers = function(){
   let h = topbar('🌈 Stickers') + '<div class="card center"><p class="qprompt">' + S.stickers.length + ' different stickers</p><p class="muted">⚪ ' + counts.common + ' · 🔵 ' + counts.rare + ' · 🟣 ' + counts.epic + ' · 🟡 ' + counts.legendary + '</p><div class="gap"></div>' +
     (S.packs ? '<button class="btn block good" data-act="openPack">✨ Open a pack (' + S.packs + ' ready)</button>' : '<p class="muted">Finish rounds and win medals to earn packs. There are thousands of stickers — you can never run out!</p>') +
     '<div class="gap"></div><button class="btn block small" ' + (S.starBalance >= PACK_COST ? '' : 'disabled ') + 'data-act="buyPack">Buy a pack · ' + PACK_COST + ' ⭐</button></div><div class="gap"></div>';
+  { const al = albumStats(S); h += '<div class="card"><h3>📖 Animal album <span class="pill" style="background:#EEF1FB;color:var(--ink)">' + al.have + '/' + al.total + '</span></h3><div class="album">' + CREATURES.map(function(c){ return '<span class="' + (al.owned[c] ? 'got' : 'miss') + '">' + c + '</span>'; }).join('') + '</div><p class="muted">Every sticker pack can bring a new animal. How many can you find?</p></div><div class="gap"></div>'; }
   h += '<div class="sgrid">' + list.map(function(s){ return stickerHTML(s); }).join('') + '</div>';
   R(h);
 };

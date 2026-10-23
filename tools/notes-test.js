@@ -68,6 +68,17 @@ const many = []; for(let i = 0; i < 100; i++) many.push({ id: 'n' + String(i).pa
 ok(J(E.importState(JSON.parse(JSON.stringify(s))).notes) === J(s.notes), 'export / import keeps notes and answers');
 ok(E.NOTE_REPLIES.length === 6 && E.NOTE_REPLIES.every(r => r.id && r.emoji && r.text), 'six ready-made answers');
 
+console.log('▶ animal album');
+ok(E.CREATURES.length === 64 && new Set(E.CREATURES).size === 64 && E.CREATURES[31] === '🦔' && E.CREATURES[0] === '🦄', 'creature list grew at the end only (old sticker ids keep their meaning)');
+ok(E.albumStats(E.mergeState({})).have === 0 && E.albumStats(E.mergeState({ stickers: [{ id: 'x', base: '🦥', acc: '', bg: 0, rarity: 'common', n: 1, date: '2026-10-23', pet: '', v: 0 }, { id: 'y', base: '🦥', acc: '👑', bg: 1, rarity: 'rare', n: 1, date: '2026-10-23', pet: '', v: 0 }] })).have === 1, 'album counts each animal once');
+console.log('▶ puzzle');
+const zi = (ts, cur) => E.puzzleInfo(E.mergeState({ totalStars: ts, puzzleCur: cur || 0 }));
+ok(zi(0).tiles === 0 && zi(0).toNext === 5 && zi(4).tiles === 0 && zi(4).toNext === 1 && zi(5).tiles === 1 && zi(59).tiles === 11 && !zi(59).complete && zi(60).complete && zi(60).tiles === 12 && zi(60).toNext === 0, 'one piece per 5 stars, 12 pieces make a picture');
+ok(zi(60, 1).tiles === 0 && zi(125, 1).tiles === 12 && zi(125, 1).pic === 1 && zi(1000, 7).pic === 1, 'next picture starts from its own stars; pictures repeat after the last one');
+ok(J(zi(25).shown) === J(E.PUZZLE_ORDER.slice(0, 5)) && new Set(E.PUZZLE_ORDER).size === 12, 'pieces turn over in a fixed scattered order');
+s = E.mergeState({ totalStars: 59 }); ok(E.puzzleCollect(s) === false && s.puzzleCur === 0 && s.packs === 0, 'cannot collect an unfinished picture');
+s.totalStars = 60; ok(E.puzzleCollect(s) === true && s.puzzleCur === 1 && s.packs === 1 && E.puzzleCollect(s) === false && s.packs === 1, 'collecting gives one pack, once');
+ok(E.mergeState({ puzzleCur: -3 }).puzzleCur === 0 && E.mergeState({ puzzleCur: 'x' }).puzzleCur === 0 && E.mergeState({ puzzleCur: 9999 }).puzzleCur === 500 && E.importState(JSON.parse(JSON.stringify(s))).puzzleCur === 1, 'puzzle progress is validated and survives export / import');
 console.log('▶ notes and prices travel between devices');
 (async () => {
   const R = fakeRepo(); const A = Device('ipad', 'iPad', base()), P = Device('phone', 'Phone', base());
@@ -82,6 +93,7 @@ console.log('▶ notes and prices travel between devices');
   await A.sync(); await A.sync(); ok(A.S.notes.length === 3, 'syncing again changes nothing');
   A.S.shopCat = { clothes: 8 }; await A.sync(); await P.sync(); ok(J(P.S.shopCat) === J({ clothes: 8 }), 'group prices set on one device reach the other');
   P.now = A.now + 600000; P.S.shopCat = {}; await P.sync(); await A.sync(); ok(J(A.S.shopCat) === J({}), 'newest price setting wins (cleared on the phone)');
+  A.S.puzzleCur = 2; P.S.puzzleCur = 1; await A.sync(); await P.sync(); await A.sync(); ok(A.S.puzzleCur === 2 && P.S.puzzleCur === 2, 'puzzle progress: the furthest picture wins on both devices');
   const old = E.mergeState({ notes: undefined, shopCat: undefined }); ok(old.notes.length === 0 && Object.keys(old.shopCat).length === 0, 'a device file from before this version still loads');
   ok(!J(R.files).includes('tok_SECRET'), 'token is still never in the repo');
 
@@ -112,6 +124,14 @@ console.log('▶ notes and prices travel between devices');
   await p.evaluate(() => { ensureDaily(S); S.daily.boss = true; save(); go('hub'); }); await p.waitForTimeout(150); ok(/Mamá left you a message/.test(await txt()), '…and appears once today’s mission is done');
   await p.evaluate(() => go('parent')); await p.click('[data-act=noteDel]'); ok(await p.evaluate(() => S.notes.filter(n => !n.del).length === 1), 'grown-up can delete a note');
   await p.evaluate(() => go('note', { id: 'ghost' })); await p.waitForTimeout(100); ok(await p.evaluate(() => scr.name === 'hub'), 'a missing note goes back to the hub');
+  console.log('▶ puzzle screen');
+  const art = await p.evaluate(() => { let bad = 0; for(let i = 0; i < PUZZLE_PICS; i++){ const d = new DOMParser().parseFromString(puzzleSVG(i, [0, 5]), 'image/svg+xml'); if(d.querySelector('parsererror')) bad++; } return bad; });
+  ok(art === 0, 'all pictures are valid SVG');
+  await p.evaluate(() => { S.totalStars = 27; S.puzzleCur = 0; save(); go('hub'); }); await p.waitForTimeout(120); ok(/Puzzle 5\/12/.test(await txt()), 'hub shows puzzle progress');
+  await p.evaluate(() => go('puzzle')); await p.waitForTimeout(120); t = await txt(); ok(/5 \/ 12 pieces/.test(t) && /3 ⭐ more/.test(t) && await p.evaluate(() => !!document.querySelector('svg.puz') && !document.querySelector('[data-act=puzzleCollect]')), 'puzzle screen: pieces and stars to the next one');
+  await p.screenshot({ path: '/tmp/puzzle-partial.png' });
+  await p.evaluate(() => { S.totalStars = 60; S.packs = 0; save(); go('puzzle'); }); await p.waitForTimeout(120); ok(/finished it/.test(await txt()), 'finished picture offers the sticker pack');
+  await p.click('[data-act=puzzleCollect]'); await p.waitForTimeout(150); ok(await p.evaluate(() => S.puzzleCur === 1 && S.packs === 1) && /0 \/ 12 pieces/.test(await txt()), 'collecting moves to the next picture');
   console.log('▶ mascot reacts to answers');
   await p.evaluate(() => { for(let i = 0; i < 30; i++){ startSession('practice', 'logic-sorting'); if(SESS.q && SESS.q.type === 'mcq') break; } });
   await p.waitForTimeout(400); ok(await p.evaluate(() => SESS.q.type === 'mcq' && !document.querySelector('.petfb')), 'no mascot reaction before she answers');
@@ -119,7 +139,8 @@ console.log('▶ notes and prices travel between devices');
   ok(await p.evaluate(() => !!document.querySelector('.petfb.ok .pfp .pw img') && !!document.querySelector('.petfb.ok .feedback.ok') && SESS.run === 1), 'right answer: the mascot celebrates beside the praise');
   await p.evaluate(() => { SESS.run = 2; ACT.qnext && 0; });
   await p.evaluate(() => { for(let i = 0; i < 30; i++){ startSession('practice', 'logic-sorting'); if(SESS.q && SESS.q.type === 'mcq') break; } }); await p.waitForTimeout(400);
-  for(let i = 0; i < 4; i++){ await p.evaluate(() => { if(SESS.phase === 'fb') return; const q = SESS.q; const ks = [...document.querySelectorAll('[data-act=pick]:not([disabled])')].map(b => Number(b.dataset.k)).filter(k => q.options[k].key !== q.correctKey); if(ks.length) document.querySelector('[data-act=pick][data-k="' + ks[0] + '"]').click(); }); await p.waitForTimeout(250); }
+  for(let i = 0; i < 8 && !(await p.evaluate(() => SESS.phase === 'fb')); i++){ await p.evaluate(() => { if(SESS.phase === 'fb') return; const q = SESS.q; const ks = [...document.querySelectorAll('[data-act=pick]:not([disabled])')].map(b => Number(b.dataset.k)).filter(k => q.options[k].key !== q.correctKey); if(ks.length) document.querySelector('[data-act=pick][data-k="' + ks[0] + '"]').click(); }); await p.waitForTimeout(400); }
+  await p.waitForTimeout(300);
   ok(await p.evaluate(() => !!document.querySelector('.petfb') && !document.querySelector('.petfb.ok') && !!document.querySelector('.petfb.no .pfp .pw img') && SESS.run === 0), 'wrong answer: the mascot stays with her and the streak resets');
   ok(errs.length === 0, 'no console errors: ' + errs.join(' | ')); await b.close();
   console.log(fails ? '\n❌ NOTES TEST FAILED (' + fails + ' of ' + checks + ')' : '\n✅ NOTES TEST PASSED (' + checks + ' checks)'); process.exit(fails ? 1 : 0);

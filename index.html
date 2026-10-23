@@ -224,6 +224,10 @@ h1,h2,h3,p{margin:0;}
 @keyframes pfsway{0%,100%{transform:rotate(0)}30%{transform:rotate(-7deg)}70%{transform:rotate(7deg)}}
 @media (prefers-reduced-motion:reduce){ .petfb .pfp{animation:none !important;} }
 
+.album{display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin:8px 0; font-size:26px;} .album .miss{filter:grayscale(1) brightness(1.6); opacity:.3;} .album .got{filter:none;}
+
+.puz{width:100%; max-width:420px; height:auto; display:block; margin:8px auto; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.18);}
+
 </style></head><body><div id="app"></div>
 <script>
 /* ===== src/core.js ===== */
@@ -19509,7 +19513,7 @@ function defaultState(){
     timer: { mode: 'free', minutes: 20, debtSeconds: 0 },
     streak: { count: 0, lastPlayDate: null },
     sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 },
-    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false, petAcc: {}, shopMult: 1, shopCat: {}, notes: []
+    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false, petAcc: {}, shopMult: 1, shopCat: {}, notes: [], puzzleCur: 0
   };
 }
 /* ---------- evidence (one dated record per answered question; capped so localStorage stays small) ---------- */
@@ -19657,7 +19661,7 @@ function mergeState(loaded){
   m.evidence = cleanEvidence(L.evidence);
   m.placement.paid = Math.max(0, Math.min(40, Number(m.placement.paid) | 0)); m.welcomeGift = !!L.welcomeGift;
   m.owned = cleanOwned(L.owned); m.avatar = cleanAvatar(L.avatar, m.owned); m.met = cleanMet(L.met);
-  m.petAcc = cleanPetAcc(L.petAcc, m.owned); m.shopMult = SHOP_MULTS.indexOf(Number(L.shopMult)) > -1 ? Number(L.shopMult) : 1; m.shopCat = cleanShopCat(L.shopCat); m.notes = cleanNotes(L.notes);
+  m.petAcc = cleanPetAcc(L.petAcc, m.owned); m.shopMult = SHOP_MULTS.indexOf(Number(L.shopMult)) > -1 ? Number(L.shopMult) : 1; m.shopCat = cleanShopCat(L.shopCat); m.notes = cleanNotes(L.notes); m.puzzleCur = Math.max(0, Math.min(500, Number(L.puzzleCur) | 0));
   m.lastBackup = (typeof L.lastBackup === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(L.lastBackup)) ? L.lastBackup : null;
   m.diag = (L.diag && typeof L.diag === 'object' && !Array.isArray(L.diag) && L.diag.strands && L.diag.results) ? L.diag : null;
   const petV = function(v){ v = Number(v) | 0; return v >= 0 && v < PET_VARIANTS ? v : 0; };
@@ -20011,13 +20015,27 @@ function diagSummary(state){
 }
 
 /* ---------- stickers (endless: creature × accessory × background × rarity) ---------- */
-const CREATURES = ['🦄', '🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐧', '🦉', '🦋', '🐢', '🐙', '🐬', '🐳', '🦖', '🦕', '🐝', '🐞', '🦩', '🦜', '🐘', '🦒', '🐹', '🐲', '🦔'];
-const ACCESSORIES = ['', '👑', '🎩', '🕶️', '🎀', '⭐', '🌈', '💎', '🎈', '🪄', '🌸', '🎧', '🧢', '🍀'];
+const CREATURES = ['🦄', '🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐧', '🦉', '🦋', '🐢', '🐙', '🐬', '🐳', '🦖', '🦕', '🐝', '🐞', '🦩', '🦜', '🐘', '🦒', '🐹', '🐲', '🦔',
+  '🦥', '🦦', '🐿️', '🦘', '🦓', '🐊', '🦈', '🐠', '🐡', '🦑', '🦀', '🦞', '🐌', '🦗', '🐛', '🦚', '🦢', '🦆', '🐓', '🐥', '🐴', '🐑', '🦙', '🐐', '🦌', '🐫', '🦛', '🦏', '🐅', '🐆', '🦇', '🦎'];   // new ones go at the END: sticker ids use the list position
+const ACCESSORIES = ['', '👑', '🎩', '🕶️', '🎀', '⭐', '🌈', '💎', '🎈', '🪄', '🌸', '🎧', '🧢', '🍀', '🔮', '🍭', '🎵', '❄️', '🔥', '🍓'];
 const STICKER_BGS = [['#FFD1DC', '#FFB3C7'], ['#C7E9FF', '#9AD0FF'], ['#D4F5D0', '#A8E6A3'], ['#FFF1B8', '#FFE27A'], ['#E6D4FF', '#C9A8FF'], ['#FFD9B3', '#FFB87A'], ['#C8F7F0', '#8EE9DB'], ['#FFC9C9', '#FF9E9E'], ['#D9E2FF', '#B5C6FF'], ['#F5D0FE', '#E9A2FB'], ['#E0F7B5', '#C3EA7A'], ['#FFE5EC', '#FFC2D1']];
 const RARITIES = ['common', 'rare', 'epic', 'legendary'];
 function rollRarity(){ const r = rng(); return r < 0.62 ? 'common' : (r < 0.88 ? 'rare' : (r < 0.98 ? 'epic' : 'legendary')); }
 const PET_IDS = ['ginger', 'bimba', 'duck'];
 const PET_VARIANTS = 9;   // images per pet (variant 0 = mascot) -> 27 collectible pet stickers
+/* ---------- puzzle: every 5 stars she earns turns over one piece of a picture; 12 pieces = a finished picture and a sticker pack ---------- */
+const PUZZLE_TILES = 12, PUZZLE_STEP = 5, PUZZLE_PICS = 6, PUZZLE_ORDER = [5, 2, 9, 0, 7, 11, 3, 8, 1, 6, 10, 4];
+function puzzleInfo(state){
+  const cur = Math.max(0, Number(state.puzzleCur) | 0), per = PUZZLE_TILES * PUZZLE_STEP, into = Math.max(0, (Number(state.totalStars) || 0) - cur * per);
+  const tiles = Math.min(PUZZLE_TILES, Math.floor(into / PUZZLE_STEP));
+  return { cur: cur, pic: cur % PUZZLE_PICS, tiles: tiles, complete: tiles >= PUZZLE_TILES, toNext: tiles >= PUZZLE_TILES ? 0 : PUZZLE_STEP - (into % PUZZLE_STEP), shown: PUZZLE_ORDER.slice(0, tiles) };
+}
+function puzzleCollect(state){ if(!puzzleInfo(state).complete) return false; state.puzzleCur = (state.puzzleCur | 0) + 1; state.packs = (state.packs | 0) + 1; return true; }
+/* the animal album: which creatures she has found at least once (as a sticker) */
+function albumStats(state){
+  const have = {}; (state.stickers || []).forEach(function(s){ if(s.base) have[s.base] = 1; });
+  return { have: CREATURES.filter(function(c){ return have[c]; }).length, total: CREATURES.length, owned: have };
+}
 function rollSticker(owned){
   let s = null;
   if(chance(0.08)){   // a pet friend sticker (the family pets, always legendary; 27 different pictures)
@@ -20150,6 +20168,7 @@ function syncMergeOne(base, rs){
   out.stickers = syncUnion(out.stickers, rs.stickers, function(s){ return s.id; }, function(a, b){ const r = syncClone(a); r.n = Math.max(a.n | 0, b.n | 0); r.date = syncDate(b.date, a.date) && [a.date, b.date].filter(Boolean).sort()[0]; return r; });
   ['badges', 'tricks', 'met', 'owned'].forEach(function(k){ out[k] = syncUnion(out[k], rs[k], function(x){ return String(x); }); });
   out.claims = syncUnion(out.claims, rs.claims, syncJ);
+  out.puzzleCur = Math.max(out.puzzleCur | 0, rs.puzzleCur | 0);
   // notes from the grown-ups: union by id; deleted / read stay so; the later answer wins
   out.notes = syncUnion(out.notes, rs.notes, function(n){ return n.id; }, function(a, b){
     const r = syncClone(a); r.del = !!(a.del || b.del); r.read = !!(a.read || b.read || (a.reply || b.reply));
@@ -20474,7 +20493,7 @@ SCREENS.hub = function(){
     const p = strandProgress(S, str.id), n = skillsOfStrand(str.id).length;
     h += '<div class="region" data-act="strand" data-id="' + str.id + '"><div class="em" style="background:' + str.color + '22">' + str.icon + '</div><div class="grow"><b>' + str.name + '</b><div class="sub">' + n + ' skills</div></div><div class="ring" style="--p:' + p + '"><span>' + p + '%</span></div></div>';
   });
-  h += '<div class="menu-grid"><button data-act="go" data-to="stickers"><span class="em">🌈</span>Stickers' + (S.packs ? ' ✨' + S.packs : '') + '</button><button data-act="go" data-to="me"><span class="em">🧑‍🎤</span>Me</button><button data-act="go" data-to="friends"><span class="em">🤝</span>Friends' + (S.met.length ? ' ' + S.met.length + '/' + FRIENDS.length : '') + '</button><button data-act="go" data-to="rewards"><span class="em">🎁</span>Prizes</button><button data-act="go" data-to="trophies"><span class="em">🏆</span>Trophies</button><button data-act="go" data-to="parentPin"><span class="em">👪</span>Grown-ups' + (parentMetrics(S, todayStr()).backup.overdue ? ' <span title="backup" style="color:#E8A33D">●</span>' : '') + '</button></div>';
+  h += '<div class="menu-grid"><button data-act="go" data-to="stickers"><span class="em">🌈</span>Stickers' + (S.packs ? ' ✨' + S.packs : '') + '</button><button data-act="go" data-to="me"><span class="em">🧑‍🎤</span>Me</button><button data-act="go" data-to="puzzle"><span class="em">🧩</span>Puzzle ' + (function(){ const z = puzzleInfo(S); return z.complete ? '🎉' : z.tiles + '/' + PUZZLE_TILES; })() + '</button><button data-act="go" data-to="friends"><span class="em">🤝</span>Friends' + (S.met.length ? ' ' + S.met.length + '/' + FRIENDS.length : '') + '</button><button data-act="go" data-to="rewards"><span class="em">🎁</span>Prizes</button><button data-act="go" data-to="trophies"><span class="em">🏆</span>Trophies</button><button data-act="go" data-to="parentPin"><span class="em">👪</span>Grown-ups' + (parentMetrics(S, todayStr()).backup.overdue ? ' <span title="backup" style="color:#E8A33D">●</span>' : '') + '</button></div>';
   R(h);
 };
 ACT.go = function(d){ go(d.to); };
@@ -20905,6 +20924,7 @@ SCREENS.stickers = function(){
   let h = topbar('🌈 Stickers') + '<div class="card center"><p class="qprompt">' + S.stickers.length + ' different stickers</p><p class="muted">⚪ ' + counts.common + ' · 🔵 ' + counts.rare + ' · 🟣 ' + counts.epic + ' · 🟡 ' + counts.legendary + '</p><div class="gap"></div>' +
     (S.packs ? '<button class="btn block good" data-act="openPack">✨ Open a pack (' + S.packs + ' ready)</button>' : '<p class="muted">Finish rounds and win medals to earn packs. There are thousands of stickers — you can never run out!</p>') +
     '<div class="gap"></div><button class="btn block small" ' + (S.starBalance >= PACK_COST ? '' : 'disabled ') + 'data-act="buyPack">Buy a pack · ' + PACK_COST + ' ⭐</button></div><div class="gap"></div>';
+  { const al = albumStats(S); h += '<div class="card"><h3>📖 Animal album <span class="pill" style="background:#EEF1FB;color:var(--ink)">' + al.have + '/' + al.total + '</span></h3><div class="album">' + CREATURES.map(function(c){ return '<span class="' + (al.owned[c] ? 'got' : 'miss') + '">' + c + '</span>'; }).join('') + '</div><p class="muted">Every sticker pack can bring a new animal. How many can you find?</p></div><div class="gap"></div>'; }
   h += '<div class="sgrid">' + list.map(function(s){ return stickerHTML(s); }).join('') + '</div>';
   R(h);
 };
@@ -21337,6 +21357,32 @@ SCREENS.note = function(p){
 };
 ACT.noteOpen = function(d){ if(noteById(S, d.id)) go('note', { id: d.id }); };
 ACT.noteReply = function(d){ if(!answerNote(S, d.id, d.r)) return; save(); confetti(50); go('note', { id: d.id, sent: true }); };
+
+/* ---------------- puzzle: pieces turn over as she earns stars ---------------- */
+const PUZZLE_NAMES = ['Rainbow day', 'Magic castle', 'Rocket to the stars', 'Under the sea', 'Flower garden', 'Beach sunset'];
+const PUZZLE_ART = [
+  function(){ return '<rect width="120" height="90" fill="#BFE8FF"/><circle cx="100" cy="16" r="9" fill="#FFD84D"/><g fill="none" stroke-width="5"><path d="M10 78 A50 50 0 0 1 110 78" stroke="#EB5757"/><path d="M15 78 A45 45 0 0 1 105 78" stroke="#F2994A"/><path d="M20 78 A40 40 0 0 1 100 78" stroke="#F2C94C"/><path d="M25 78 A35 35 0 0 1 95 78" stroke="#27AE60"/><path d="M30 78 A30 30 0 0 1 90 78" stroke="#4F8FE8"/><path d="M35 78 A25 25 0 0 1 85 78" stroke="#BB6BD9"/></g><ellipse cx="60" cy="92" rx="80" ry="20" fill="#7BCB6B"/><g fill="#fff"><ellipse cx="14" cy="64" rx="13" ry="7"/><ellipse cx="24" cy="60" rx="9" ry="7"/><ellipse cx="104" cy="66" rx="13" ry="7"/><ellipse cx="94" cy="62" rx="9" ry="7"/></g>'; },
+  function(){ return '<rect width="120" height="90" fill="#FFD1E8"/><circle cx="20" cy="15" r="2" fill="#fff"/><circle cx="98" cy="12" r="2" fill="#fff"/><circle cx="60" cy="8" r="1.6" fill="#fff"/><ellipse cx="60" cy="92" rx="90" ry="22" fill="#8FD97A"/><rect x="38" y="42" width="44" height="40" fill="#E4D4F5"/><rect x="28" y="30" width="16" height="52" fill="#D2BDF0"/><rect x="76" y="30" width="16" height="52" fill="#D2BDF0"/><polygon points="26,30 36,10 46,30" fill="#9B6BDC"/><polygon points="74,30 84,10 94,30" fill="#9B6BDC"/><polygon points="46,42 60,22 74,42" fill="#B88CEB"/><path d="M52 82 V66 A8 8 0 0 1 68 66 V82Z" fill="#7A4B2A"/><rect x="33" y="44" width="6" height="9" rx="3" fill="#4F8FE8"/><rect x="81" y="44" width="6" height="9" rx="3" fill="#4F8FE8"/><path d="M36 10 V2 L44 5 L36 8" fill="#EB5757"/>'; },
+  function(){ return '<rect width="120" height="90" fill="#1F2A5C"/><g fill="#fff"><circle cx="12" cy="14" r="1.4"/><circle cx="40" cy="8" r="1.2"/><circle cx="72" cy="18" r="1.5"/><circle cx="108" cy="10" r="1.3"/><circle cx="96" cy="40" r="1.2"/><circle cx="14" cy="52" r="1.3"/><circle cx="30" cy="80" r="1.4"/><circle cx="104" cy="82" r="1.2"/></g><circle cx="94" cy="26" r="13" fill="#F2994A"/><ellipse cx="94" cy="26" rx="21" ry="4.5" fill="none" stroke="#FFD84D" stroke-width="2.4" transform="rotate(-18 94 26)"/><g transform="rotate(25 50 50)"><ellipse cx="50" cy="48" rx="10" ry="24" fill="#F4F4F8"/><polygon points="40,28 50,10 60,28" fill="#EB5757"/><circle cx="50" cy="44" r="5" fill="#4F8FE8" stroke="#fff" stroke-width="1.6"/><polygon points="40,62 28,76 41,70" fill="#EB5757"/><polygon points="60,62 72,76 59,70" fill="#EB5757"/><polygon points="44,72 50,88 56,72" fill="#FFD84D"/></g>'; },
+  function(){ return '<rect width="120" height="90" fill="#7FD1F0"/><rect y="74" width="120" height="16" fill="#F6E1A6"/><g fill="none" stroke="#2E9E5B" stroke-width="3" stroke-linecap="round"><path d="M16 78 q-6 -10 0 -20 q6 -10 0 -18"/><path d="M104 78 q6 -10 0 -18 q-6 -8 0 -16"/></g><g><ellipse cx="42" cy="38" rx="14" ry="9" fill="#F2994A"/><polygon points="55,38 68,28 68,48" fill="#F2994A"/><circle cx="34" cy="35" r="2.4" fill="#fff"/><circle cx="34" cy="35" r="1.1" fill="#222"/></g><g><ellipse cx="86" cy="58" rx="10" ry="6" fill="#BB6BD9"/><polygon points="76,58 66,51 66,65" fill="#BB6BD9"/><circle cx="91" cy="56" r="1.8" fill="#fff"/><circle cx="91" cy="56" r="0.8" fill="#222"/></g><g fill="none" stroke="#fff" stroke-width="1.4"><circle cx="26" cy="22" r="3"/><circle cx="32" cy="12" r="2"/><circle cx="78" cy="30" r="2.6"/><circle cx="100" cy="26" r="3.4"/></g><polygon points="58,84 60,78 62,84 68,84 63,88 65,94 60,90 55,94 57,88 52,84" fill="#EB5757" transform="scale(.7) translate(25 34)"/>'; },
+  function(){ return '<rect width="120" height="90" fill="#CFEFFF"/><circle cx="18" cy="16" r="9" fill="#FFD84D"/><rect y="62" width="120" height="28" fill="#7BCB6B"/><g stroke="#2E9E5B" stroke-width="2.4"><path d="M22 90 V56"/><path d="M52 90 V48"/><path d="M84 90 V54"/><path d="M106 90 V60"/></g><g><circle cx="22" cy="52" r="9" fill="#EB5757"/><circle cx="52" cy="44" r="10" fill="#F2C94C"/><circle cx="84" cy="50" r="9" fill="#BB6BD9"/><circle cx="106" cy="56" r="7" fill="#F59AC3"/></g><g fill="#7A4B2A"><circle cx="22" cy="52" r="3.6"/><circle cx="52" cy="44" r="4"/><circle cx="84" cy="50" r="3.6"/><circle cx="106" cy="56" r="3"/></g><g transform="translate(70 22)"><ellipse cx="-4" cy="0" rx="6" ry="4" fill="#F2994A"/><ellipse cx="4" cy="0" rx="6" ry="4" fill="#F2994A"/><rect x="-1" y="-5" width="2" height="10" rx="1" fill="#333"/></g>'; },
+  function(){ return '<defs><linearGradient id="pzs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8F6B"/><stop offset="1" stop-color="#FFD59A"/></linearGradient></defs><rect width="120" height="90" fill="url(#pzs)"/><circle cx="60" cy="52" r="18" fill="#FFF3B0"/><rect y="52" width="120" height="20" fill="#3E8FD6"/><g stroke="#fff" stroke-width="1.2" opacity=".7"><path d="M44 58 h32"/><path d="M50 63 h20"/></g><path d="M0 72 Q60 62 120 72 V90 H0Z" fill="#F6E1A6"/><g><path d="M96 80 Q98 56 92 38" fill="none" stroke="#7A4B2A" stroke-width="3.4" stroke-linecap="round"/><path d="M92 38 q-14 -6 -20 4 M92 38 q12 -10 22 -2 M92 38 q-4 -14 6 -18 M92 38 q10 -8 14 4" fill="none" stroke="#2E9E5B" stroke-width="3" stroke-linecap="round"/></g><g><path d="M18 66 h20 l-4 7 h-12z" fill="#EB5757"/><path d="M28 66 V50 L38 64Z" fill="#fff"/></g>'; }
+];
+function puzzleSVG(pic, tiles){
+  let cover = '';
+  for(let i = 0; i < PUZZLE_TILES; i++){
+    const x = (i % 4) * 30, y = Math.floor(i / 4) * 30;
+    if(tiles.indexOf(i) === -1) cover += '<rect x="' + x + '" y="' + y + '" width="30" height="30" fill="#8E7CC3"/><text x="' + (x + 15) + '" y="' + (y + 21) + '" font-size="14" text-anchor="middle" fill="#fff" opacity=".85">🧩</text>';
+  }
+  return '<svg viewBox="0 0 120 90" class="puz" role="img" aria-label="' + esc(PUZZLE_NAMES[pic]) + ' puzzle">' + PUZZLE_ART[pic]() + cover + '<g stroke="#ffffffaa" stroke-width=".6">' + [30, 60, 90].map(function(x){ return '<path d="M' + x + ' 0V90"/>'; }).join('') + [30, 60].map(function(y){ return '<path d="M0 ' + y + 'H120"/>'; }).join('') + '</g></svg>';
+}
+SCREENS.puzzle = function(){
+  const z = puzzleInfo(S);
+  R(topbar('🧩 My puzzle') + '<div class="card center"><p class="qprompt">' + esc(PUZZLE_NAMES[z.pic]) + '</p>' + puzzleSVG(z.pic, z.shown) + '<div class="gap"></div>' +
+    (z.complete ? '<p class="qprompt">🎉 You finished it!</p><button class="btn good block" data-act="puzzleCollect">Collect a sticker pack ✨</button>'
+      : '<p class="qprompt">' + z.tiles + ' / ' + PUZZLE_TILES + ' pieces</p><p class="muted">Win <b>' + z.toNext + ' ⭐</b> more to turn over the next piece. Every ' + PUZZLE_STEP + ' stars you earn gives a piece!</p>') + '</div>');
+};
+ACT.puzzleCollect = function(){ if(!puzzleCollect(S)) return; save(); confetti(70); toast('+1 sticker pack ✨ — a new picture is waiting!'); render(); };
 
 (function(){try{var c=document.createElement('canvas');c.width=c.height=180;var x=c.getContext('2d');var g=x.createLinearGradient(0,0,180,180);g.addColorStop(0,'#9B51E0');g.addColorStop(1,'#F2A6D8');x.fillStyle=g;x.fillRect(0,0,180,180);x.font='100px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('🧙‍♀️',90,98);var l=document.createElement('link');l.rel='apple-touch-icon';l.href=c.toDataURL('image/png');document.head.appendChild(l);var l2=document.createElement('link');l2.rel='icon';l2.href=l.href;document.head.appendChild(l2);}catch(e){}})();
 </script></body></html>
