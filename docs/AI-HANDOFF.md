@@ -19,6 +19,7 @@
 ```
 index.html                 BUILT FILE — never edit by hand; `node tools/build.js` regenerates it
 src/core.js                RNG, text helpers (plural, nnoun, isAre, stripTags), question builders, skill registry, validateQuestion
+src/app/sync.js          Multi-device sync (merge rules + GitHub transport); see docs/SYNC.md
 src/visuals.js             SVG/HTML pictures + their DECODERS (V.render / V.verify / V.decode*)
 src/skills/*.js            72 skill files, each calls registerSkill({...})
 src/app/engine.js          state, mastery, spaced repetition, quest/diagnostic, missions, stars economy, parent metrics, migrations
@@ -94,6 +95,7 @@ Direct pushes to `main` return 403 and GraphQL is blocked, so:
 6. Tell the user; Melissa may need to reload (close and reopen the app) on the iPad.
 
 ## 10. Known caveats and open items
+- Sync between devices is built (docs/SYNC.md). Her iPad and the phone were separate profiles before it; the first sync asks the grown-up which avatar/settings to keep.
 - Open wording items (not wrong answers, but clumsy for an 8-year-old) are in `docs/WORDING-BACKLOG.md`. Fix them in order of value; `tools/text-lint.js` and `tools/text-math-check.js` guard against regressions.
 - iPad/WebKit, offline and PWA install are unverified by automation (touch test = Chromium only).
 - Economy and prices untested with a child; pet-clothes placement only checked in Chromium screenshots.

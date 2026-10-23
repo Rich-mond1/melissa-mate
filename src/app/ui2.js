@@ -395,6 +395,7 @@ SCREENS.parent = function(){
   let h = topbar('👪 Panel de padres');
   /* backup first: it is the only thing that can really be lost */
   const bk = m.backup;
+  h += syncCardHTML();
   h += '<div class="card" style="' + (bk.overdue ? 'border:3px solid #E8A33D' : '') + '"><h3>💾 Copia de seguridad</h3>' +
     '<p style="margin:6px 0">' + (bk.last ? 'Última copia: <b>' + esc(bk.last) + '</b> (hace ' + bk.daysAgo + ' día' + (bk.daysAgo === 1 ? '' : 's') + ')' : 'Todavía <b>no hay ninguna copia</b>.') + '</p>' +
     (bk.overdue ? '<p style="color:#8a4b00;font-weight:800">' + (bk.last ? 'Hace más de ' + BACKUP_DAYS + ' días de la última copia.' : 'Hay progreso que solo existe en este iPad.') + ' Pulsa “Compartir copia” y guárdala en Archivos o envíatela por correo.</p>' : '<p class="muted">El progreso solo vive en este iPad. Si se borran los datos de Safari o se cambia de iPad, sin copia se pierde.</p>') +
@@ -453,7 +454,7 @@ ACT.radd = function(){ S.rewards.push({ id: 'r' + Date.now(), emoji: '🎁', tit
 ACT.rdel = function(d){ S.rewards.splice(+d.i, 1); save(); render(); };
 ACT.shopMult = function(d){ const x = Number(d.v); if(SHOP_MULTS.indexOf(x) > -1){ S.shopMult = x; save(); render(); } };
 ACT.redoPlacement = function(){ if(!confirm('¿Repetir el diagnóstico? Se conservan medallas, estrellas y stickers.')) return; S.placement = defaultState().placement; diagStart(S); S.placement.started = false; save(); go('placementIntro'); };
-ACT.reset = function(){ const bk = parentMetrics(S, todayStr()).backup; if(!confirm('¿Borrar TODO el progreso (' + describeState(S) + ')? ' + (bk.last ? 'Última copia: ' + bk.last + '.' : 'No hay ninguna copia de seguridad.') + ' Se guarda una copia interna para poder deshacerlo.')) return; if(!confirm('Seguro: se perderán estrellas, stickers y medallas.')) return; keepPrevious(); try { localStorage.removeItem(STATE_KEY); } catch(e){} S = defaultState(); save(); go('welcome'); };
+ACT.reset = function(){ if(syncCfg()) return toast('Con la sincronización activa no se puede borrar. Desactívala antes.'); const bk = parentMetrics(S, todayStr()).backup; if(!confirm('¿Borrar TODO el progreso (' + describeState(S) + ')? ' + (bk.last ? 'Última copia: ' + bk.last + '.' : 'No hay ninguna copia de seguridad.') + ' Se guarda una copia interna para poder deshacerlo.')) return; if(!confirm('Seguro: se perderán estrellas, stickers y medallas.')) return; keepPrevious(); try { localStorage.removeItem(STATE_KEY); } catch(e){} S = defaultState(); save(); go('welcome'); };
 ACT.copySummary = function(){
   const txt = summaryText(S, todayStr());
   try { if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){ toast('Resumen copiado'); }, function(){ fallbackCopy(txt); }); return; } } catch(e){}
@@ -496,6 +497,7 @@ function describeState(o){ try { const m = mergeState(o); const lastDay = m.sess
 function keepPrevious(){ try { localStorage.setItem(PREV_KEY, JSON.stringify(S)); } catch(e){} }
 function hasPrevious(){ try { return !!localStorage.getItem(PREV_KEY); } catch(e){ return false; } }
 function onImport(file){
+  if(syncCfg()) return toast('Con la sincronización activa no se puede importar. Desactívala antes.');
   const fr = new FileReader();
   fr.onload = function(){
     let o; try { o = JSON.parse(fr.result); if(!o || typeof o !== 'object' || Array.isArray(o)) throw 0; } catch(e){ return toast('Archivo no válido'); }
@@ -506,11 +508,66 @@ function onImport(file){
   fr.readAsText(file);
 }
 ACT.undoImport = function(){
+  if(syncCfg()) return toast('Con la sincronización activa no se puede deshacer una importación. Desactívala antes.');
   let raw = null; try { raw = localStorage.getItem(PREV_KEY); } catch(e){}
   if(!raw) return toast('No hay nada que deshacer');
   if(!confirm('¿Volver al progreso anterior a la última importación o borrado?')) return;
   try { const cur = JSON.stringify(S); S = mergeState(JSON.parse(raw)); save(); localStorage.setItem(PREV_KEY, cur); toast('Progreso anterior recuperado'); go('parent'); } catch(e){ toast('No se pudo recuperar'); }
 };
+
+
+/* ---------------- sync between devices (see docs/SYNC.md) ---------------- */
+let SYNC_BUSY = false, SYNC_LAST_AUTO = 0;
+function syncCfg(){ try { const o = JSON.parse(localStorage.getItem(SYNC_KEY)); return o && o.cfg && o.cfg.token && o.cfg.repo && o.meta ? o : null; } catch(e){ return null; } }
+function syncStore(o){ try { localStorage.setItem(SYNC_KEY, JSON.stringify(o)); return true; } catch(e){ return false; } }
+function syncWhen(iso){ if(!iso) return 'nunca'; const d = new Date(iso); const mins = Math.round((Date.now() - d.getTime()) / 60000); if(mins < 1) return 'ahora mismo'; if(mins < 60) return 'hace ' + mins + ' min'; if(mins < 1440) return 'hace ' + Math.round(mins / 60) + ' h'; return 'hace ' + Math.round(mins / 1440) + ' días'; }
+function syncCardHTML(){
+  const c = syncCfg(); const inp = 'class="input" style="margin:4px 0;border:2px solid #d9dcf0"';
+  if(!c) return '<div class="card"><h3>🔄 Sincronizar dispositivos</h3><p class="muted" style="margin:4px 0 8px">Une el progreso, las estrellas, las compras y el avatar de este dispositivo con los demás (iPad, teléfono…). Necesita un repositorio privado de GitHub y un token solo para ese repositorio (mira docs/SYNC.md).</p>' +
+    '<label class="muted">Repositorio (usuario/nombre)</label><input id="sy-repo" ' + inp + ' value="Rich-mond1/matemagics-sync" autocapitalize="off" autocorrect="off" spellcheck="false">' +
+    '<label class="muted">Token</label><input id="sy-token" type="password" ' + inp + ' placeholder="github_pat_…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">' +
+    '<label class="muted">Nombre de este dispositivo</label><input id="sy-name" ' + inp + ' placeholder="iPad de casa, Teléfono de Camino…" maxlength="30">' +
+    '<div class="row" style="margin-top:8px"><button class="btn grow" data-act="syncSave">Activar y sincronizar</button></div></div><div class="gap"></div>';
+  const st = c.status || {};
+  return '<div class="card"><h3>🔄 Sincronizar dispositivos</h3>' +
+    '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Este dispositivo</span><b>' + esc(c.cfg.deviceName || 'sin nombre') + '</b></div>' +
+    '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Última sincronización</span><b>' + esc(syncWhen(c.meta.lastSync)) + '</b></div>' +
+    (st.ok === false ? '<p style="margin:6px 0;color:#B3261E"><b>' + esc(st.msg || 'No se pudo sincronizar') + '</b></p>' : '') +
+    '<div class="row" style="flex-wrap:wrap;margin-top:8px"><button class="btn grow" data-act="syncNow">' + (SYNC_BUSY ? 'Sincronizando…' : '🔄 Sincronizar ahora') + '</button><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="syncOff">Desactivar</button></div>' +
+    '<p class="muted" style="margin-top:6px">Se sincroniza sola al abrir la app y al volver la cobertura. Con la sincronización activa no se puede importar ni borrar el progreso (desactívala antes).</p></div><div class="gap"></div>';
+}
+function syncRandomId(){ let a = ''; try { const u = new Uint8Array(6); crypto.getRandomValues(u); u.forEach(function(b){ a += (b % 36).toString(36); }); } catch(e){ a = Math.random().toString(36).slice(2, 8); } return 'd' + a + Date.now().toString(36).slice(-3); }
+function syncMsg(e){ return e && e.kind === 'offline' ? 'Sin conexión. Se reintentará al volver la cobertura.' : (e && e.message) || 'No se pudo sincronizar'; }
+async function syncDo(manual){
+  const c = syncCfg(); if(!c || SYNC_BUSY) return;
+  if(typeof navigator !== 'undefined' && navigator.onLine === false){ c.status = { ok: false, msg: 'Sin conexión. Se reintentará al volver la cobertura.' }; syncStore(c); if(manual){ toast('Sin conexión'); render(); } return; }
+  if(typeof SESS !== 'undefined' && SESS && !manual) return;
+  SYNC_BUSY = true; if(manual) render();
+  const snap = JSON.stringify(S); let again = false;
+  try {
+    const res = await syncRun(c.cfg, S, c.meta, Date.now(), { askTie: function(notes){
+      if(!manual) return 'abort';
+      const what = (notes.lookTie ? 'el avatar y la mascota' : '') + (notes.lookTie && notes.setTie ? ' y ' : '') + (notes.setTie ? 'los ajustes (premios, precios)' : '');
+      return confirm('Este dispositivo y el otro tienen ' + what + ' distintos.\n\nAceptar = usar los de ESTE dispositivo.\nCancelar = usar los del OTRO dispositivo.') ? 'local' : 'remote'; } });
+    if(JSON.stringify(S) !== snap){ again = true; }          // she played while we were talking to GitHub: do not overwrite that, just run again
+    else { S = res.state; save(); c.meta = res.meta; c.status = { ok: true, at: new Date().toISOString() }; syncStore(c); if(manual) toast('🔄 Sincronizado'); }
+  } catch(e){ c.status = { ok: false, msg: syncMsg(e) }; syncStore(c); if(manual) toast(syncMsg(e)); }
+  SYNC_BUSY = false;
+  if(again){ setTimeout(function(){ SYNC_LAST_AUTO = 0; syncDo(manual); }, 3000); return; }
+  try { if(!(typeof SESS !== 'undefined' && SESS) && (manual || scr.name === 'hub' || scr.name === 'parent')) render(); } catch(e){}
+}
+function syncAuto(){ if(!syncCfg()) return; const now = Date.now(); if(now - SYNC_LAST_AUTO < 20000) return; SYNC_LAST_AUTO = now; syncDo(false); }
+ACT.syncSave = function(){
+  const repo = (document.getElementById('sy-repo') || {}).value || '', token = ((document.getElementById('sy-token') || {}).value || '').trim(), name = ((document.getElementById('sy-name') || {}).value || '').trim();
+  if(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo.trim())) return toast('El repositorio debe ser usuario/nombre');
+  if(token.length < 20) return toast('Pega el token completo');
+  if(!name) return toast('Ponle un nombre a este dispositivo');
+  const meta = syncNewMeta(syncRandomId(), name);
+  if(!syncStore({ cfg: { repo: repo.trim(), token: token, deviceId: meta.deviceId, deviceName: name }, meta: meta, status: null })) return toast('No se pudo guardar la configuración');
+  syncDo(true);
+};
+ACT.syncNow = function(){ syncDo(true); };
+ACT.syncOff = function(){ if(!confirm('¿Desactivar la sincronización en este dispositivo? El progreso se queda como está. Para volver a activarla necesitarás el token.')) return; try { localStorage.removeItem(SYNC_KEY); } catch(e){} toast('Sincronización desactivada'); render(); };
 
 /* ---------------- boot ---------------- */
 function boot(){
@@ -551,9 +608,11 @@ function boot(){
     if(e.target.dataset && e.target.dataset.chg) onChange(e.target);
     else if(e.target.id === 'imp' && e.target.files[0]) onImport(e.target.files[0]);
   });
-  document.addEventListener('visibilitychange', function(){ if(document.hidden) stopSpeak(); });
+  document.addEventListener('visibilitychange', function(){ if(document.hidden) stopSpeak(); else syncAuto(); });
+  window.addEventListener('online', function(){ syncAuto(); });
   if(!S.onboardingDone) go('welcome');
   else if(!S.placement.started) go('placementIntro');
   else go('hub');
+  syncAuto();
 }
 if(typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', boot);
