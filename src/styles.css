@@ -198,3 +198,13 @@ h1,h2,h3,p{margin:0;}
 .avbig.petbig{aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;} .petbig .pw{width:80%; height:80%;}
 .avitem .th .pw{width:100%; height:100%;} .avitem.legend{border-style:dashed; border-color:#E8B63A99;}
 .card.win{border:3px solid #FFD23F;}
+
+/* notes for Melissa */
+.nscene{display:flex; align-items:flex-end; justify-content:center; gap:10px; margin:8px 0;}
+.nscene .nme{width:34%; max-width:130px;} .nscene .nme svg{width:100%; height:auto; display:block;}
+.nscene .npet{width:34%; max-width:130px;} .nscene .npet .pw{width:100%; height:auto; aspect-ratio:1/1;}
+.nscene .npet.hop{animation:bob 1.2s ease-in-out infinite;}
+.nscene .bubble{align-self:center; max-width:40%; font-size:16px;}
+.nscene.small .nme{width:46px; flex:none;} .nscene.small .npet{width:46px; flex:none;} .nscene.small{justify-content:flex-start; align-items:center; margin:4px 0;} .nscene.small .bubble{font-size:14px; max-width:none; margin-top:0;}
+.note-text{display:block; font-size:20px; line-height:1.35; text-align:center; white-space:pre-wrap; word-break:break-word;}
+@media (prefers-reduced-motion:reduce){ .nscene .npet.hop{animation:none;} }

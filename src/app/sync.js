@@ -7,7 +7,7 @@
    - The token and the counters live in their own localStorage key (SYNC_KEY), NOT in the progress file, so export / backups never contain the token. */
 const SYNC_KEY = 'matemagics_sync_v1';
 const SYNC_LOOK = ['avatar', 'petAcc', 'friend', 'theme'];                 // what she looks like: the newest change wins, as one unit
-const SYNC_SETTINGS = ['rewards', 'goalReward', 'shopMult', 'focus'];     // grown-up settings: the newest change wins, as one unit
+const SYNC_SETTINGS = ['rewards', 'goalReward', 'shopMult', 'shopCat', 'focus'];     // grown-up settings: the newest change wins, as one unit
 const SYNC_DIR = 'devices';
 
 function syncClone(x){ return x === undefined ? undefined : JSON.parse(JSON.stringify(x)); }
@@ -71,6 +71,10 @@ function syncMergeOne(base, rs){
   out.stickers = syncUnion(out.stickers, rs.stickers, function(s){ return s.id; }, function(a, b){ const r = syncClone(a); r.n = Math.max(a.n | 0, b.n | 0); r.date = syncDate(b.date, a.date) && [a.date, b.date].filter(Boolean).sort()[0]; return r; });
   ['badges', 'tricks', 'met', 'owned'].forEach(function(k){ out[k] = syncUnion(out[k], rs[k], function(x){ return String(x); }); });
   out.claims = syncUnion(out.claims, rs.claims, syncJ);
+  // notes from the grown-ups: union by id; deleted / read stay so; the later answer wins
+  out.notes = syncUnion(out.notes, rs.notes, function(n){ return n.id; }, function(a, b){
+    const r = syncClone(a); r.del = !!(a.del || b.del); r.read = !!(a.read || b.read || (a.reply || b.reply));
+    const w = (b.replyAt || '') > (a.replyAt || '') ? b : a; r.reply = w.reply || ''; r.replyAt = w.replyAt || ''; return r; });
   // preferences: keep every like / dislike either device knows; sound & voice stay as set on THIS device
   ['likes', 'dislikes'].forEach(function(k){ out.prefs[k] = syncUnion(out.prefs[k], (rs.prefs || {})[k], function(x){ return String(x); }); });
   // placement and diagnostic: whichever is further along; never go backwards

@@ -20,6 +20,7 @@
 index.html                 BUILT FILE — never edit by hand; `node tools/build.js` regenerates it
 src/core.js                RNG, text helpers (plural, nnoun, isAre, stripTags), question builders, skill registry, validateQuestion
 src/app/sync.js          Multi-device sync (merge rules + GitHub transport); see docs/SYNC.md
+Notes for Melissa (engine.js: NOTE_REPLIES, addNote, notesDue, answerNote; screen `note` in ui3.js; card in the grown-ups panel) and per-group prices (avatar.js: SHOP_CATS, catMult; S.shopCat) — tested in tools/notes-test.js
 src/visuals.js             SVG/HTML pictures + their DECODERS (V.render / V.verify / V.decode*)
 src/skills/*.js            72 skill files, each calls registerSkill({...})
 src/app/engine.js          state, mastery, spaced repetition, quest/diagnostic, missions, stars economy, parent metrics, migrations

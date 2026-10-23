@@ -18,6 +18,8 @@ The token lives only in that browser's `localStorage` key `matemagics_sync_v1`. 
 | Errors | highest count, latest date |
 | Evidence, session log | union without duplicates (caps 800 / 400) |
 | Stickers | union by id, highest count; badges, tricks, met, owned, claims: union |
+| Notes from the grown-ups | union by id; deleted and read stay so; the later answer wins |
+| Prices (general + per group) | part of the grown-up settings: newest change wins |
 | Streak | the newest day wins; same day → highest count |
 | Placement / diagnostic | whichever is further along; never goes back |
 | Look (avatar, pet clothes, friend, theme) | the newest change wins as one unit. The FIRST time two devices have different looks, the grown-up chooses (a confirm in the parent panel) |

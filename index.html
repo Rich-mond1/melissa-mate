@@ -204,6 +204,16 @@ h1,h2,h3,p{margin:0;}
 .avitem .th .pw{width:100%; height:100%;} .avitem.legend{border-style:dashed; border-color:#E8B63A99;}
 .card.win{border:3px solid #FFD23F;}
 
+/* notes for Melissa */
+.nscene{display:flex; align-items:flex-end; justify-content:center; gap:10px; margin:8px 0;}
+.nscene .nme{width:34%; max-width:130px;} .nscene .nme svg{width:100%; height:auto; display:block;}
+.nscene .npet{width:34%; max-width:130px;} .nscene .npet .pw{width:100%; height:auto; aspect-ratio:1/1;}
+.nscene .npet.hop{animation:bob 1.2s ease-in-out infinite;}
+.nscene .bubble{align-self:center; max-width:40%; font-size:16px;}
+.nscene.small .nme{width:46px; flex:none;} .nscene.small .npet{width:46px; flex:none;} .nscene.small{justify-content:flex-start; align-items:center; margin:4px 0;} .nscene.small .bubble{font-size:14px; max-width:none; margin-top:0;}
+.note-text{display:block; font-size:20px; line-height:1.35; text-align:center; white-space:pre-wrap; word-break:break-word;}
+@media (prefers-reduced-motion:reduce){ .nscene .npet.hop{animation:none;} }
+
 </style></head><body><div id="app"></div>
 <script>
 /* ===== src/core.js ===== */
@@ -19123,14 +19133,25 @@ const AV_ITEMS = {
 const AV_DEFAULT = { skin: 'sk4', hairStyle: 'curly', hairColor: 'dkbrown', top: 'tee', bottom: 'joggers', hat: '', glasses: '', neck: '', face: '', wings: '', hold: '', bg: 'pink' };
 const MASCOT_IDS = AV_ITEMS.pet.map(function(r){ return r[0]; });
 const PET_ACC_SLOTS = ['phat', 'pglasses', 'pneck'];
-const SHOP_MULTS = [1, 2, 3, 5];        // the grown-up can make everything cost more (set in the Grown-ups panel)
+const SHOP_MULTS = [1, 2, 3, 5, 8];     // the grown-up can make everything cost more (set in the Grown-ups panel)
+/* price groups: the grown-up can set a different multiplier for each (S.shopCat[group]); a group without its own value follows the general one (S.shopMult) */
+const SHOP_CATS = [
+  { k: 'clothes', label: 'Ropa y pelo', slots: ['top', 'bottom', 'hairStyle', 'hairColor', 'skin'] },
+  { k: 'acc', label: 'Accesorios', slots: ['hat', 'glasses', 'neck', 'face', 'wings', 'hold'] },
+  { k: 'scene', label: 'Escenas', slots: ['bg'] },
+  { k: 'pet', label: 'Mascotas y su ropa', slots: ['pet', 'phat', 'pglasses', 'pneck'] },
+  { k: 'box', label: 'Cajas sorpresa', slots: [] }
+];
 const BOX_COST = 12;                    // base price of a surprise box
 function avItem(slot, id){ const l = AV_ITEMS[slot] || []; for(let i = 0; i < l.length; i++) if(l[i][0] === id) return { id: l[i][0], name: l[i][1], cost: l[i][2], c: l[i][3], req: l[i][4] || 0 }; return null; }
 function avOwns(state, slot, id){ const it = avItem(slot, id); if(!it) return false; return it.cost === 0 || (state.owned || []).indexOf(slot + ':' + id) > -1; }
 function shopMult(state){ const m = Number(state && state.shopMult); return SHOP_MULTS.indexOf(m) > -1 ? m : 1; }
+function slotCat(slot){ for(let i = 0; i < SHOP_CATS.length; i++) if(SHOP_CATS[i].slots.indexOf(slot) > -1) return SHOP_CATS[i].k; return 'acc'; }
+function catMult(state, cat){ const o = state && state.shopCat && Number(state.shopCat[cat]); return SHOP_MULTS.indexOf(o) > -1 ? o : shopMult(state); }
+function cleanShopCat(o){ const out = {}; if(!o || typeof o !== 'object' || Array.isArray(o)) return out; SHOP_CATS.forEach(function(c){ const v = Number(o[c.k]); if(SHOP_MULTS.indexOf(v) > -1) out[c.k] = v; }); return out; }
 function avGold(state){ let n = 0; const sk = (state && state.skills) || {}; Object.keys(sk).forEach(function(k){ if(sk[k] && sk[k].medal >= 3) n++; }); return n; }
 function avLocked(state, slot, id){ const it = avItem(slot, id); return !!(it && it.req > avGold(state) && !avOwns(state, slot, id)); }
-function avPrice(state, slot, id){ const it = avItem(slot, id); if(!it || it.cost === 0) return 0; return Math.max(1, Math.round(it.cost * shopMult(state))); }
+function avPrice(state, slot, id){ const it = avItem(slot, id); if(!it || it.cost === 0) return 0; return Math.max(1, Math.round(it.cost * catMult(state, slotCat(slot)))); }
 function defaultAvatar(){ return Object.assign({}, AV_DEFAULT); }
 function cleanOwned(a){
   const out = []; if(!Array.isArray(a)) return out;
@@ -19184,11 +19205,11 @@ function avCandidates(state){
 /* surprise box: a random item she does not own yet (and may open). Returns {slot,id} | 'poor' | 'full'. */
 function avBox(state, rnd){
   const c = avCandidates(state); if(!c.length) return 'full';
-  const price = Math.max(1, Math.round(BOX_COST * shopMult(state))); if(state.starBalance < price) return 'poor';
+  const price = boxPrice(state); if(state.starBalance < price) return 'poor';
   const w = c[Math.min(c.length - 1, Math.floor((rnd || Math.random)() * c.length))];
   state.starBalance -= price; state.owned.push(w.slot + ':' + w.id); avEquip(state, w.slot, w.id); return w;
 }
-function boxPrice(state){ return Math.max(1, Math.round(BOX_COST * shopMult(state))); }
+function boxPrice(state){ return Math.max(1, Math.round(BOX_COST * catMult(state, 'box'))); }
 /* progress through the wardrobe + the next legendary prize */
 function avProgress(state){
   let total = 0, have = 0, next = null; const gold = avGold(state);
@@ -19478,7 +19499,7 @@ function defaultState(){
     timer: { mode: 'free', minutes: 20, debtSeconds: 0 },
     streak: { count: 0, lastPlayDate: null },
     sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 },
-    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false, petAcc: {}, shopMult: 1
+    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false, petAcc: {}, shopMult: 1, shopCat: {}, notes: []
   };
 }
 /* ---------- evidence (one dated record per answered question; capped so localStorage stays small) ---------- */
@@ -19581,6 +19602,39 @@ function skillState(state, id){
   if(!state.skills[id]) state.skills[id] = { medal: 0, box: 0, seen: 0, correct: 0, credit: 0, lessonDone: false, last: null, due: null, wobbly: false, placed: false };
   return state.skills[id];
 }
+/* ---------- notes from the grown-ups: Melissa opens them with her avatar and her mascot, answers with a button, the grown-up sees the answer ---------- */
+const NOTE_REPLIES = [
+  { id: 'love', emoji: '❤️', text: 'I love you!' }, { id: 'party', emoji: '🎉', text: 'Yay! Thank you!' }, { id: 'hug', emoji: '🤗', text: 'Big hug!' },
+  { id: 'try', emoji: '⭐', text: 'I will try my best!' }, { id: 'done', emoji: '💪', text: 'I did it!' }, { id: 'laugh', emoji: '😂', text: 'Ha ha ha!' }
+];
+const NOTES_CAP = 60;
+function noteReplyById(id){ for(let i = 0; i < NOTE_REPLIES.length; i++) if(NOTE_REPLIES[i].id === id) return NOTE_REPLIES[i]; return null; }
+function cleanNotes(a){
+  if(!Array.isArray(a)) return [];
+  const seen = {}, out = [];
+  a.forEach(function(n){
+    if(!n || typeof n !== 'object' || typeof n.text !== 'string' || !n.text.trim() || !n.id) return;
+    const id = String(n.id).slice(0, 40); if(seen[id]) return; seen[id] = 1;
+    out.push({ id: id, text: n.text.trim().slice(0, 300), from: String(n.from || '').trim().slice(0, 24), when: n.when === 'mission' ? 'mission' : 'now',
+      date: /^\d{4}-\d{2}-\d{2}$/.test(String(n.date)) ? String(n.date) : '', read: !!n.read, reply: noteReplyById(n.reply) ? String(n.reply) : '', replyAt: n.reply && noteReplyById(n.reply) && typeof n.replyAt === 'string' ? n.replyAt.slice(0, 30) : '', del: !!n.del });
+  });
+  return out.sort(function(a, b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.id < b.id ? -1 : 1); }).slice(-NOTES_CAP);
+}
+function addNote(state, text, from, when, now, rnd){
+  text = String(text || '').trim(); if(!text) return null;
+  const n = { id: 'n' + (now || Date.now()).toString(36) + Math.floor((rnd || Math.random)() * 1679616).toString(36), text: text.slice(0, 300), from: String(from || '').trim().slice(0, 24), when: when === 'mission' ? 'mission' : 'now', date: todayStr(), read: false, reply: '', replyAt: '', del: false };
+  state.notes = cleanNotes((state.notes || []).concat([n])); return n;
+}
+/* notes she should see now: unread, not deleted, and (for "after the mission" ones) only once today's mission is done */
+function notesDue(state){
+  const d = state.daily && state.daily.date === todayStr() && state.daily.boss;
+  return (state.notes || []).filter(function(n){ return !n.del && !n.read && (n.when === 'now' || d); });
+}
+function noteById(state, id){ const l = state.notes || []; for(let i = 0; i < l.length; i++) if(l[i].id === id) return l[i]; return null; }
+function answerNote(state, id, replyId, now){
+  const n = noteById(state, id), r = noteReplyById(replyId); if(!n || n.del || !r) return null;
+  n.read = true; n.reply = r.id; n.replyAt = new Date(now || Date.now()).toISOString(); return n;
+}
 function mergeState(loaded){
   const d = defaultState(); const L = loaded || {};
   const m = Object.assign({}, d, L);
@@ -19593,7 +19647,7 @@ function mergeState(loaded){
   m.evidence = cleanEvidence(L.evidence);
   m.placement.paid = Math.max(0, Math.min(40, Number(m.placement.paid) | 0)); m.welcomeGift = !!L.welcomeGift;
   m.owned = cleanOwned(L.owned); m.avatar = cleanAvatar(L.avatar, m.owned); m.met = cleanMet(L.met);
-  m.petAcc = cleanPetAcc(L.petAcc, m.owned); m.shopMult = SHOP_MULTS.indexOf(Number(L.shopMult)) > -1 ? Number(L.shopMult) : 1;
+  m.petAcc = cleanPetAcc(L.petAcc, m.owned); m.shopMult = SHOP_MULTS.indexOf(Number(L.shopMult)) > -1 ? Number(L.shopMult) : 1; m.shopCat = cleanShopCat(L.shopCat); m.notes = cleanNotes(L.notes);
   m.lastBackup = (typeof L.lastBackup === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(L.lastBackup)) ? L.lastBackup : null;
   m.diag = (L.diag && typeof L.diag === 'object' && !Array.isArray(L.diag) && L.diag.strands && L.diag.results) ? L.diag : null;
   const petV = function(v){ v = Number(v) | 0; return v >= 0 && v < PET_VARIANTS ? v : 0; };
@@ -20022,7 +20076,7 @@ function checkBadges(state){
    - The token and the counters live in their own localStorage key (SYNC_KEY), NOT in the progress file, so export / backups never contain the token. */
 const SYNC_KEY = 'matemagics_sync_v1';
 const SYNC_LOOK = ['avatar', 'petAcc', 'friend', 'theme'];                 // what she looks like: the newest change wins, as one unit
-const SYNC_SETTINGS = ['rewards', 'goalReward', 'shopMult', 'focus'];     // grown-up settings: the newest change wins, as one unit
+const SYNC_SETTINGS = ['rewards', 'goalReward', 'shopMult', 'shopCat', 'focus'];     // grown-up settings: the newest change wins, as one unit
 const SYNC_DIR = 'devices';
 
 function syncClone(x){ return x === undefined ? undefined : JSON.parse(JSON.stringify(x)); }
@@ -20086,6 +20140,10 @@ function syncMergeOne(base, rs){
   out.stickers = syncUnion(out.stickers, rs.stickers, function(s){ return s.id; }, function(a, b){ const r = syncClone(a); r.n = Math.max(a.n | 0, b.n | 0); r.date = syncDate(b.date, a.date) && [a.date, b.date].filter(Boolean).sort()[0]; return r; });
   ['badges', 'tricks', 'met', 'owned'].forEach(function(k){ out[k] = syncUnion(out[k], rs[k], function(x){ return String(x); }); });
   out.claims = syncUnion(out.claims, rs.claims, syncJ);
+  // notes from the grown-ups: union by id; deleted / read stay so; the later answer wins
+  out.notes = syncUnion(out.notes, rs.notes, function(n){ return n.id; }, function(a, b){
+    const r = syncClone(a); r.del = !!(a.del || b.del); r.read = !!(a.read || b.read || (a.reply || b.reply));
+    const w = (b.replyAt || '') > (a.replyAt || '') ? b : a; r.reply = w.reply || ''; r.replyAt = w.replyAt || ''; return r; });
   // preferences: keep every like / dislike either device knows; sound & voice stay as set on THIS device
   ['likes', 'dislikes'].forEach(function(k){ out.prefs[k] = syncUnion(out.prefs[k], (rs.prefs || {})[k], function(x){ return String(x); }); });
   // placement and diagnostic: whichever is further along; never go backwards
@@ -20385,6 +20443,7 @@ SCREENS.hub = function(){
   const d = S.daily;
   let h = '<div class="hero"><div class="herome" data-act="go" data-to="me" role="button" aria-label="My avatar">' + avatarSVG(S.avatar, { view: 'head' }) + '</div><div class="mascot" data-act="cycleFriend">' + mascot() + '</div><div class="grow"><b style="font-size:18px">' + nick() + ' · Lv ' + lvl + '</b><div style="font-size:13px;font-weight:800;opacity:.9">' + levelTitle(lvl) + '</div><div class="xpbar" style="margin-top:6px"><i style="width:' + pct + '%"></i></div></div>' +
     '<div style="text-align:right;font-weight:900">⭐ ' + S.starBalance + '<br>🔥 ' + liveStreak() + '</div></div>' + trailHTML(false);
+  { const due = notesDue(S); if(due.length) h += '<div class="card quest" style="margin-top:12px"><h3>💌 A message for you!</h3><p class="muted">' + (due[0].from ? esc(due[0].from) + ' left you a message.' : 'Someone left you a message.') + '</p><div class="gap"></div><button class="btn good block" data-act="noteOpen" data-id="' + esc(due[0].id) + '">Open it</button></div>'; }
   if(!S.welcomeGift) h += '<div class="card quest" style="margin-top:12px"><h3>🎁 A welcome gift for you!</h3><p class="muted">' + WELCOME_STARS + ' ⭐ to spend on clothes and hats for your avatar.</p><div class="gap"></div><button class="btn good block" data-act="claimWelcome">Open my gift</button></div>';
   if(!placementDone(S)) h += '<div class="card quest" style="margin-top:12px"><h3>🗺️ Finish your Explorer’s Quest</h3><p class="muted">So I can build your own map. Every land you finish gives you +' + LAND_STARS + ' ⭐ — and you can stop any time and carry on later.</p><div class="gap"></div><button class="btn block" data-act="placementGo">Continue quest</button></div>';
   else {
@@ -20900,6 +20959,7 @@ SCREENS.parent = function(){
   let h = topbar('👪 Panel de padres');
   /* backup first: it is the only thing that can really be lost */
   const bk = m.backup;
+  h += notesCardHTML();
   h += syncCardHTML();
   h += '<div class="card" style="' + (bk.overdue ? 'border:3px solid #E8A33D' : '') + '"><h3>💾 Copia de seguridad</h3>' +
     '<p style="margin:6px 0">' + (bk.last ? 'Última copia: <b>' + esc(bk.last) + '</b> (hace ' + bk.daysAgo + ' día' + (bk.daysAgo === 1 ? '' : 's') + ')' : 'Todavía <b>no hay ninguna copia</b>.') + '</p>' +
@@ -20923,7 +20983,7 @@ SCREENS.parent = function(){
     '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Ritmo (por día de juego)</span><b>' + (e.perDay === null ? '—' : e.perDay + ' ⭐') + '</b></div>' +
     '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Prendas compradas</span><b>' + e.owned + '</b></div>' +
     '<p class="muted" style="margin-top:6px">' + (e.cheapest === null ? 'Ya tiene todo el vestuario.' : (e.daysToCheapest === 0 ? 'Ya puede comprar la prenda más barata que le falta (' + e.cheapest + ' ⭐).' : (e.daysToCheapest === null ? 'Aún no hay ritmo para estimar.' : 'Con su ritmo, la prenda más barata que le falta (' + e.cheapest + ' ⭐) llega en unos ' + e.daysToCheapest + ' día(s) de juego.'))) + ' Si tarda demasiado se desmotiva; si compra todo en un día, no hay meta: ajusta el multiplicador de precios (solo afecta a lo que compre a partir de ahora).</p>' +
-    '<p style="margin-top:8px"><b>Precio del vestuario</b></p><div class="chips">' + SHOP_MULTS.map(function(x){ return '<button class="chip' + (shopMult(S) === x ? ' picked' : '') + '" data-act="shopMult" data-v="' + x + '">×' + x + '</button>'; }).join('') + '</div></div><div class="gap"></div>'; }
+    '<p style="margin-top:8px"><b>Precio del vestuario</b></p><div class="chips">' + SHOP_MULTS.map(function(x){ return '<button class="chip' + (shopMult(S) === x ? ' picked' : '') + '" data-act="shopMult" data-v="' + x + '">×' + x + '</button>'; }).join('') + '</div>' + shopCatHTML() + '</div><div class="gap"></div>'; }
   h += '<div class="card"><h3>🏅 Dominio</h3><p class="muted" style="margin-bottom:6px">Asentada = plata con buen acierto sin ayuda. Dominada = oro tras un repaso otro día.</p>' + [4, 3, 2, 1, 0].map(function(k){ return row(LV[k], m.levels[k] + ' habilidades'); }).join('') + '</div><div class="gap"></div>';
   h += '<div class="card"><h3>¿Está aprendiendo de verdad?</h3>' +
     row('Repasos superados (días después)', revN ? pct(revC / revN) + ' de ' + revN : 'sin datos aún') +
@@ -21026,6 +21086,48 @@ let SYNC_BUSY = false, SYNC_LAST_AUTO = 0;
 function syncCfg(){ try { const o = JSON.parse(localStorage.getItem(SYNC_KEY)); return o && o.cfg && o.cfg.token && o.cfg.repo && o.meta ? o : null; } catch(e){ return null; } }
 function syncStore(o){ try { localStorage.setItem(SYNC_KEY, JSON.stringify(o)); return true; } catch(e){ return false; } }
 function syncWhen(iso){ if(!iso) return 'nunca'; const d = new Date(iso); const mins = Math.round((Date.now() - d.getTime()) / 60000); if(mins < 1) return 'ahora mismo'; if(mins < 60) return 'hace ' + mins + ' min'; if(mins < 1440) return 'hace ' + Math.round(mins / 60) + ' h'; return 'hace ' + Math.round(mins / 1440) + ' días'; }
+/* ---------------- price per category + notes for Melissa (grown-ups panel) ---------------- */
+function shopCatHTML(){
+  return '<p class="muted" style="margin-top:10px">Precio por tipo (“=” sigue al general ×' + shopMult(S) + ')</p>' + SHOP_CATS.map(function(c){
+    const cur = (S.shopCat && SHOP_MULTS.indexOf(Number(S.shopCat[c.k])) > -1) ? Number(S.shopCat[c.k]) : 0;
+    return '<div style="margin-top:6px"><b style="font-size:14px">' + esc(c.label) + '</b> <span class="muted">(×' + catMult(S, c.k) + ')</span><div class="chips" style="margin:2px 0;justify-content:flex-start">' +
+      '<button class="chip' + (cur === 0 ? ' picked' : '') + '" style="font-size:16px;padding:6px 12px;min-width:44px" data-act="shopCat" data-c="' + c.k + '" data-v="0">=</button>' +
+      SHOP_MULTS.map(function(x){ return '<button class="chip' + (cur === x ? ' picked' : '') + '" style="font-size:16px;padding:6px 12px;min-width:44px" data-act="shopCat" data-c="' + c.k + '" data-v="' + x + '">×' + x + '</button>'; }).join('') + '</div></div>';
+  }).join('');
+}
+ACT.shopCat = function(d){
+  const x = Number(d.v); if(!SHOP_CATS.some(function(c){ return c.k === d.c; })) return;
+  S.shopCat = cleanShopCat(S.shopCat);
+  if(x === 0) delete S.shopCat[d.c]; else if(SHOP_MULTS.indexOf(x) > -1) S.shopCat[d.c] = x; else return;
+  save(); render();
+};
+function noteStatusHTML(n){
+  const r = noteReplyById(n.reply);
+  if(r) return '<div class="nscene small"><div class="nme">' + avatarSVG(S.avatar, { view: 'head' }) + '</div><div class="bubble">' + r.emoji + ' ' + esc(r.text) + '</div><div class="npet">' + friendImg() + '</div></div>';
+  return '<span class="muted">' + (n.read ? 'Leído' : (n.when === 'mission' ? 'Saldrá al terminar la misión de hoy' : 'Aún sin abrir')) + '</span>';
+}
+function notesCardHTML(){
+  const list = (S.notes || []).filter(function(n){ return !n.del; }).slice(-8).reverse(), inp = 'class="input" style="margin:4px 0;border:2px solid #d9dcf0"';
+  let from = 'Papá'; try { from = localStorage.getItem('matemagics_note_from') || from; } catch(e){}
+  return '<div class="card"><h3>💌 Mensajes para Melissa</h3><p class="muted" style="margin:4px 0 8px">Ella los abre con su avatar y su mascota y responde con un botón. Aquí ves su respuesta.</p>' +
+    '<label class="muted">De</label><input id="nt-from" ' + inp + ' value="' + esc(from) + '" maxlength="24">' +
+    '<label class="muted">Mensaje</label><textarea id="nt-text" ' + inp + ' rows="3" maxlength="300" placeholder="¡Qué orgullo de cómo trabajaste hoy!"></textarea>' +
+    '<label class="muted">Cuándo lo ve</label><select id="nt-when" ' + inp + '><option value="now">Al abrir la app</option><option value="mission">Al terminar la misión de hoy</option></select>' +
+    '<div class="row" style="margin-top:8px"><button class="btn grow" data-act="noteSend">Enviar mensaje</button></div>' +
+    (list.length ? '<div style="margin-top:10px">' + list.map(function(n){
+      return '<div class="prow" style="background:#EEF1FB;color:var(--ink);display:block"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + esc(n.date) + ' · <b>' + esc(n.from || '—') + '</b></span><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="noteDel" data-id="' + esc(n.id) + '">Borrar</button></div>' +
+        '<div style="margin:4px 0">' + esc(n.text) + '</div>' + noteStatusHTML(n) + '</div>';
+    }).join('') + '</div>' : '') + '</div><div class="gap"></div>';
+}
+ACT.noteSend = function(){
+  const t = document.getElementById('nt-text'), f = document.getElementById('nt-from'), w = document.getElementById('nt-when');
+  const text = t ? t.value : '', from = f ? f.value : '';
+  if(!text.trim()) return toast('Escribe el mensaje primero');
+  try { localStorage.setItem('matemagics_note_from', from.trim().slice(0, 24)); } catch(e){}
+  if(!addNote(S, text, from, w && w.value === 'mission' ? 'mission' : 'now')) return;
+  save(); toast('Mensaje enviado ✓'); render();
+};
+ACT.noteDel = function(d){ const n = noteById(S, d.id); if(!n) return; n.del = true; save(); render(); };
 function syncCardHTML(){
   const c = syncCfg(); const inp = 'class="input" style="margin:4px 0;border:2px solid #d9dcf0"';
   if(!c) return '<div class="card"><h3>🔄 Sincronizar dispositivos</h3><p class="muted" style="margin:4px 0 8px">Une el progreso, las estrellas, las compras y el avatar de este dispositivo con los demás (iPad, teléfono…). Necesita un repositorio privado de GitHub y un token solo para ese repositorio (mira docs/SYNC.md).</p>' +
@@ -21201,6 +21303,26 @@ ACT.meBox = function(){
   render();
 };
 ACT.meCancel = function(){ ME.prev = null; render(); };
+
+/* ---------------- a note from a grown-up: she sees herself and her mascot, answers with a button ---------------- */
+SCREENS.note = function(p){
+  const n = noteById(S, p && p.id);
+  if(!n || n.del) return go('hub');
+  const pet = PET_NAMES[S.friend] || 'Pato', scene = function(bubbleHTML, petBubble){
+    return '<div class="nscene"><div class="nme">' + avatarSVG(S.avatar, { view: 'head' }) + '</div>' + bubbleHTML + '<div class="npet' + (petBubble ? ' hop' : '') + '">' + friendImg() + '</div></div>';
+  };
+  if(p.sent){
+    const r = noteReplyById(n.reply) || NOTE_REPLIES[0];
+    R(topbar('💌 Sent!') + '<div class="card center">' + scene('<div class="bubble pop">' + r.emoji + ' ' + esc(r.text) + '</div>', true) +
+      '<p class="muted" style="margin:8px 0"><b>' + esc(pet) + '</b> loves your answer!</p><button class="btn good block" data-act="go" data-to="hub">Done</button></div>');
+    return;
+  }
+  R(topbar('💌 For you') + '<div class="card center"><p class="muted">' + (n.from ? 'From <b>' + esc(n.from) + '</b>' : 'A message for you') + '</p>' + scene('', false) +
+    '<div class="bubble note-text">' + esc(n.text) + '</div><div class="gap"></div><p class="muted"><b>' + esc(pet) + '</b> is waiting. Pick your answer:</p>' +
+    '<div class="chips">' + NOTE_REPLIES.map(function(r){ return '<button class="chip" style="font-size:18px" data-act="noteReply" data-id="' + esc(n.id) + '" data-r="' + r.id + '">' + r.emoji + ' ' + esc(r.text) + '</button>'; }).join('') + '</div></div>');
+};
+ACT.noteOpen = function(d){ if(noteById(S, d.id)) go('note', { id: d.id }); };
+ACT.noteReply = function(d){ if(!answerNote(S, d.id, d.r)) return; save(); confetti(50); go('note', { id: d.id, sent: true }); };
 
 (function(){try{var c=document.createElement('canvas');c.width=c.height=180;var x=c.getContext('2d');var g=x.createLinearGradient(0,0,180,180);g.addColorStop(0,'#9B51E0');g.addColorStop(1,'#F2A6D8');x.fillStyle=g;x.fillRect(0,0,180,180);x.font='100px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('🧙‍♀️',90,98);var l=document.createElement('link');l.rel='apple-touch-icon';l.href=c.toDataURL('image/png');document.head.appendChild(l);var l2=document.createElement('link');l2.rel='icon';l2.href=l.href;document.head.appendChild(l2);}catch(e){}})();
 </script></body></html>
