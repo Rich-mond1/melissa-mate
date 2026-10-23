@@ -395,6 +395,7 @@ SCREENS.parent = function(){
   let h = topbar('👪 Panel de padres');
   /* backup first: it is the only thing that can really be lost */
   const bk = m.backup;
+  h += notesCardHTML();
   h += syncCardHTML();
   h += '<div class="card" style="' + (bk.overdue ? 'border:3px solid #E8A33D' : '') + '"><h3>💾 Copia de seguridad</h3>' +
     '<p style="margin:6px 0">' + (bk.last ? 'Última copia: <b>' + esc(bk.last) + '</b> (hace ' + bk.daysAgo + ' día' + (bk.daysAgo === 1 ? '' : 's') + ')' : 'Todavía <b>no hay ninguna copia</b>.') + '</p>' +
@@ -418,7 +419,7 @@ SCREENS.parent = function(){
     '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Ritmo (por día de juego)</span><b>' + (e.perDay === null ? '—' : e.perDay + ' ⭐') + '</b></div>' +
     '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>Prendas compradas</span><b>' + e.owned + '</b></div>' +
     '<p class="muted" style="margin-top:6px">' + (e.cheapest === null ? 'Ya tiene todo el vestuario.' : (e.daysToCheapest === 0 ? 'Ya puede comprar la prenda más barata que le falta (' + e.cheapest + ' ⭐).' : (e.daysToCheapest === null ? 'Aún no hay ritmo para estimar.' : 'Con su ritmo, la prenda más barata que le falta (' + e.cheapest + ' ⭐) llega en unos ' + e.daysToCheapest + ' día(s) de juego.'))) + ' Si tarda demasiado se desmotiva; si compra todo en un día, no hay meta: ajusta el multiplicador de precios (solo afecta a lo que compre a partir de ahora).</p>' +
-    '<p style="margin-top:8px"><b>Precio del vestuario</b></p><div class="chips">' + SHOP_MULTS.map(function(x){ return '<button class="chip' + (shopMult(S) === x ? ' picked' : '') + '" data-act="shopMult" data-v="' + x + '">×' + x + '</button>'; }).join('') + '</div></div><div class="gap"></div>'; }
+    '<p style="margin-top:8px"><b>Precio del vestuario</b></p><div class="chips">' + SHOP_MULTS.map(function(x){ return '<button class="chip' + (shopMult(S) === x ? ' picked' : '') + '" data-act="shopMult" data-v="' + x + '">×' + x + '</button>'; }).join('') + '</div>' + shopCatHTML() + '</div><div class="gap"></div>'; }
   h += '<div class="card"><h3>🏅 Dominio</h3><p class="muted" style="margin-bottom:6px">Asentada = plata con buen acierto sin ayuda. Dominada = oro tras un repaso otro día.</p>' + [4, 3, 2, 1, 0].map(function(k){ return row(LV[k], m.levels[k] + ' habilidades'); }).join('') + '</div><div class="gap"></div>';
   h += '<div class="card"><h3>¿Está aprendiendo de verdad?</h3>' +
     row('Repasos superados (días después)', revN ? pct(revC / revN) + ' de ' + revN : 'sin datos aún') +
@@ -521,6 +522,48 @@ let SYNC_BUSY = false, SYNC_LAST_AUTO = 0;
 function syncCfg(){ try { const o = JSON.parse(localStorage.getItem(SYNC_KEY)); return o && o.cfg && o.cfg.token && o.cfg.repo && o.meta ? o : null; } catch(e){ return null; } }
 function syncStore(o){ try { localStorage.setItem(SYNC_KEY, JSON.stringify(o)); return true; } catch(e){ return false; } }
 function syncWhen(iso){ if(!iso) return 'nunca'; const d = new Date(iso); const mins = Math.round((Date.now() - d.getTime()) / 60000); if(mins < 1) return 'ahora mismo'; if(mins < 60) return 'hace ' + mins + ' min'; if(mins < 1440) return 'hace ' + Math.round(mins / 60) + ' h'; return 'hace ' + Math.round(mins / 1440) + ' días'; }
+/* ---------------- price per category + notes for Melissa (grown-ups panel) ---------------- */
+function shopCatHTML(){
+  return '<p class="muted" style="margin-top:10px">Precio por tipo (“=” sigue al general ×' + shopMult(S) + ')</p>' + SHOP_CATS.map(function(c){
+    const cur = (S.shopCat && SHOP_MULTS.indexOf(Number(S.shopCat[c.k])) > -1) ? Number(S.shopCat[c.k]) : 0;
+    return '<div style="margin-top:6px"><b style="font-size:14px">' + esc(c.label) + '</b> <span class="muted">(×' + catMult(S, c.k) + ')</span><div class="chips" style="margin:2px 0;justify-content:flex-start">' +
+      '<button class="chip' + (cur === 0 ? ' picked' : '') + '" style="font-size:16px;padding:6px 12px;min-width:44px" data-act="shopCat" data-c="' + c.k + '" data-v="0">=</button>' +
+      SHOP_MULTS.map(function(x){ return '<button class="chip' + (cur === x ? ' picked' : '') + '" style="font-size:16px;padding:6px 12px;min-width:44px" data-act="shopCat" data-c="' + c.k + '" data-v="' + x + '">×' + x + '</button>'; }).join('') + '</div></div>';
+  }).join('');
+}
+ACT.shopCat = function(d){
+  const x = Number(d.v); if(!SHOP_CATS.some(function(c){ return c.k === d.c; })) return;
+  S.shopCat = cleanShopCat(S.shopCat);
+  if(x === 0) delete S.shopCat[d.c]; else if(SHOP_MULTS.indexOf(x) > -1) S.shopCat[d.c] = x; else return;
+  save(); render();
+};
+function noteStatusHTML(n){
+  const r = noteReplyById(n.reply);
+  if(r) return '<div class="nscene small"><div class="nme">' + avatarSVG(S.avatar, { view: 'head' }) + '</div><div class="bubble">' + r.emoji + ' ' + esc(r.text) + '</div><div class="npet">' + friendImg() + '</div></div>';
+  return '<span class="muted">' + (n.read ? 'Leído' : (n.when === 'mission' ? 'Saldrá al terminar la misión de hoy' : 'Aún sin abrir')) + '</span>';
+}
+function notesCardHTML(){
+  const list = (S.notes || []).filter(function(n){ return !n.del; }).slice(-8).reverse(), inp = 'class="input" style="margin:4px 0;border:2px solid #d9dcf0"';
+  let from = 'Papá'; try { from = localStorage.getItem('matemagics_note_from') || from; } catch(e){}
+  return '<div class="card"><h3>💌 Mensajes para Melissa</h3><p class="muted" style="margin:4px 0 8px">Ella los abre con su avatar y su mascota y responde con un botón. Aquí ves su respuesta.</p>' +
+    '<label class="muted">De</label><input id="nt-from" ' + inp + ' value="' + esc(from) + '" maxlength="24">' +
+    '<label class="muted">Mensaje</label><textarea id="nt-text" ' + inp + ' rows="3" maxlength="300" placeholder="¡Qué orgullo de cómo trabajaste hoy!"></textarea>' +
+    '<label class="muted">Cuándo lo ve</label><select id="nt-when" ' + inp + '><option value="now">Al abrir la app</option><option value="mission">Al terminar la misión de hoy</option></select>' +
+    '<div class="row" style="margin-top:8px"><button class="btn grow" data-act="noteSend">Enviar mensaje</button></div>' +
+    (list.length ? '<div style="margin-top:10px">' + list.map(function(n){
+      return '<div class="prow" style="background:#EEF1FB;color:var(--ink);display:block"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + esc(n.date) + ' · <b>' + esc(n.from || '—') + '</b></span><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="noteDel" data-id="' + esc(n.id) + '">Borrar</button></div>' +
+        '<div style="margin:4px 0">' + esc(n.text) + '</div>' + noteStatusHTML(n) + '</div>';
+    }).join('') + '</div>' : '') + '</div><div class="gap"></div>';
+}
+ACT.noteSend = function(){
+  const t = document.getElementById('nt-text'), f = document.getElementById('nt-from'), w = document.getElementById('nt-when');
+  const text = t ? t.value : '', from = f ? f.value : '';
+  if(!text.trim()) return toast('Escribe el mensaje primero');
+  try { localStorage.setItem('matemagics_note_from', from.trim().slice(0, 24)); } catch(e){}
+  if(!addNote(S, text, from, w && w.value === 'mission' ? 'mission' : 'now')) return;
+  save(); toast('Mensaje enviado ✓'); render();
+};
+ACT.noteDel = function(d){ const n = noteById(S, d.id); if(!n) return; n.del = true; save(); render(); };
 function syncCardHTML(){
   const c = syncCfg(); const inp = 'class="input" style="margin:4px 0;border:2px solid #d9dcf0"';
   if(!c) return '<div class="card"><h3>🔄 Sincronizar dispositivos</h3><p class="muted" style="margin:4px 0 8px">Une el progreso, las estrellas, las compras y el avatar de este dispositivo con los demás (iPad, teléfono…). Necesita un repositorio privado de GitHub y un token solo para ese repositorio (mira docs/SYNC.md).</p>' +

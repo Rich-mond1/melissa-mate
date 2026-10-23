@@ -46,14 +46,25 @@ const AV_ITEMS = {
 const AV_DEFAULT = { skin: 'sk4', hairStyle: 'curly', hairColor: 'dkbrown', top: 'tee', bottom: 'joggers', hat: '', glasses: '', neck: '', face: '', wings: '', hold: '', bg: 'pink' };
 const MASCOT_IDS = AV_ITEMS.pet.map(function(r){ return r[0]; });
 const PET_ACC_SLOTS = ['phat', 'pglasses', 'pneck'];
-const SHOP_MULTS = [1, 2, 3, 5];        // the grown-up can make everything cost more (set in the Grown-ups panel)
+const SHOP_MULTS = [1, 2, 3, 5, 8];     // the grown-up can make everything cost more (set in the Grown-ups panel)
+/* price groups: the grown-up can set a different multiplier for each (S.shopCat[group]); a group without its own value follows the general one (S.shopMult) */
+const SHOP_CATS = [
+  { k: 'clothes', label: 'Ropa y pelo', slots: ['top', 'bottom', 'hairStyle', 'hairColor', 'skin'] },
+  { k: 'acc', label: 'Accesorios', slots: ['hat', 'glasses', 'neck', 'face', 'wings', 'hold'] },
+  { k: 'scene', label: 'Escenas', slots: ['bg'] },
+  { k: 'pet', label: 'Mascotas y su ropa', slots: ['pet', 'phat', 'pglasses', 'pneck'] },
+  { k: 'box', label: 'Cajas sorpresa', slots: [] }
+];
 const BOX_COST = 12;                    // base price of a surprise box
 function avItem(slot, id){ const l = AV_ITEMS[slot] || []; for(let i = 0; i < l.length; i++) if(l[i][0] === id) return { id: l[i][0], name: l[i][1], cost: l[i][2], c: l[i][3], req: l[i][4] || 0 }; return null; }
 function avOwns(state, slot, id){ const it = avItem(slot, id); if(!it) return false; return it.cost === 0 || (state.owned || []).indexOf(slot + ':' + id) > -1; }
 function shopMult(state){ const m = Number(state && state.shopMult); return SHOP_MULTS.indexOf(m) > -1 ? m : 1; }
+function slotCat(slot){ for(let i = 0; i < SHOP_CATS.length; i++) if(SHOP_CATS[i].slots.indexOf(slot) > -1) return SHOP_CATS[i].k; return 'acc'; }
+function catMult(state, cat){ const o = state && state.shopCat && Number(state.shopCat[cat]); return SHOP_MULTS.indexOf(o) > -1 ? o : shopMult(state); }
+function cleanShopCat(o){ const out = {}; if(!o || typeof o !== 'object' || Array.isArray(o)) return out; SHOP_CATS.forEach(function(c){ const v = Number(o[c.k]); if(SHOP_MULTS.indexOf(v) > -1) out[c.k] = v; }); return out; }
 function avGold(state){ let n = 0; const sk = (state && state.skills) || {}; Object.keys(sk).forEach(function(k){ if(sk[k] && sk[k].medal >= 3) n++; }); return n; }
 function avLocked(state, slot, id){ const it = avItem(slot, id); return !!(it && it.req > avGold(state) && !avOwns(state, slot, id)); }
-function avPrice(state, slot, id){ const it = avItem(slot, id); if(!it || it.cost === 0) return 0; return Math.max(1, Math.round(it.cost * shopMult(state))); }
+function avPrice(state, slot, id){ const it = avItem(slot, id); if(!it || it.cost === 0) return 0; return Math.max(1, Math.round(it.cost * catMult(state, slotCat(slot)))); }
 function defaultAvatar(){ return Object.assign({}, AV_DEFAULT); }
 function cleanOwned(a){
   const out = []; if(!Array.isArray(a)) return out;
@@ -107,11 +118,11 @@ function avCandidates(state){
 /* surprise box: a random item she does not own yet (and may open). Returns {slot,id} | 'poor' | 'full'. */
 function avBox(state, rnd){
   const c = avCandidates(state); if(!c.length) return 'full';
-  const price = Math.max(1, Math.round(BOX_COST * shopMult(state))); if(state.starBalance < price) return 'poor';
+  const price = boxPrice(state); if(state.starBalance < price) return 'poor';
   const w = c[Math.min(c.length - 1, Math.floor((rnd || Math.random)() * c.length))];
   state.starBalance -= price; state.owned.push(w.slot + ':' + w.id); avEquip(state, w.slot, w.id); return w;
 }
-function boxPrice(state){ return Math.max(1, Math.round(BOX_COST * shopMult(state))); }
+function boxPrice(state){ return Math.max(1, Math.round(BOX_COST * catMult(state, 'box'))); }
 /* progress through the wardrobe + the next legendary prize */
 function avProgress(state){
   let total = 0, have = 0, next = null; const gold = avGold(state);
@@ -333,4 +344,4 @@ function meetFriend(state, p){
   if(state.met.length === 0 || chance(p)){ const f = pick(unmet); state.met.push(f.id); return f; }
   return null;
 }
-if(typeof module !== 'undefined') module.exports = { AV_SLOTS, PET_SLOTS, AV_ITEMS, AV_DEFAULT, MASCOT_IDS, PET_ACC_SLOTS, SHOP_MULTS, BOX_COST, PET_ANCH, shopMult, avGold, avLocked, avPrice, avWorn, avCandidates, avBox, boxPrice, avProgress, cleanPetAcc, petWears, petCan, petAccSVG, avItem, avOwns, avEquip, avBuy, avCost, cleanAvatar, cleanOwned, defaultAvatar, avatarSVG, FRIENDS, friendById, cleanMet, meetFriend };
+if(typeof module !== 'undefined') module.exports = { AV_SLOTS, PET_SLOTS, AV_ITEMS, AV_DEFAULT, MASCOT_IDS, PET_ACC_SLOTS, SHOP_MULTS, SHOP_CATS, slotCat, catMult, cleanShopCat, BOX_COST, PET_ANCH, shopMult, avGold, avLocked, avPrice, avWorn, avCandidates, avBox, boxPrice, avProgress, cleanPetAcc, petWears, petCan, petAccSVG, avItem, avOwns, avEquip, avBuy, avCost, cleanAvatar, cleanOwned, defaultAvatar, avatarSVG, FRIENDS, friendById, cleanMet, meetFriend };

@@ -76,3 +76,23 @@ ACT.meBox = function(){
   render();
 };
 ACT.meCancel = function(){ ME.prev = null; render(); };
+
+/* ---------------- a note from a grown-up: she sees herself and her mascot, answers with a button ---------------- */
+SCREENS.note = function(p){
+  const n = noteById(S, p && p.id);
+  if(!n || n.del) return go('hub');
+  const pet = PET_NAMES[S.friend] || 'Pato', scene = function(bubbleHTML, petBubble){
+    return '<div class="nscene"><div class="nme">' + avatarSVG(S.avatar, { view: 'head' }) + '</div>' + bubbleHTML + '<div class="npet' + (petBubble ? ' hop' : '') + '">' + friendImg() + '</div></div>';
+  };
+  if(p.sent){
+    const r = noteReplyById(n.reply) || NOTE_REPLIES[0];
+    R(topbar('💌 Sent!') + '<div class="card center">' + scene('<div class="bubble pop">' + r.emoji + ' ' + esc(r.text) + '</div>', true) +
+      '<p class="muted" style="margin:8px 0"><b>' + esc(pet) + '</b> loves your answer!</p><button class="btn good block" data-act="go" data-to="hub">Done</button></div>');
+    return;
+  }
+  R(topbar('💌 For you') + '<div class="card center"><p class="muted">' + (n.from ? 'From <b>' + esc(n.from) + '</b>' : 'A message for you') + '</p>' + scene('', false) +
+    '<div class="bubble note-text">' + esc(n.text) + '</div><div class="gap"></div><p class="muted"><b>' + esc(pet) + '</b> is waiting. Pick your answer:</p>' +
+    '<div class="chips">' + NOTE_REPLIES.map(function(r){ return '<button class="chip" style="font-size:18px" data-act="noteReply" data-id="' + esc(n.id) + '" data-r="' + r.id + '">' + r.emoji + ' ' + esc(r.text) + '</button>'; }).join('') + '</div></div>');
+};
+ACT.noteOpen = function(d){ if(noteById(S, d.id)) go('note', { id: d.id }); };
+ACT.noteReply = function(d){ if(!answerNote(S, d.id, d.r)) return; save(); confetti(50); go('note', { id: d.id, sent: true }); };

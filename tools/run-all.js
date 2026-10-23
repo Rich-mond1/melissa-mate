@@ -22,7 +22,7 @@ const steps = [
   ['layout', 'node tools/layout-audit.js --n ' + (FULL ? 20 : 4) + ' --widths 360,390,430'],
   ['touch', 'node tools/touch-test.js'],
   ['palm', 'node tools/palm-test.js'],
-  ['sync', 'node tools/sync-test.js'],
+  ['sync', 'node tools/sync-test.js'], ['notes', 'node tools/notes-test.js'],
   ['syncui', 'node tools/sync-ui-test.js'],
   ['gold', 'node tools/gold-ui-test.js'],
   ['diagui', 'node tools/diag-ui-test.js'],

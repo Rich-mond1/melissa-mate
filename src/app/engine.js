@@ -66,7 +66,7 @@ function defaultState(){
     timer: { mode: 'free', minutes: 20, debtSeconds: 0 },
     streak: { count: 0, lastPlayDate: null },
     sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 },
-    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false, petAcc: {}, shopMult: 1
+    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false, petAcc: {}, shopMult: 1, shopCat: {}, notes: []
   };
 }
 /* ---------- evidence (one dated record per answered question; capped so localStorage stays small) ---------- */
@@ -169,6 +169,39 @@ function skillState(state, id){
   if(!state.skills[id]) state.skills[id] = { medal: 0, box: 0, seen: 0, correct: 0, credit: 0, lessonDone: false, last: null, due: null, wobbly: false, placed: false };
   return state.skills[id];
 }
+/* ---------- notes from the grown-ups: Melissa opens them with her avatar and her mascot, answers with a button, the grown-up sees the answer ---------- */
+const NOTE_REPLIES = [
+  { id: 'love', emoji: '❤️', text: 'I love you!' }, { id: 'party', emoji: '🎉', text: 'Yay! Thank you!' }, { id: 'hug', emoji: '🤗', text: 'Big hug!' },
+  { id: 'try', emoji: '⭐', text: 'I will try my best!' }, { id: 'done', emoji: '💪', text: 'I did it!' }, { id: 'laugh', emoji: '😂', text: 'Ha ha ha!' }
+];
+const NOTES_CAP = 60;
+function noteReplyById(id){ for(let i = 0; i < NOTE_REPLIES.length; i++) if(NOTE_REPLIES[i].id === id) return NOTE_REPLIES[i]; return null; }
+function cleanNotes(a){
+  if(!Array.isArray(a)) return [];
+  const seen = {}, out = [];
+  a.forEach(function(n){
+    if(!n || typeof n !== 'object' || typeof n.text !== 'string' || !n.text.trim() || !n.id) return;
+    const id = String(n.id).slice(0, 40); if(seen[id]) return; seen[id] = 1;
+    out.push({ id: id, text: n.text.trim().slice(0, 300), from: String(n.from || '').trim().slice(0, 24), when: n.when === 'mission' ? 'mission' : 'now',
+      date: /^\d{4}-\d{2}-\d{2}$/.test(String(n.date)) ? String(n.date) : '', read: !!n.read, reply: noteReplyById(n.reply) ? String(n.reply) : '', replyAt: n.reply && noteReplyById(n.reply) && typeof n.replyAt === 'string' ? n.replyAt.slice(0, 30) : '', del: !!n.del });
+  });
+  return out.sort(function(a, b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.id < b.id ? -1 : 1); }).slice(-NOTES_CAP);
+}
+function addNote(state, text, from, when, now, rnd){
+  text = String(text || '').trim(); if(!text) return null;
+  const n = { id: 'n' + (now || Date.now()).toString(36) + Math.floor((rnd || Math.random)() * 1679616).toString(36), text: text.slice(0, 300), from: String(from || '').trim().slice(0, 24), when: when === 'mission' ? 'mission' : 'now', date: todayStr(), read: false, reply: '', replyAt: '', del: false };
+  state.notes = cleanNotes((state.notes || []).concat([n])); return n;
+}
+/* notes she should see now: unread, not deleted, and (for "after the mission" ones) only once today's mission is done */
+function notesDue(state){
+  const d = state.daily && state.daily.date === todayStr() && state.daily.boss;
+  return (state.notes || []).filter(function(n){ return !n.del && !n.read && (n.when === 'now' || d); });
+}
+function noteById(state, id){ const l = state.notes || []; for(let i = 0; i < l.length; i++) if(l[i].id === id) return l[i]; return null; }
+function answerNote(state, id, replyId, now){
+  const n = noteById(state, id), r = noteReplyById(replyId); if(!n || n.del || !r) return null;
+  n.read = true; n.reply = r.id; n.replyAt = new Date(now || Date.now()).toISOString(); return n;
+}
 function mergeState(loaded){
   const d = defaultState(); const L = loaded || {};
   const m = Object.assign({}, d, L);
@@ -181,7 +214,7 @@ function mergeState(loaded){
   m.evidence = cleanEvidence(L.evidence);
   m.placement.paid = Math.max(0, Math.min(40, Number(m.placement.paid) | 0)); m.welcomeGift = !!L.welcomeGift;
   m.owned = cleanOwned(L.owned); m.avatar = cleanAvatar(L.avatar, m.owned); m.met = cleanMet(L.met);
-  m.petAcc = cleanPetAcc(L.petAcc, m.owned); m.shopMult = SHOP_MULTS.indexOf(Number(L.shopMult)) > -1 ? Number(L.shopMult) : 1;
+  m.petAcc = cleanPetAcc(L.petAcc, m.owned); m.shopMult = SHOP_MULTS.indexOf(Number(L.shopMult)) > -1 ? Number(L.shopMult) : 1; m.shopCat = cleanShopCat(L.shopCat); m.notes = cleanNotes(L.notes);
   m.lastBackup = (typeof L.lastBackup === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(L.lastBackup)) ? L.lastBackup : null;
   m.diag = (L.diag && typeof L.diag === 'object' && !Array.isArray(L.diag) && L.diag.strands && L.diag.results) ? L.diag : null;
   const petV = function(v){ v = Number(v) | 0; return v >= 0 && v < PET_VARIANTS ? v : 0; };
@@ -600,4 +633,4 @@ function checkBadges(state){
   return fresh;
 }
 
-if(typeof module !== 'undefined') module.exports = { migrateQuestToDiag, starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
+if(typeof module !== 'undefined') module.exports = { NOTE_REPLIES, noteReplyById, cleanNotes, addNote, notesDue, noteById, answerNote, migrateQuestToDiag, starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
