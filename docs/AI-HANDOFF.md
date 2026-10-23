@@ -128,3 +128,6 @@ Then: reproduce → minimal fix → `node tools/build.js` → suite → publish 
 - Animal album (64 creatures; new ones are added at the END of `CREATURES` because sticker ids use the list position), puzzle (one piece per 5 stars earned since `puzzleBase`), notes from the grown-ups, price per group (`shopCat`), mascot reacting to answers.
 - `tools/newcontent-audit.js` checks everything that is not a maths skill (wording rules, the maths said in friend lines, art, real screens at phone and iPad size).
 - WebKit (the iPad engine) can be installed with `npx playwright install webkit`; then `USE_WEBKIT=1 node tools/<ui-test>.js` runs any UI test on it (palm-test needs Chromium touch emulation).
+
+### "My plan" (Oct 2026)
+`questPlan(state)` (engine.js) is derived, not stored: skills the Explorer's Quest/diagnostic marked failed + skills currently `wobbly`. Order: refresh, core number skills (`PLAN_TIER`), new topics, logic. Done = silver. Hub card `.plancard` and `SCREENS.plan` (ui1.js). Test: `tools/plan-test.js`.

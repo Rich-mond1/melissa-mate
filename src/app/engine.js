@@ -469,7 +469,25 @@ function placementRecord(state, skillId, credit){
   else { P.misses++; }
 }
 function placementDone(state){ if(state.diag) return state.diag.done ? true : diagNextItem(state) === null; return placementNextItem(state) === null; }
-/* Explorer's Quest rewards: a welcome gift (so there is something to spend in "Me" from day one) and +3 stars for every land finished. */
+
+/* "My plan": what the Explorer's Quest found tricky, plus skills that went wobbly in reviews.
+   Order: refresh (wobbly now) first, then the core number skills, then the new topics, then logic. Done = silver or better. */
+const PLAN_TIER = { 'addsub-sub-column': 0, 'number-10-100-more-less': 0, 'number-compare-order': 0, 'multdiv-3': 0, 'multdiv-8': 0, 'logic-puzzles': 3, 'logic-strategies': 3 };
+function questPlan(state){
+  const failed = {};
+  if(state.placement && state.placement.results) Object.keys(state.placement.results).forEach(function(id){ if(state.placement.results[id] === 0) failed[id] = 1; });
+  if(state.diag && state.diag.results) Object.keys(state.diag.results).forEach(function(id){ const r = state.diag.results[id]; if(r && r.n > 0 && r.pass === false) failed[id] = 1; });
+  const items = [];
+  SKILLS.forEach(function(sk){
+    const st = state.skills[sk.id], wob = !!(st && st.wobbly && st.medal >= 1), q = !!failed[sk.id];
+    if(!q && !wob) return;
+    const medal = st ? st.medal : 0;
+    items.push({ id: sk.id, why: wob ? 'refresh' : 'quest', tier: wob ? -1 : (PLAN_TIER[sk.id] !== undefined ? PLAN_TIER[sk.id] : 1), medal: medal, done: medal >= 2 && !wob, unlocked: isUnlocked(state, sk), order: sk.order });
+  });
+  items.sort(function(a, b){ return a.done !== b.done ? (a.done ? 1 : -1) : (a.tier - b.tier) || (a.order - b.order); });
+  const open = items.filter(function(x){ return !x.done; });
+  return { items: items, total: items.length, done: items.length - open.length, next: open.filter(function(x){ return x.unlocked; })[0] || null };
+}/* Explorer's Quest rewards: a welcome gift (so there is something to spend in "Me" from day one) and +3 stars for every land finished. */
 const WELCOME_STARS = 20, LAND_STARS = 3;
 function claimWelcome(state){ if(state.welcomeGift) return 0; state.welcomeGift = true; state.starBalance += WELCOME_STARS; state.totalStars += WELCOME_STARS; return WELCOME_STARS; }
 function questLands(state){
@@ -648,4 +666,4 @@ function checkBadges(state){
   return fresh;
 }
 
-if(typeof module !== 'undefined') module.exports = { PUZZLE_TILES, PUZZLE_STEP, PUZZLE_PICS, PUZZLE_ORDER, puzzleInfo, puzzleCollect, albumStats, CREATURES, NOTE_REPLIES, noteReplyById, cleanNotes, addNote, notesDue, noteById, answerNote, migrateQuestToDiag, starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
+if(typeof module !== 'undefined') module.exports = { questPlan, PUZZLE_TILES, PUZZLE_STEP, PUZZLE_PICS, PUZZLE_ORDER, puzzleInfo, puzzleCollect, albumStats, CREATURES, NOTE_REPLIES, noteReplyById, cleanNotes, addNote, notesDue, noteById, answerNote, migrateQuestToDiag, starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
