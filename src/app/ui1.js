@@ -138,6 +138,7 @@ SCREENS.hub = function(){
     else if(rec) h += '<button class="btn block" data-act="mission" style="font-size:20px">🚀 Today’s mission · about 25 min</button><div class="gap"></div>';
     if(rec) h += '<button class="btn block' + (MISSION ? ' small' : '') + '" data-act="playRec"' + (MISSION ? ' style="background:#ffffffcc;color:var(--ink)"' : ' style="font-size:20px;background:#ffffffcc;color:var(--ink)"') + '>▶ Quick round — ' + (rec.step === 'learn' ? 'Learn' : STEP_LABEL[rec.step]) + ': ' + esc(rec.skill.name) + (rec.backoffFrom ? ' (let’s strengthen this first)' : '') + '</button>';
     if(due.length) h += '<div class="gap"></div><button class="btn good block" data-act="startReview">🧠 Brain boost — ' + due.length + ' to remember</button>';
+    { const pl = questPlan(S); if(pl.total){ const nx = pl.next && skillById(pl.next.id); h += '<div class="gap"></div><div class="card quest plancard"><h3>🎯 My plan <span class="pill">' + pl.done + '/' + pl.total + '</span></h3><p class="muted">' + (pl.done === pl.total ? 'You did them all — amazing! 🎉' : 'These are the things your quest says to practise. Get silver ⭐⭐ on each one!') + '</p><div class="planbar"><i style="width:' + Math.round(pl.done / pl.total * 100) + '%"></i></div>' + (nx && pl.done < pl.total ? '<div class="gap"></div><button class="btn block" data-act="skill" data-id="' + nx.id + '">' + nx.emoji + ' Next: ' + esc(nx.name) + '</button>' : '') + '<div class="gap"></div><button class="btn small block" style="background:#ffffffcc;color:var(--ink)" data-act="go" data-to="plan">See my whole plan</button></div>'; } }
     h += '<div class="gap"></div><div class="card quest"><h3>📅 Today’s quest <span class="pill">' + dailyDone() + '/3</span></h3>' +
       '<div class="task' + (d.warmup ? ' done' : '') + '"><span class="chk">' + (d.warmup ? '✓' : '') + '</span>Play one round</div>' +
       '<div class="task' + (d.learn ? ' done' : '') + '"><span class="chk">' + (d.learn ? '✓' : '') + '</span>Learn something new</div>' +
@@ -182,6 +183,17 @@ SCREENS.strand = function(p){
 };
 ACT.skill = function(d){ go('skill', { id: d.id }); };
 
+SCREENS.plan = function(){
+  const pl = questPlan(S);
+  let h = topbar('🎯 My plan', 'hub');
+  h += '<div class="card center"><b style="font-size:20px">' + pl.done + ' of ' + pl.total + ' done</b><p class="muted">Silver ⭐⭐ means a skill is strong. Do the top ones first!</p><div class="planbar"><i style="width:' + (pl.total ? Math.round(pl.done / pl.total * 100) : 0) + '%"></i></div></div><div class="gap"></div>';
+  if(!pl.total) h += '<div class="card"><p>Nothing to fix right now. Keep playing! 🌟</p></div>';
+  pl.items.forEach(function(it){
+    const sk = skillById(it.id); if(!sk) return;
+    h += '<div class="node' + (it.unlocked ? '' : ' locked') + '" data-act="skill" data-id="' + sk.id + '"><div class="em">' + (it.unlocked ? sk.emoji : '🔒') + '</div><div class="grow"><b>' + esc(sk.name) + (it.why === 'refresh' ? '<span class="tag wobbly">refresh</span>' : '') + '</b><div class="sub">' + (it.done ? 'Done! 🎉' : (it.unlocked ? (it.why === 'refresh' ? 'Needs a quick refresh' : 'Your quest said: let’s practise this') : 'Learn the first steps to open this')) + '</div></div>' + medalsHTML(it.medal) + '</div>';
+  });
+  R(h);
+};
 SCREENS.skill = function(p){
   const sk = skillById(p.id); const st = skillState(S, sk.id); const un = isUnlocked(S, sk); const str = strandMeta(sk.strand);
   const nxt = nextStepFor(S, sk);

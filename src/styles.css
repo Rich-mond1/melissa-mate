@@ -222,3 +222,5 @@ h1,h2,h3,p{margin:0;}
 .album{display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin:8px 0; font-size:26px;} .album .miss{filter:grayscale(1) brightness(1.6); opacity:.3;} .album .got{filter:none;}
 
 .puz{width:100%; max-width:420px; height:auto; display:block; margin:8px auto; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.18);}
+
+.planbar{height:12px;border-radius:8px;background:#e9ecf5;overflow:hidden;margin-top:8px}.planbar i{display:block;height:100%;background:linear-gradient(90deg,#34c76b,#ffd24a);border-radius:8px}
