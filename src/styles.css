@@ -218,3 +218,7 @@ h1,h2,h3,p{margin:0;}
 @keyframes pfhop{0%,100%{transform:translateY(0)}35%{transform:translateY(-16px) rotate(-6deg)}65%{transform:translateY(-4px) rotate(5deg)}}
 @keyframes pfsway{0%,100%{transform:rotate(0)}30%{transform:rotate(-7deg)}70%{transform:rotate(7deg)}}
 @media (prefers-reduced-motion:reduce){ .petfb .pfp{animation:none !important;} }
+
+.album{display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin:8px 0; font-size:26px;} .album .miss{filter:grayscale(1) brightness(1.6); opacity:.3;} .album .got{filter:none;}
+
+.puz{width:100%; max-width:420px; height:auto; display:block; margin:8px auto; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.18);}

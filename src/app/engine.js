@@ -66,7 +66,7 @@ function defaultState(){
     timer: { mode: 'free', minutes: 20, debtSeconds: 0 },
     streak: { count: 0, lastPlayDate: null },
     sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 },
-    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false, petAcc: {}, shopMult: 1, shopCat: {}, notes: []
+    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false, petAcc: {}, shopMult: 1, shopCat: {}, notes: [], puzzleCur: 0
   };
 }
 /* ---------- evidence (one dated record per answered question; capped so localStorage stays small) ---------- */
@@ -214,7 +214,7 @@ function mergeState(loaded){
   m.evidence = cleanEvidence(L.evidence);
   m.placement.paid = Math.max(0, Math.min(40, Number(m.placement.paid) | 0)); m.welcomeGift = !!L.welcomeGift;
   m.owned = cleanOwned(L.owned); m.avatar = cleanAvatar(L.avatar, m.owned); m.met = cleanMet(L.met);
-  m.petAcc = cleanPetAcc(L.petAcc, m.owned); m.shopMult = SHOP_MULTS.indexOf(Number(L.shopMult)) > -1 ? Number(L.shopMult) : 1; m.shopCat = cleanShopCat(L.shopCat); m.notes = cleanNotes(L.notes);
+  m.petAcc = cleanPetAcc(L.petAcc, m.owned); m.shopMult = SHOP_MULTS.indexOf(Number(L.shopMult)) > -1 ? Number(L.shopMult) : 1; m.shopCat = cleanShopCat(L.shopCat); m.notes = cleanNotes(L.notes); m.puzzleCur = Math.max(0, Math.min(500, Number(L.puzzleCur) | 0));
   m.lastBackup = (typeof L.lastBackup === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(L.lastBackup)) ? L.lastBackup : null;
   m.diag = (L.diag && typeof L.diag === 'object' && !Array.isArray(L.diag) && L.diag.strands && L.diag.results) ? L.diag : null;
   const petV = function(v){ v = Number(v) | 0; return v >= 0 && v < PET_VARIANTS ? v : 0; };
@@ -568,13 +568,27 @@ function diagSummary(state){
 }
 
 /* ---------- stickers (endless: creature × accessory × background × rarity) ---------- */
-const CREATURES = ['🦄', '🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐧', '🦉', '🦋', '🐢', '🐙', '🐬', '🐳', '🦖', '🦕', '🐝', '🐞', '🦩', '🦜', '🐘', '🦒', '🐹', '🐲', '🦔'];
-const ACCESSORIES = ['', '👑', '🎩', '🕶️', '🎀', '⭐', '🌈', '💎', '🎈', '🪄', '🌸', '🎧', '🧢', '🍀'];
+const CREATURES = ['🦄', '🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐧', '🦉', '🦋', '🐢', '🐙', '🐬', '🐳', '🦖', '🦕', '🐝', '🐞', '🦩', '🦜', '🐘', '🦒', '🐹', '🐲', '🦔',
+  '🦥', '🦦', '🐿️', '🦘', '🦓', '🐊', '🦈', '🐠', '🐡', '🦑', '🦀', '🦞', '🐌', '🦗', '🐛', '🦚', '🦢', '🦆', '🐓', '🐥', '🐴', '🐑', '🦙', '🐐', '🦌', '🐫', '🦛', '🦏', '🐅', '🐆', '🦇', '🦎'];   // new ones go at the END: sticker ids use the list position
+const ACCESSORIES = ['', '👑', '🎩', '🕶️', '🎀', '⭐', '🌈', '💎', '🎈', '🪄', '🌸', '🎧', '🧢', '🍀', '🔮', '🍭', '🎵', '❄️', '🔥', '🍓'];
 const STICKER_BGS = [['#FFD1DC', '#FFB3C7'], ['#C7E9FF', '#9AD0FF'], ['#D4F5D0', '#A8E6A3'], ['#FFF1B8', '#FFE27A'], ['#E6D4FF', '#C9A8FF'], ['#FFD9B3', '#FFB87A'], ['#C8F7F0', '#8EE9DB'], ['#FFC9C9', '#FF9E9E'], ['#D9E2FF', '#B5C6FF'], ['#F5D0FE', '#E9A2FB'], ['#E0F7B5', '#C3EA7A'], ['#FFE5EC', '#FFC2D1']];
 const RARITIES = ['common', 'rare', 'epic', 'legendary'];
 function rollRarity(){ const r = rng(); return r < 0.62 ? 'common' : (r < 0.88 ? 'rare' : (r < 0.98 ? 'epic' : 'legendary')); }
 const PET_IDS = ['ginger', 'bimba', 'duck'];
 const PET_VARIANTS = 9;   // images per pet (variant 0 = mascot) -> 27 collectible pet stickers
+/* ---------- puzzle: every 5 stars she earns turns over one piece of a picture; 12 pieces = a finished picture and a sticker pack ---------- */
+const PUZZLE_TILES = 12, PUZZLE_STEP = 5, PUZZLE_PICS = 6, PUZZLE_ORDER = [5, 2, 9, 0, 7, 11, 3, 8, 1, 6, 10, 4];
+function puzzleInfo(state){
+  const cur = Math.max(0, Number(state.puzzleCur) | 0), per = PUZZLE_TILES * PUZZLE_STEP, into = Math.max(0, (Number(state.totalStars) || 0) - cur * per);
+  const tiles = Math.min(PUZZLE_TILES, Math.floor(into / PUZZLE_STEP));
+  return { cur: cur, pic: cur % PUZZLE_PICS, tiles: tiles, complete: tiles >= PUZZLE_TILES, toNext: tiles >= PUZZLE_TILES ? 0 : PUZZLE_STEP - (into % PUZZLE_STEP), shown: PUZZLE_ORDER.slice(0, tiles) };
+}
+function puzzleCollect(state){ if(!puzzleInfo(state).complete) return false; state.puzzleCur = (state.puzzleCur | 0) + 1; state.packs = (state.packs | 0) + 1; return true; }
+/* the animal album: which creatures she has found at least once (as a sticker) */
+function albumStats(state){
+  const have = {}; (state.stickers || []).forEach(function(s){ if(s.base) have[s.base] = 1; });
+  return { have: CREATURES.filter(function(c){ return have[c]; }).length, total: CREATURES.length, owned: have };
+}
 function rollSticker(owned){
   let s = null;
   if(chance(0.08)){   // a pet friend sticker (the family pets, always legendary; 27 different pictures)
@@ -633,4 +647,4 @@ function checkBadges(state){
   return fresh;
 }
 
-if(typeof module !== 'undefined') module.exports = { NOTE_REPLIES, noteReplyById, cleanNotes, addNote, notesDue, noteById, answerNote, migrateQuestToDiag, starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
+if(typeof module !== 'undefined') module.exports = { PUZZLE_TILES, PUZZLE_STEP, PUZZLE_PICS, PUZZLE_ORDER, puzzleInfo, puzzleCollect, albumStats, CREATURES, NOTE_REPLIES, noteReplyById, cleanNotes, addNote, notesDue, noteById, answerNote, migrateQuestToDiag, starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
