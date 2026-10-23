@@ -171,12 +171,16 @@ function endQuestion(credit, ok, skipped){
   }
   if(ok){
     const praise = (credit >= 1 ? pick(PRAISE).replace(/[.!]$/, '') : 'You worked it out') + ', ' + nick() + '!';
-    SESS.fbHTML = '<div class="feedback ok">✅ ' + praise + '</div>';
+    SESS.run = credit >= 1 ? (SESS.run || 0) + 1 : 0;
+    SESS.fbHTML = petFB(true, '<div class="feedback ok">✅ ' + praise + (SESS.run >= 3 ? '<div class="run">🔥 ' + SESS.run + ' in a row!</div>' : '') + '</div>');
   } else {
-    SESS.fbHTML = '<div class="feedback">' + pick(ENCOURAGE).replace(/[.!]$/, '') + ', ' + nick() + '!</div>' + explainHTML(q);
+    SESS.run = 0;
+    SESS.fbHTML = petFB(false, '<div class="feedback">' + pick(ENCOURAGE).replace(/[.!]$/, '') + ', ' + nick() + '!</div>') + explainHTML(q);
   }
   render();
 }
+/* her mascot reacts to every answer: it jumps for joy when she gets it, and sits beside her with a kind word when she does not */
+function petFB(good, inner){ return '<div class="petfb ' + (good ? 'ok' : 'no') + '"><div class="pfp">' + friendImg() + '</div><div class="pfb">' + inner + '</div></div>'; }
 function explainHTML(q){
   const ans = q.type === 'mcq' ? q.options[q.correct].label : (q.type === 'num' ? q.answer + (q.unit ? ' ' + q.unit : '') : '');
   return (ans ? '<div class="explain"><div class="eh">The answer is <b>' + ans + '</b></div>' : '<div class="explain">') + q.explain + '</div>';
