@@ -67,9 +67,9 @@ let bad = 0; Object.keys(E.AV_ITEMS).forEach(k => E.AV_ITEMS[k].forEach(r => { c
   console.log('▶ parent panel shows the star economy');
   await p.evaluate(() => { PARENT_OK = true; go('parent'); }); await p.waitForTimeout(150); t = await text(); ok(/Estrellas y premios/.test(t) && /Ganadas \/ gastadas/.test(t), 'parent card present');
   console.log('▶ friends appear on the way');
-  await p.evaluate(() => { S.met = []; S.packs = 1; save(); go('friends'); }); t = await text(); ok(/0 of 8/.test(t) && (t.match(/\?\?\?/g) || []).length === 8, 'all 8 are hidden as ??? at first');
+  await p.evaluate(() => { S.met = []; S.packs = 1; save(); go('friends'); }); t = await text(); ok(/0 of 16/.test(t) && (t.match(/\?\?\?/g) || []).length === 16, 'all 16 are hidden as ??? at first');
   await p.evaluate(() => { ACT.openPack(); }); await p.waitForTimeout(150); t = await text(); ok(await p.evaluate(() => scr.name === 'reveal' && S.met.length === 1), 'the first pack brings the first friend'); ok(/You met a new friend/.test(t), 'reveal shows the friend card'); ok(await p.evaluate(() => document.querySelector('.friendcard img').naturalWidth > 100), 'friend picture really loads');
-  await p.evaluate(() => go('friends')); t = await text(); ok(/1 of 8/.test(t) && (t.match(/\?\?\?/g) || []).length === 7, 'friends screen: 1 met, 7 hidden');
+  await p.evaluate(() => go('friends')); t = await text(); ok(/1 of 16/.test(t) && (t.match(/\?\?\?/g) || []).length === 15, 'friends screen: 1 met, 15 hidden');
   await p.evaluate(() => document.querySelector('.fcard:not(.locked)').click()); await p.waitForTimeout(100); ok(await p.evaluate(() => scr.name === 'friendMeet'), 'tap a met friend opens its page');
   await p.evaluate(() => { MISSION = { t0: Date.now() - 600000, done: [{ kind: 'practice', skillId: null, acc: 1 }], agg: { stars: 3, medals: [], goldWaiting: [], wobblyCleared: 0, newBadges: [], levelUp: 0, n: 5, sum: 5, perfect: false, packs: 0 } }; S.met = ['hoot']; save(); ACT.missionEnd(); }); await p.waitForTimeout(200);
   ok(await p.evaluate(() => scr.name === 'results'), 'mission results opens'); ok(await p.evaluate(() => S.met.length >= 1 && S.met.length <= 2), 'a mission can bring at most one new friend');

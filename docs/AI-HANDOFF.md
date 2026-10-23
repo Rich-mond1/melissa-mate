@@ -122,3 +122,9 @@ node tools/run-all.js                                          # must be green b
 node tools/text-dump.js /tmp/txt && ls /tmp/txt                # read what the child reads
 ```
 Then: reproduce → minimal fix → `node tools/build.js` → suite → publish (§9).
+
+## 11. Added in Oct 2026 (all covered by the suite)
+- Friends: 16 (8 original + Tilly, Rocco, Dina, Coral, Abra, Bea, Zara, Dot); art in `tools/art/friends/*.webp` → `node tools/make-friends-art.js`.
+- Animal album (64 creatures; new ones are added at the END of `CREATURES` because sticker ids use the list position), puzzle (one piece per 5 stars earned since `puzzleBase`), notes from the grown-ups, price per group (`shopCat`), mascot reacting to answers.
+- `tools/newcontent-audit.js` checks everything that is not a maths skill (wording rules, the maths said in friend lines, art, real screens at phone and iPad size).
+- WebKit (the iPad engine) can be installed with `npx playwright install webkit`; then `USE_WEBKIT=1 node tools/<ui-test>.js` runs any UI test on it (palm-test needs Chromium touch emulation).

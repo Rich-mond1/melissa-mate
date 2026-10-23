@@ -334,7 +334,15 @@ const FRIENDS = [
   { id: 'lumi', name: 'Lumi', theme: 'Sleepy moon fairy', line: 'The moon is out. A little brain boost before bed? ✨' },
   { id: 'blip', name: 'Blip', theme: 'Alien from Planet Zog', line: 'On Planet Zog, 2 + 2 is also 4! Teach me more, please.' },
   { id: 'pups', name: 'The Scout Pups', theme: 'Three adventure pups', line: 'Three pups with three backpacks. How many backpacks? 3 × 1… easy!' },
-  { id: 'starbeat', name: 'Star Beat', theme: 'Pop star', line: 'Every song has a beat. Count with me: 1, 2, 3, 4!' }
+  { id: 'starbeat', name: 'Star Beat', theme: 'Pop star', line: 'Every song has a beat. Count with me: 1, 2, 3, 4!' },
+  { id: 'tilly', name: 'Tilly', theme: 'Bunny with a pocket watch', line: 'Tick-tock! A quarter of an hour is 15 minutes. Can you tell me the time?' },
+  { id: 'rocco', name: 'Rocco', theme: 'Friendly number robot', line: 'Beep boop! My buttons count 0 to 9. What number shall we make?' },
+  { id: 'dina', name: 'Dina', theme: 'Baby dinosaur explorer', line: 'I measured my footprint with my ruler. How long is yours?' },
+  { id: 'coral', name: 'Coral', theme: 'Octopus of the reef', line: 'Eight arms, eight shells! Count in eights with me: 8, 16, 24, 32!' },
+  { id: 'abra', name: 'Abra', theme: 'Fox magician', line: 'Pick a number, double it, add ten… ta-da! Maths is full of magic tricks.' },
+  { id: 'bea', name: 'Bea', theme: 'Honeycomb bee', line: 'Every cell in my honeycomb has 6 sides. Spot the pattern with me!' },
+  { id: 'zara', name: 'Zara', theme: 'Little pizza chef', line: 'I cut my pizza into 8 equal slices. If you eat 2, what fraction is left?' },
+  { id: 'dot', name: 'Dot', theme: 'Detective dalmatian', line: 'Every puzzle has a clue. Let us look closely and solve it together!' }
 ];
 function friendById(id){ for(let i = 0; i < FRIENDS.length; i++) if(FRIENDS[i].id === id) return FRIENDS[i]; return null; }
 function cleanMet(a){ const out = []; if(!Array.isArray(a)) return out; a.forEach(function(x){ x = String(x); if(friendById(x) && out.indexOf(x) === -1) out.push(x); }); return out; }

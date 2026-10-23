@@ -111,7 +111,7 @@ console.log('▶ notes and prices travel between devices');
   await p.click('[data-act=shopCat][data-c=clothes][data-v="8"]'); ok(await p.evaluate(() => S.shopCat.clothes === 8 && catMult(S, 'clothes') === 8), 'tapping x8 on clothes sets it');
   await p.click('[data-act=shopCat][data-c=clothes][data-v="0"]'); ok(await p.evaluate(() => !('clothes' in S.shopCat)), 'tapping = goes back to the general price');
   await p.click('[data-act=noteSend]'); ok(await p.evaluate(() => S.notes.length === 0), 'empty message is not sent');
-  await p.fill('#nt-from', 'Papá'); await p.fill('#nt-text', 'Estoy muy orgulloso de ti 💛 <b>x</b>'); await p.click('[data-act=noteSend]');
+  await p.waitForTimeout(150); await p.fill('#nt-from', 'Papá'); await p.fill('#nt-text', 'Estoy muy orgulloso de ti 💛 <b>x</b>'); await p.click('[data-act=noteSend]');
   ok(await p.evaluate(() => S.notes.length === 1 && S.notes[0].text.includes('<b>x</b>') && !document.querySelector('.card b[data-x]')), 'message is saved');
   ok(await p.evaluate(() => !document.body.innerHTML.includes('<b>x</b>') && document.body.innerText.includes('Aún sin abrir')), 'message text is escaped and shown as unread');
   await p.evaluate(() => go('hub')); await p.waitForTimeout(150); t = await txt(); if(!/A message for you/.test(t)) console.log(JSON.stringify(await p.evaluate(() => [scr.name, S.notes, notesDue(S).length])), t.slice(0, 200)); ok(/A message for you/.test(t) && /Papá left you a message/.test(t), 'hub shows the message card');
@@ -136,14 +136,15 @@ console.log('▶ notes and prices travel between devices');
   await p.evaluate(() => { S.totalStars = 60; S.puzzleBase = 0; S.packs = 0; save(); go('puzzle'); }); await p.waitForTimeout(120); ok(/finished it/.test(await txt()), 'finished picture offers the sticker pack');
   await p.click('[data-act=puzzleCollect]'); await p.waitForTimeout(150); ok(await p.evaluate(() => S.puzzleCur === 1 && S.packs === 1) && /0 \/ 12 pieces/.test(await txt()), 'collecting moves to the next picture');
   console.log('▶ mascot reacts to answers');
-  await p.evaluate(() => { for(let i = 0; i < 30; i++){ startSession('practice', 'logic-sorting'); if(SESS.q && SESS.q.type === 'mcq') break; } });
+  await p.evaluate(() => { for(let i = 0; i < 30; i++){ startSession('practice', 'logic-sorting'); if(SESS.q && SESS.q.type === 'mcq' && SESS.q.options.length >= 3) break; } });
   await p.waitForTimeout(400); ok(await p.evaluate(() => SESS.q.type === 'mcq' && !document.querySelector('.petfb')), 'no mascot reaction before she answers');
   await p.evaluate(() => { const q = SESS.q; const c = q.options.findIndex(o => o.key === q.correctKey); document.querySelector('[data-act=pick][data-k="' + c + '"]').click(); }); await p.waitForTimeout(250);
   ok(await p.evaluate(() => !!document.querySelector('.petfb.ok .pfp .pw img') && !!document.querySelector('.petfb.ok .feedback.ok') && SESS.run === 1), 'right answer: the mascot celebrates beside the praise');
   await p.evaluate(() => { SESS.run = 2; ACT.qnext && 0; });
-  await p.evaluate(() => { for(let i = 0; i < 30; i++){ startSession('practice', 'logic-sorting'); if(SESS.q && SESS.q.type === 'mcq') break; } }); await p.waitForTimeout(400);
+  await p.evaluate(() => { for(let i = 0; i < 30; i++){ startSession('practice', 'logic-sorting'); if(SESS.q && SESS.q.type === 'mcq' && SESS.q.options.length >= 3) break; } }); await p.waitForTimeout(400);
   for(let i = 0; i < 8 && !(await p.evaluate(() => SESS.phase === 'fb')); i++){ await p.evaluate(() => { if(SESS.phase === 'fb') return; const q = SESS.q; const ks = [...document.querySelectorAll('[data-act=pick]:not([disabled])')].map(b => Number(b.dataset.k)).filter(k => q.options[k].key !== q.correctKey); if(ks.length) document.querySelector('[data-act=pick][data-k="' + ks[0] + '"]').click(); }); await p.waitForTimeout(400); }
   await p.waitForTimeout(300);
+  { const dbg = await p.evaluate(() => JSON.stringify({ ph: SESS.phase, run: SESS.run, pf: document.querySelector('.petfb') && document.querySelector('.petfb').className, tries: SESS.tries, type: SESS.q.type, credits: SESS.credits })); if(process.env.DBG) console.log('   dbg', dbg); }
   ok(await p.evaluate(() => !!document.querySelector('.petfb') && !document.querySelector('.petfb.ok') && !!document.querySelector('.petfb.no .pfp .pw img') && SESS.run === 0), 'wrong answer: the mascot stays with her and the streak resets');
   ok(errs.length === 0, 'no console errors: ' + errs.join(' | ')); await b.close();
   console.log(fails ? '\n❌ NOTES TEST FAILED (' + fails + ' of ' + checks + ')' : '\n✅ NOTES TEST PASSED (' + checks + ' checks)'); process.exit(fails ? 1 : 0);
