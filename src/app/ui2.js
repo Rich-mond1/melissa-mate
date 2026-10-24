@@ -103,11 +103,21 @@ SCREENS.question = function(){
   if(SESS.fb && !fb) h += '<div class="feedback">' + SESS.fb + '</div>';
   if(fb) h += SESS.fbHTML;
   h += '</div>';
-  if(fb) h += '<div class="gap"></div><button class="btn block" data-act="qnext">' + (placing ? 'Next →' : (SESS.idx + 1 >= SESS.items.length ? 'Finish ✨' : 'Next →')) + '</button>';
+  if(fb) h += '<div class="nextbar"><button class="btn block" data-act="qnext">' + (placing ? 'Next →' : (SESS.idx + 1 >= SESS.items.length ? 'Finish ✨' : 'Next →')) + '</button></div>';
   else if(!placing && !SESS.hint) h += '<div class="gap"></div><button class="btn small block" style="background:#ffffff40;color:#fff" data-act="hint">💡 Give me a hint</button>';
   if(placing && !fb) h += '<div class="gap"></div><button class="btn small block" style="background:#ffffff40;color:#fff" data-act="idk">I don’t know yet</button>';
   R(h);
+  if(fb) setTimeout(fitFeedback, 40);
 };
+/* After an answer, bring the right answer + the feedback into view (the Next button is sticky, so it is always there). */
+function fitFeedback(){
+  const app = document.getElementById('app'), nb = document.querySelector('.nextbar'); if(!app || !nb) return;
+  const anchor = document.querySelector('.opt.correct') || document.querySelector('.feedback'); if(!anchor) return;
+  const limit = nb.getBoundingClientRect().top, fbs = document.querySelectorAll('.feedback, .explain'), last = fbs[fbs.length - 1];
+  if(last && last.getBoundingClientRect().bottom <= limit && anchor.getBoundingClientRect().top >= 0) return;   // already all visible
+  const want = anchor.getBoundingClientRect().top - 64;   // correct answer near the top, feedback under it
+  if(want > 0) app.scrollTo({ top: app.scrollTop + want });
+}
 ACT.sayq = function(){ speak(SESS.q.prompt, true); };
 ACT.quit = function(){
   if(SESS.kind === 'placement'){ save(); SESS = null; return go('hub'); }

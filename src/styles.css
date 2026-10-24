@@ -224,3 +224,16 @@ h1,h2,h3,p{margin:0;}
 .puz{width:100%; max-width:420px; height:auto; display:block; margin:8px auto; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.18);}
 
 .planbar{height:12px;border-radius:8px;background:#e9ecf5;overflow:hidden;margin-top:8px}.planbar i{display:block;height:100%;background:linear-gradient(90deg,#34c76b,#ffd24a);border-radius:8px}
+
+/* Next is always on screen (no scrolling to reach it); on short screens the question screen gets tighter */
+.nextbar{position:sticky; bottom:0; z-index:5; margin-top:12px; padding:8px 0 2px;}
+@media (max-height:860px){
+  #app{padding-top:calc(8px + var(--safe-t));}
+  .topbar{margin-bottom:6px;}
+  .qcard{padding:44px 12px 12px;} .qprompt{font-size:19px; margin:2px 2px 8px; line-height:1.25;} .qvis{margin-bottom:6px;}
+  .opt{min-height:46px; padding:6px 10px; font-size:19px;} .opts{gap:8px;}
+  .feedback{margin-top:8px; font-size:19px;} .petfb{margin-top:8px;} .petfb .pfp{width:48px;} .petfb .pfp .pw{width:48px; height:48px;} .petfb .feedback{font-size:18px;}
+  .explain{margin-top:8px; padding:10px; font-size:15px; line-height:1.4;} .explain .eh{font-size:16px; margin-bottom:3px;} .explain .step{padding:3px 0;}
+  .keypad{gap:6px; margin-top:6px;} .keypad button{min-height:44px; font-size:22px;} .numdisplay{min-height:50px; font-size:30px;}
+  .hint-text{margin-top:6px; padding:8px; font-size:15px;}
+}

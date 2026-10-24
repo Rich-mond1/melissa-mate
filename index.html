@@ -230,6 +230,19 @@ h1,h2,h3,p{margin:0;}
 
 .planbar{height:12px;border-radius:8px;background:#e9ecf5;overflow:hidden;margin-top:8px}.planbar i{display:block;height:100%;background:linear-gradient(90deg,#34c76b,#ffd24a);border-radius:8px}
 
+/* Next is always on screen (no scrolling to reach it); on short screens the question screen gets tighter */
+.nextbar{position:sticky; bottom:0; z-index:5; margin-top:12px; padding:8px 0 2px;}
+@media (max-height:860px){
+  #app{padding-top:calc(8px + var(--safe-t));}
+  .topbar{margin-bottom:6px;}
+  .qcard{padding:44px 12px 12px;} .qprompt{font-size:19px; margin:2px 2px 8px; line-height:1.25;} .qvis{margin-bottom:6px;}
+  .opt{min-height:46px; padding:6px 10px; font-size:19px;} .opts{gap:8px;}
+  .feedback{margin-top:8px; font-size:19px;} .petfb{margin-top:8px;} .petfb .pfp{width:48px;} .petfb .pfp .pw{width:48px; height:48px;} .petfb .feedback{font-size:18px;}
+  .explain{margin-top:8px; padding:10px; font-size:15px; line-height:1.4;} .explain .eh{font-size:16px; margin-bottom:3px;} .explain .step{padding:3px 0;}
+  .keypad{gap:6px; margin-top:6px;} .keypad button{min-height:44px; font-size:22px;} .numdisplay{min-height:50px; font-size:30px;}
+  .hint-text{margin-top:6px; padding:8px; font-size:15px;}
+}
+
 </style></head><body><div id="app"></div>
 <script>
 /* ===== src/core.js ===== */
@@ -20745,11 +20758,21 @@ SCREENS.question = function(){
   if(SESS.fb && !fb) h += '<div class="feedback">' + SESS.fb + '</div>';
   if(fb) h += SESS.fbHTML;
   h += '</div>';
-  if(fb) h += '<div class="gap"></div><button class="btn block" data-act="qnext">' + (placing ? 'Next →' : (SESS.idx + 1 >= SESS.items.length ? 'Finish ✨' : 'Next →')) + '</button>';
+  if(fb) h += '<div class="nextbar"><button class="btn block" data-act="qnext">' + (placing ? 'Next →' : (SESS.idx + 1 >= SESS.items.length ? 'Finish ✨' : 'Next →')) + '</button></div>';
   else if(!placing && !SESS.hint) h += '<div class="gap"></div><button class="btn small block" style="background:#ffffff40;color:#fff" data-act="hint">💡 Give me a hint</button>';
   if(placing && !fb) h += '<div class="gap"></div><button class="btn small block" style="background:#ffffff40;color:#fff" data-act="idk">I don’t know yet</button>';
   R(h);
+  if(fb) setTimeout(fitFeedback, 40);
 };
+/* After an answer, bring the right answer + the feedback into view (the Next button is sticky, so it is always there). */
+function fitFeedback(){
+  const app = document.getElementById('app'), nb = document.querySelector('.nextbar'); if(!app || !nb) return;
+  const anchor = document.querySelector('.opt.correct') || document.querySelector('.feedback'); if(!anchor) return;
+  const limit = nb.getBoundingClientRect().top, fbs = document.querySelectorAll('.feedback, .explain'), last = fbs[fbs.length - 1];
+  if(last && last.getBoundingClientRect().bottom <= limit && anchor.getBoundingClientRect().top >= 0) return;   // already all visible
+  const want = anchor.getBoundingClientRect().top - 64;   // correct answer near the top, feedback under it
+  if(want > 0) app.scrollTo({ top: app.scrollTop + want });
+}
 ACT.sayq = function(){ speak(SESS.q.prompt, true); };
 ACT.quit = function(){
   if(SESS.kind === 'placement'){ save(); SESS = null; return go('hub'); }
