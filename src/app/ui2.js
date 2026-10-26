@@ -661,6 +661,21 @@ function boot(){
       setTimeout(function(){ if(lastClick < t0) fire(el); }, 150);
     }
   }, { passive: true });
+  /* NO ZOOM. iPadOS ignores user-scalable=no, and a pinched/double-tapped page is magnified: the keys then sit under a different spot than
+     the finger (5 types 8, delete types 9) and the screen looks "frozen". Block pinch, and if the page ever ends up zoomed, snap it back. */
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function(t){ document.addEventListener(t, function(e){ e.preventDefault(); }, { passive: false }); });
+  document.addEventListener('touchmove', function(e){ if(e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  let unzooming = false;
+  window.unzoom = function(){
+    const vv = window.visualViewport; if(unzooming || !vv || vv.scale <= 1.02) return false;
+    const m = document.querySelector('meta[name=viewport]'); if(!m) return false;
+    unzooming = true; const orig = m.getAttribute('content');
+    m.setAttribute('content', 'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover');
+    setTimeout(function(){ m.setAttribute('content', orig); unzooming = false; }, 120);
+    return true;
+  };
+  if(window.visualViewport){ window.visualViewport.addEventListener('resize', function(){ window.unzoom(); }); }
+  document.addEventListener('touchend', function(){ if(window.visualViewport && window.visualViewport.scale > 1.02) setTimeout(window.unzoom, 60); }, { passive: true });
   window.addEventListener('error', function(){ try { toast('Oops — let’s go back'); } catch(e){} });
   document.addEventListener('change', function(e){
     if(e.target.dataset && e.target.dataset.chg) onChange(e.target);
