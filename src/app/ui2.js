@@ -482,7 +482,7 @@ function fallbackCopy(txt){
 }
 ACT.export = function(){
   S.lastBackup = todayStr(); save();
-  const blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }); const a = document.createElement('a');
+  const blob = new Blob([JSON.stringify(Object.assign({}, S, { _tapLog: (window.tapLog ? window.tapLog() : []) }), null, 1)], { type: 'application/json' }); const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = 'matemagics-' + todayStr() + '.json'; document.body.appendChild(a); a.click(); a.remove();
 };
 /* Backup through the iPad share sheet ("Save to Files", AirDrop, email...). Plan B for Exportar, whose download link may not work in a home-screen app. */
@@ -491,8 +491,8 @@ ACT.share = function(){
   PREV_BACKUP = S.lastBackup;
   const name = 'matemagics-' + todayStr() + '.json';
   try {
-    const file = new File([JSON.stringify(S, null, 1)], name, { type: 'application/json' });
-    S.lastBackup = todayStr(); const file2 = new File([JSON.stringify(S, null, 1)], name, { type: 'application/json' });
+    const file = new File([JSON.stringify(Object.assign({}, S, { _tapLog: (window.tapLog ? window.tapLog() : []) }), null, 1)], name, { type: 'application/json' });
+    S.lastBackup = todayStr(); const file2 = new File([JSON.stringify(Object.assign({}, S, { _tapLog: (window.tapLog ? window.tapLog() : []) }), null, 1)], name, { type: 'application/json' });
     if(navigator.share && navigator.canShare && navigator.canShare({ files: [file2] })){
       navigator.share({ files: [file2], title: 'Matemagics ' + todayStr() }).then(function(){ save(); if(scr.name === 'parent') render(); }).catch(function(e){ if(e && e.name === 'AbortError'){ S.lastBackup = PREV_BACKUP; } else toast('No se pudo compartir'); });
       return;
@@ -643,10 +643,21 @@ function boot(){
   // a short, still touch is a tap (and, if iOS swallows its click, we run it ourselves); a long or moving touch that overlapped a tap on
   // another button (a resting palm) is NOT a tap, and the click it leaves behind on release is ignored.
   const touches = {}; let ignoreEl = null, ignoreUntil = 0, lastTap = null;
+  /* Tap log (last 40 events, kept on this device and added to the backup file as _tapLog) so a mis-tap can be diagnosed from real data. */
+  let TAPLOG = []; try { TAPLOG = JSON.parse(localStorage.getItem('matemagics_taplog') || '[]'); if(!Array.isArray(TAPLOG)) TAPLOG = []; } catch(e){ TAPLOG = []; }
+  window.tapLog = function(){ return TAPLOG; };
+  function tkey(el){ return el ? (el.dataset.act || '') + (el.dataset.k !== undefined ? ':' + el.dataset.k : '') + (el.dataset.id ? ':' + el.dataset.id : '') + (el.dataset.to ? ':' + el.dataset.to : '') : '-'; }
+  function logTap(kind, o){
+    const vv = window.visualViewport; o = o || {}; o.t = new Date().toISOString().slice(11, 23); o.e = kind; o.vw = innerWidth; o.vh = innerHeight; if(vv) o.z = Math.round(vv.scale * 100) / 100;
+    TAPLOG.push(o); if(TAPLOG.length > 40) TAPLOG.shift(); try { localStorage.setItem('matemagics_taplog', JSON.stringify(TAPLOG)); } catch(e){}
+  }
   document.addEventListener('click', function(e){
     const el = e.target.closest && e.target.closest('[data-act]');
     if(el && el === ignoreEl && Date.now() < ignoreUntil) return;   // click left behind by a resting palm / drag
-    lastClick = Date.now(); fire(el);
+    /* A finger tap is decided by where the finger STARTED (touchstart). If iOS then sends the click to a different button (resting palm, second finger),
+       that click is wrong: ignore it and let the touch fallback below run the button that was really tapped. */
+    if(el && lastTap && Date.now() - lastTap.t < 500 && lastTap.key !== tkey(el)){ logTap('click-redirected', { to: tkey(el), want: lastTap.key }); return; }
+    lastClick = Date.now(); logTap('click', { k: tkey(el) }); fire(el);
   });
   document.addEventListener('touchstart', function(e){
     for(let i = 0; i < e.changedTouches.length; i++){ const c = e.changedTouches[i]; touches[c.identifier] = { x: c.clientX, y: c.clientY, t: Date.now(), el: c.target && c.target.closest ? c.target.closest('[data-act]') : null }; }
@@ -657,10 +668,25 @@ function boot(){
       const c = e.changedTouches[i]; const s = touches[c.identifier]; delete touches[c.identifier]; if(!s || !s.el) continue;
       const tap = Date.now() - s.t <= 600 && Math.abs(c.clientX - s.x) <= 10 && Math.abs(c.clientY - s.y) <= 10;
       if(!tap){ if(lastTap && lastTap.t >= s.t && lastTap.el !== s.el){ ignoreEl = s.el; ignoreUntil = Date.now() + 500; } continue; }   // a long touch that overlapped a tap elsewhere = resting palm
-      const el = s.el, t0 = Date.now(); lastTap = { el: el, t: t0 };
-      setTimeout(function(){ if(lastClick < t0) fire(el); }, 150);
+      const el = s.el, t0 = Date.now(); lastTap = { el: el, t: t0, key: tkey(el) }; logTap('tap', { k: lastTap.key, x: Math.round(c.clientX), y: Math.round(c.clientY), n: e.touches.length });
+      setTimeout(function(){ if(lastClick < t0){ logTap('fallback', { k: tkey(el) }); fire(el); } }, 150);
     }
   }, { passive: true });
+  /* NO ZOOM. iPadOS ignores user-scalable=no, and a pinched/double-tapped page is magnified: the keys then sit under a different spot than
+     the finger (5 types 8, delete types 9) and the screen looks "frozen". Block pinch, and if the page ever ends up zoomed, snap it back. */
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function(t){ document.addEventListener(t, function(e){ e.preventDefault(); }, { passive: false }); });
+  document.addEventListener('touchmove', function(e){ if(e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  let unzooming = false;
+  window.unzoom = function(){
+    const vv = window.visualViewport; if(unzooming || !vv || vv.scale <= 1.02) return false;
+    const m = document.querySelector('meta[name=viewport]'); if(!m) return false;
+    unzooming = true; const orig = m.getAttribute('content');
+    m.setAttribute('content', 'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover');
+    setTimeout(function(){ m.setAttribute('content', orig); unzooming = false; }, 120);
+    return true;
+  };
+  if(window.visualViewport){ window.visualViewport.addEventListener('resize', function(){ window.unzoom(); }); }
+  document.addEventListener('touchend', function(){ if(window.visualViewport && window.visualViewport.scale > 1.02) setTimeout(window.unzoom, 60); }, { passive: true });
   window.addEventListener('error', function(){ try { toast('Oops — let’s go back'); } catch(e){} });
   document.addEventListener('change', function(e){
     if(e.target.dataset && e.target.dataset.chg) onChange(e.target);
