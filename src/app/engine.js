@@ -204,7 +204,7 @@ function answerNote(state, id, replyId, now){
 }
 function mergeState(loaded){
   const d = defaultState(); const L = loaded || {};
-  const m = Object.assign({}, d, L);
+  const m = Object.assign({}, d, L); delete m._tapLog;   // the tap log rides along in backup files only; it is not progress
   m.prefs = Object.assign({}, d.prefs, L.prefs || {});
   m.placement = Object.assign({}, d.placement, L.placement || {});
   m.timer = Object.assign({}, d.timer, L.timer || {});
