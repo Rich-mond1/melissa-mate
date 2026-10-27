@@ -1,0 +1,27 @@
+/* Guess detector + parent penalty: pure-engine checks. */
+const E = require('./lib/load-engine')(); let bad = 0; const ok = (c, m) => { if(!c){ bad++; console.log('  ✗ ' + m); } else console.log('  ✓ ' + m); };
+ok(E.looksLikeGuess([1200]) === 1, 'answer in 1.2 s = guess');
+ok(E.looksLikeGuess([9000]) === 0, 'answer in 9 s = not a guess');
+ok(E.looksLikeGuess([9000, 1500]) === 1, 'quick re-tap after a wrong answer = guess');
+ok(E.looksLikeGuess([9000, 6000]) === 0, 'thoughtful second try = not a guess');
+ok(E.looksLikeGuess([]) === 0, 'no taps = not a guess');
+const s = E.mergeState({}); const t = E.todayStr();
+s.evidence = [];
+for(let i = 0; i < 4; i++) E.recordEvidence(s, { d: t, s: 'geo-symmetry', k: 'practice', t: 1, c: 'f', r: 0, ms: 1500, g: 1 });
+for(let i = 0; i < 4; i++) E.recordEvidence(s, { d: t, s: 'number-line-3digit', k: 'practice', t: 1, c: 'f', r: 0, ms: 12000, g: 0 });
+E.recordEvidence(s, { d: t, s: 'geo-symmetry', k: 'placement', t: 1, c: 'f', r: 0, ms: 800, g: 1 });
+const g = E.guessReport(s, t, 7);
+ok(g.n === 8 && g.g === 4 && g.pct === 50, 'report counts practice only: 4 of 8 = 50% (got ' + g.g + '/' + g.n + ')');
+ok(g.skills.length === 1 && g.skills[0].id === 'geo-symmetry', 'flags only the skill that is guessed');
+ok(E.mergeState(JSON.parse(JSON.stringify(s))).evidence.filter(e => e.g).length === 5, 'g flag survives save/merge');
+const p = E.mergeState({ starBalance: 444, totalStars: 770, met: ['a', 'b', 'c', 'd', 'e', 'f'].map((x, i) => E.FRIENDS[i].id), stickers: [] });
+p.stickers = Array.from({ length: 9 }, (_, i) => ({ id: i + '.0.0.common', base: '🐢', acc: '', bg: 0, rarity: 'common', n: 1, date: t, pet: '', v: 0 }));
+const r = E.applyPenalty(p, { stars: true, friends: 1 / 3, stickers: 1 / 3 }, Math.random);
+ok(p.starBalance === 0 && r.stars === 444, 'all spendable stars removed');
+ok(p.totalStars === 770, 'lifetime star total kept');
+ok(r.friends.length === 2 && p.met.length === 4 && r.friends.every(x => p.met.indexOf(x) === -1), '1/3 of 6 friends removed (2)');
+ok(r.stickers === 3 && p.stickers.length === 6, '1/3 of 9 stickers removed (3)');
+const p2 = E.mergeState({ starBalance: 5, met: [E.FRIENDS[0].id, E.FRIENDS[1].id, E.FRIENDS[2].id] }); E.applyPenalty(p2, { friends: 1 / 2 }, Math.random);
+ok(p2.met.length === 1 && p2.starBalance === 5, 'half of 3 friends rounds up to 2 removed; stars untouched when not asked');
+const e0 = E.mergeState({ starBalance: 1, met: [] }); E.applyPenalty(e0, { stars: true, friends: 0.5, stickers: 0.5 }, Math.random); ok(e0.met.length === 0 && e0.stickers.length === 0, 'empty collections are fine');
+console.log(bad ? '\n❌ PENALTY TEST FAILED (' + bad + ')' : '\n✅ PENALTY TEST PASSED'); process.exit(bad ? 1 : 0);

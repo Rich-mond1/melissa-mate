@@ -52,7 +52,7 @@ function nextQuestion(){
 function startQ(skillId, tier){
   const q = SESS.q;
   SESS.skillId_ = skillId; SESS.tries = 0; SESS.hint = false; SESS.phase = 'ask'; SESS.chosen = []; SESS.fb = null;
-  SESS.numStr = ''; SESS.sel = 0; SESS.t0 = Date.now(); SESS.why = '';
+  SESS.numStr = ''; SESS.sel = 0; SESS.t0 = Date.now(); SESS.why = ''; SESS.lastAt = SESS.t0; SESS.gaps = [];
   if(q.type === 'setclock'){ SESS.clk = { h: 12, m: 0 }; }
   if(q.type === 'order'){ SESS.pool = shuffle(q.model.items.slice()); if(SESS.pool.map(function(i){ return i.key; }).join() === q.model.items.map(function(i){ return i.key; }).join()) SESS.pool.reverse(); SESS.picked = []; }
   go('question');
@@ -152,7 +152,7 @@ ACT.idk = function(){ if(!SESS || SESS.phase !== 'ask') return; SESS.tries = 9; 
 
 function submit(resp){
   if(SESS.phase !== 'ask') return;
-  const q = SESS.q; const ok = resp === q.correctKey;
+  const q = SESS.q; const ok = resp === q.correctKey; const nowT = Date.now(); SESS.gaps.push(nowT - SESS.lastAt); SESS.lastAt = nowT;
   if(ok) return endQuestion(questionCredit(true, SESS.tries, SESS.hint), true);
   const why = (q.wrongWhy && q.wrongWhy(resp)) || '';
   recordError(S, SESS.skillId_, why || 'Mixed up the answer');
@@ -170,7 +170,7 @@ function endQuestion(credit, ok, skipped){
   const q = SESS.q; const sk = skillById(SESS.skillId_);
   addUsed(Math.min(90, Math.round((Date.now() - SESS.t0) / 1000)));
   SESS.credits.push(credit);
-  recordEvidence(S, { d: todayStr(), s: sk.id, k: SESS.kind, t: (SESS.items && SESS.items[SESS.idx]) ? SESS.items[SESS.idx].tier : 2, c: credit >= 1 ? 'f' : (credit > 0 ? 'a' : 'x'), h: SESS.hint, r: SESS.tries, ms: Date.now() - SESS.t0, w: SESS.why });
+  recordEvidence(S, { d: todayStr(), s: sk.id, k: SESS.kind, t: (SESS.items && SESS.items[SESS.idx]) ? SESS.items[SESS.idx].tier : 2, c: credit >= 1 ? 'f' : (credit > 0 ? 'a' : 'x'), h: SESS.hint, r: SESS.tries, ms: Date.now() - SESS.t0, w: SESS.why, g: skipped ? 0 : looksLikeGuess(SESS.gaps) });
   (SESS.by[sk.id] = SESS.by[sk.id] || []).push(credit);
   SESS.phase = 'fb';
   if(SESS.kind === 'placement'){
@@ -453,6 +453,10 @@ SCREENS.parent = function(){
   const recent = S.sessionLog.filter(function(l){ return l.kind !== 'legacy'; }).slice(-10).reverse();
   h += '<div class="card"><h3>Últimas sesiones</h3>' + (recent.length ? recent.map(function(l){ const sk = skillById(l.skill); return '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>' + esc(l.date.slice(5)) + ' · ' + esc(KIND_ES[l.kind] || l.kind) + ' · ' + esc(sk ? sk.name : '') + '</span><b>' + l.correct + '/' + l.total + ' ' + ({ happy: '😀', ok: '😐', hard: '😟' }[l.mood] || '') + '</b></div>'; }).join('') : '<p class="muted">Todavía nada.</p>') + '</div><div class="gap"></div>';
   h += '<div class="card"><h3>Premios canjeados</h3>' + (S.claims.length ? S.claims.slice(-8).reverse().map(function(c){ return '<div class="prow" style="background:#EEF1FB;color:var(--ink)"><span>' + (c.date || '') + ' · ' + esc(c.emoji || '') + ' ' + esc(c.title) + '</span><b>' + c.cost + '⭐</b></div>'; }).join('') : '<p class="muted">Ninguno aún.</p>') + '</div><div class="gap"></div>';
+  const gr = guessReport(S, t, 7);
+  h += '<div class="card"><h3>🎲 ¿Adivina?</h3><p class="muted">Últimos 7 días: ' + gr.g + ' de ' + gr.n + ' respuestas parecen adivinadas (' + gr.pct + '%). Cuenta como adivinada la que responde en menos de 2,5 s, o la que reintenta en menos de 2,5 s tras fallar. Solo aplica a partir de esta versión.</p>' +
+    (gr.skills.length ? gr.skills.map(function(b){ const sk = skillById(b.id); return '<p>• ' + esc(sk ? sk.name : b.id) + ': ' + b.g + ' de ' + b.n + '</p>'; }).join('') : '<p class="muted">Ninguna habilidad destaca por ahora.</p>') + '</div>';
+  h += '<div class="card"><h3>⚖️ Penalización</h3><p class="muted">Quita todas las ⭐ sin gastar, ⅓ de los stickers y parte de los amigos (al azar). Se guarda una copia para poder deshacerlo (Datos → recuperar anterior).</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn" style="background:#ffe3e3;color:var(--ink)" data-act="penalty" data-f="3">Amigos ⅓</button><button class="seg-btn" style="background:#ffe3e3;color:var(--ink)" data-act="penalty" data-f="2">Amigos ½</button></div></div>';
   h += '<div class="card"><h3>Ajustes</h3>' +
     '<p class="muted">Tiempo diario</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn' + (S.timer.mode === 'free' ? ' on' : '') + '" data-act="tmode" data-v="free" style="background:#e9ebf7;color:var(--ink)">Libre</button><button class="seg-btn' + (S.timer.mode === 'limit' ? ' on' : '') + '" data-act="tmode" data-v="limit" style="background:#e9ebf7;color:var(--ink)">Límite</button>' +
     (S.timer.mode === 'limit' ? '<input class="input" type="number" min="5" max="120" value="' + S.timer.minutes + '" data-chg="tmin" style="width:80px"> min <button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="plus10">+10 min hoy</button>' : '') + '</div>' +
@@ -462,6 +466,12 @@ SCREENS.parent = function(){
     '<button class="seg-btn" style="background:#e9ebf7;color:var(--ink);margin-top:8px" data-act="radd">+ Añadir premio</button>' +
     '<p class="muted" style="margin-top:14px">Datos</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="export">⬇ Exportar</button><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="share">📤 Compartir copia</button><label class="seg-btn" style="background:#e9ebf7;color:var(--ink)">⬆ Importar<input type="file" accept="application/json" id="imp" style="display:none"></label><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="redoPlacement">Repetir diagnóstico</button><button class="seg-btn" style="background:#FFD1D1;color:#7a0000" data-act="reset">Borrar todo</button>' + (hasPrevious() ? '<button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="undoImport">↩ Deshacer importación o borrado</button>' : '') + '</div></div>';
   R(h);
+};
+ACT.penalty = function(d){
+  if(syncCfg()) return toast('Con la sincronización activa no se puede quitar nada (se volvería a copiar). Desactívala antes.');
+  const ff = d.f === '2' ? 1 / 2 : 1 / 3; const nf = Math.ceil(S.met.length * ff), ns = Math.ceil(S.stickers.length / 3);
+  if(!confirm('Se quitarán: ' + S.starBalance + ' ⭐, ' + nf + ' de ' + S.met.length + ' amigos y ' + ns + ' de ' + S.stickers.length + ' stickers (al azar). Se guarda una copia para deshacerlo. ¿Seguro?')) return;
+  keepPrevious(); const r = applyPenalty(S, { stars: true, friends: ff, stickers: 1 / 3 }); save(); toast('Quitado: ' + r.stars + ' ⭐, ' + r.friends.length + ' amigos, ' + r.stickers + ' stickers'); render();
 };
 ACT.tmode = function(d){ S.timer.mode = d.v; save(); render(); };
 ACT.plus10 = function(){ addUsed(-600); if(S.timer.used.sec < 0) S.timer.used.sec = 0; save(); toast('+10 min'); render(); };
