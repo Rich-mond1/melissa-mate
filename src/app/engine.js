@@ -74,14 +74,38 @@ const EVIDENCE_CAP = 800;
 function cleanEvidence(a){
   if(!Array.isArray(a)) return [];
   return a.filter(function(e){ return e && typeof e === 'object' && /^\d{4}-\d{2}-\d{2}$/.test(e.d) && typeof e.s === 'string' && (e.c === 'f' || e.c === 'a' || e.c === 'x'); })
-    .map(function(e){ return { d: e.d, s: e.s, k: String(e.k || ''), t: Math.min(3, Math.max(0, Number(e.t) | 0)), c: e.c, h: e.h ? 1 : 0, r: Math.min(2, Math.max(0, Number(e.r) | 0)), ms: Math.min(90000, Math.max(0, Number(e.ms) | 0)), w: String(e.w || '').slice(0, 80) }; })
+    .map(function(e){ return { d: e.d, s: e.s, k: String(e.k || ''), t: Math.min(3, Math.max(0, Number(e.t) | 0)), c: e.c, h: e.h ? 1 : 0, r: Math.min(2, Math.max(0, Number(e.r) | 0)), ms: Math.min(90000, Math.max(0, Number(e.ms) | 0)), w: String(e.w || '').slice(0, 80), g: e.g ? 1 : 0 }; })
     .slice(-EVIDENCE_CAP);
 }
 /* c: 'f' right first time without help, 'a' right but with a hint or a second try, 'x' not right. w: why she went wrong (first wrong answer), if any. */
 function recordEvidence(state, e){
   if(!Array.isArray(state.evidence)) state.evidence = [];
-  state.evidence.push({ d: e.d, s: e.s, k: String(e.k || ''), t: e.t | 0, c: e.c, h: e.h ? 1 : 0, r: Math.min(2, e.r | 0), ms: Math.min(90000, Math.max(0, e.ms | 0)), w: String(e.w || '').slice(0, 80) });
+  state.evidence.push({ d: e.d, s: e.s, k: String(e.k || ''), t: e.t | 0, c: e.c, h: e.h ? 1 : 0, r: Math.min(2, e.r | 0), ms: Math.min(90000, Math.max(0, e.ms | 0)), w: String(e.w || '').slice(0, 80), g: e.g ? 1 : 0 });
   if(state.evidence.length > EVIDENCE_CAP) state.evidence.splice(0, state.evidence.length - (EVIDENCE_CAP - 100));
+}
+
+/* ---------- guessing detector + parent penalty ---------- */
+const GUESS_MS = 2500;   // answering faster than this (first try), or re-answering faster than this after a wrong one, looks like guessing
+/* gaps = ms between question shown / each submit. Returns 1 when the pattern looks like tap-and-hope. */
+function looksLikeGuess(gaps){ if(!gaps || !gaps.length) return 0; if(gaps[0] < GUESS_MS) return 1; for(let i = 1; i < gaps.length; i++) if(gaps[i] < GUESS_MS) return 1; return 0; }
+/* Last `days` days of practice (not placement): share of answers flagged as guesses, overall and per skill. */
+function guessReport(state, today, days){
+  const from = addDays(today, -(days - 1)), ev = (state.evidence || []).filter(function(e){ return e.k !== 'placement' && e.d >= from && e.d <= today; });
+  const by = {}; let g = 0;
+  ev.forEach(function(e){ const b = by[e.s] || (by[e.s] = { id: e.s, n: 0, g: 0 }); b.n++; if(e.g){ b.g++; g++; } });
+  const skills = Object.keys(by).map(function(k){ return by[k]; }).filter(function(b){ return b.g >= 2 && b.g / b.n >= 0.25; }).sort(function(a, b){ return b.g - a.g; });
+  return { n: ev.length, g: g, pct: ev.length ? Math.round(100 * g / ev.length) : 0, skills: skills };
+}
+/* Parent penalty: all spendable stars, a fraction of friends met, a fraction of sticker kinds. rnd is injectable for tests. */
+function applyPenalty(state, o, rnd){
+  rnd = rnd || Math.random; o = o || {};
+  const take = function(arr, frac){ const n = Math.min(arr.length, Math.ceil(arr.length * Math.max(0, Math.min(1, frac || 0)))), a = arr.slice(), out = [];
+    for(let i = 0; i < n; i++){ out.push(a.splice(Math.floor(rnd() * a.length), 1)[0]); } return out; };
+  const res = { stars: 0, friends: [], stickers: 0 };
+  if(o.stars){ res.stars = state.starBalance; state.starBalance = 0; }
+  const fr = take(state.met || [], o.friends); state.met = (state.met || []).filter(function(x){ return fr.indexOf(x) === -1; }); res.friends = fr;
+  const st = take(state.stickers || [], o.stickers); state.stickers = (state.stickers || []).filter(function(x){ return st.indexOf(x) === -1; }); res.stickers = st.length;
+  return res;
 }
 const LEVEL_NAMES = ['Not started', 'Learning', 'Practising', 'Secure', 'Mastered'];
 /* Five levels derived from medals + evidence. Secure needs silver AND recent independent answers; Mastered = gold (which needs a review passed on a later day). */
@@ -666,4 +690,4 @@ function checkBadges(state){
   return fresh;
 }
 
-if(typeof module !== 'undefined') module.exports = { questPlan, PUZZLE_TILES, PUZZLE_STEP, PUZZLE_PICS, PUZZLE_ORDER, puzzleInfo, puzzleCollect, albumStats, CREATURES, NOTE_REPLIES, noteReplyById, cleanNotes, addNote, notesDue, noteById, answerNote, migrateQuestToDiag, starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
+if(typeof module !== 'undefined') module.exports = { looksLikeGuess, guessReport, applyPenalty, GUESS_MS, questPlan, PUZZLE_TILES, PUZZLE_STEP, PUZZLE_PICS, PUZZLE_ORDER, puzzleInfo, puzzleCollect, albumStats, CREATURES, NOTE_REPLIES, noteReplyById, cleanNotes, addNote, notesDue, noteById, answerNote, migrateQuestToDiag, starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
