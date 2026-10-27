@@ -20819,7 +20819,7 @@ SCREENS.question = function(){
     (placing ? '🗺️ ' + esc(strandMeta(sk.strand).name) : esc(sk.emoji + ' ' + (SESS.kind === 'review' ? 'Brain boost' : sk.name))) + '</h2><span class="pill nobtn">' + (placing ? (function(){ const L = questLands(S); return 'Land ' + Math.min(L.total, L.done + 1) + '/' + L.total; })() : (SESS.idx + 1) + '/' + SESS.items.length) + '</span></div>' + sessionDots();
   if(placing) h += trailHTML(true);
   h += '<div class="card qcard">' + (q.visual ? '<div class="qvis">' + q.visual + '</div>' : '') + '<div class="qprompt">' + q.prompt + '</div><button class="speak" data-act="sayq">🔊</button>';
-  const lock = fb;
+  const lock = fb || isLocked();
   if(q.type === 'mcq'){
     h += '<div class="opts' + (q.optionsAreVisual ? ' vis' : '') + (q.optionsWide ? ' wide' : '') + '">' + q.options.map(function(o, k){
       const isChosen = SESS.chosen.indexOf(o.key) > -1; let cls = 'opt' + (q.optionsAreVisual ? ' vis' : '');
@@ -20874,12 +20874,12 @@ ACT.quit = function(){
 ACT.hint = function(){ SESS.hint = true; render(); };
 ACT.pick = function(d){ const o = SESS.q.options[+d.k]; submit(o.key); };
 ACT.key = function(d){
-  if(SESS.phase !== 'ask') return;
+  if(SESS.phase !== 'ask' || isLocked()) return;
   let s = SESS.numStr;
   if(d.k === '⌫') s = s.slice(0, -1); else if(d.k === '.'){ if(s.indexOf('.') === -1) s = (s === '' ? '0' : s) + '.'; } else if(s.length < 7) s += d.k;
   SESS.numStr = s; render();
 };
-ACT.seg = function(d){ const k = +d.k; SESS.sel = (SESS.sel === k + 1) ? k : k + 1; render(); };
+ACT.seg = function(d){ if(isLocked()) return; const k = +d.k; SESS.sel = (SESS.sel === k + 1) ? k : k + 1; render(); };
 ACT.clk = function(d){
   const st = SESS.q.model.step || 5, c = SESS.clk;
   if(d.d === 'h+') c.h = c.h % 12 + 1; else if(d.d === 'h-') c.h = c.h === 1 ? 12 : c.h - 1;
@@ -20897,8 +20897,11 @@ ACT.check = function(){
 };
 ACT.idk = function(){ if(!SESS || SESS.phase !== 'ask') return; SESS.tries = 9; SESS.fbSkip = true; endQuestion(0, false, true); };
 
+/* After a wrong answer the buttons rest for 4 s and the hint opens by itself: read again instead of tapping on. */
+const COOLDOWN_MS = 4000;
+function isLocked(){ return !!(SESS && SESS.lockUntil && Date.now() < SESS.lockUntil && !window.__noGuard); }
 function submit(resp){
-  if(SESS.phase !== 'ask') return;
+  if(SESS.phase !== 'ask' || isLocked()) return;
   const q = SESS.q; const ok = resp === q.correctKey; const nowT = Date.now(); SESS.gaps.push(nowT - SESS.lastAt); SESS.lastAt = nowT;
   if(ok) return endQuestion(questionCredit(true, SESS.tries, SESS.hint), true);
   const why = (q.wrongWhy && q.wrongWhy(resp)) || '';
@@ -20910,8 +20913,9 @@ function submit(resp){
   if(q.type === 'num') SESS.numStr = '';
   if(q.type === 'shade') SESS.sel = 0;
   if(q.type === 'order') SESS.picked = [];
-  SESS.fb = '🤔 Not quite. ' + (why ? why + ' ' : '') + '<b>Try once more!</b>';
-  render();
+  SESS.hint = true; SESS.lockUntil = Date.now() + COOLDOWN_MS;
+  SESS.fb = '🤔 Not quite. ' + (why ? why + ' ' : '') + '<b>Look again 👀 — read the hint, then try once more!</b>';
+  render(); const qq = SESS.q; setTimeout(function(){ if(SESS && SESS.q === qq && SESS.phase === 'ask') render(); }, COOLDOWN_MS + 60);
 }
 function endQuestion(credit, ok, skipped){
   const q = SESS.q; const sk = skillById(SESS.skillId_);

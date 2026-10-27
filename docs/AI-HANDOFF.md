@@ -136,3 +136,7 @@ Then: reproduce → minimal fix → `node tools/build.js` → suite → publish 
 - Friends: 26 now (10 new originals: hopper, mochi, zippy, gus, willow, mira, juno, orbit, lola, sunny — inspired by Melissa's interests, NOT copies of real characters). Meeting odds lowered: 0.35 after a mission, 0.10 on opening a pack.
 - Pet stickers: `PET_VARIANTS = 25` per pet (75 total). Variants 1–16 are fun poses (skate, surf, K-pop idol…), 17–24 are Halloween. APPEND ONLY: saved ids are `pet:<pet>:<v>`.
 - Art pipeline: fal.ai nano-banana-2/edit → `tools/make-pets.py` logic (white→transparent, 176px webp) appended into `src/app/pets.js`; friends → `tools/art/friends/*.webp` → `node tools/make-friends-art.js`.
+
+## Guess detector, penalty, cooldown (Oct 27)
+- Evidence rows carry `g` (1 = answered <2.5 s, or re-answered <2.5 s after a wrong one). Parent panel: 🎲 ¿Adivina? (7-day report) and ⚖️ Penalización (stars to 0, 1/3 stickers, 1/3 or 1/2 friends; undoable; blocked while sync is on).
+- Cooldown: after a wrong answer inputs are locked 4 s (`COOLDOWN_MS`) and the hint opens by itself. Tests bypass it with `window.__noGuard`.
