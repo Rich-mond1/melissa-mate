@@ -359,7 +359,7 @@ function cleanMet(a){ const out = []; if(!Array.isArray(a)) return out; a.forEac
 /* p = chance of meeting someone new. The very first meeting is guaranteed so she learns the feature exists. Returns the friend or null. */
 function meetFriend(state, p){
   const unmet = FRIENDS.filter(function(f){ return state.met.indexOf(f.id) === -1; }); if(!unmet.length) return null;
-  if(state.met.length === 0 || chance(p)){ const f = pick(unmet); state.met.push(f.id); return f; }
+  if(state.met.length === 0 || chance(p)){ const f = pick(unmet); state.met.push(f.id); if(typeof goneBack === 'function') goneBack(state, 'm:' + f.id); return f; }
   return null;
 }
 if(typeof module !== 'undefined') module.exports = { AV_SLOTS, PET_SLOTS, AV_ITEMS, AV_DEFAULT, MASCOT_IDS, PET_ACC_SLOTS, SHOP_MULTS, SHOP_CATS, slotCat, catMult, cleanShopCat, BOX_COST, PET_ANCH, shopMult, avGold, avLocked, avPrice, avWorn, avCandidates, avBox, boxPrice, avProgress, cleanPetAcc, petWears, petCan, petAccSVG, avItem, avOwns, avEquip, avBuy, avCost, cleanAvatar, cleanOwned, defaultAvatar, avatarSVG, FRIENDS, friendById, cleanMet, meetFriend };

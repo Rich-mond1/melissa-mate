@@ -140,3 +140,8 @@ Then: reproduce → minimal fix → `node tools/build.js` → suite → publish 
 ## Guess detector, penalty, cooldown (Oct 27)
 - Evidence rows carry `g` (1 = answered <2.5 s, or re-answered <2.5 s after a wrong one). Parent panel: 🎲 ¿Adivina? (7-day report) and ⚖️ Penalización (stars to 0, 1/3 stickers, 1/3 or 1/2 friends; undoable; blocked while sync is on).
 - Cooldown: after a wrong answer inputs are locked 4 s (`COOLDOWN_MS`) and the hint opens by itself. Tests bypass it with `window.__noGuard`.
+
+## Removals that sync (Oct 27)
+- `state.gone` = tombstones `{ 'm:<friend id>' | 's:<sticker id>': { at, on } }`; per key the newest wins (`goneMerge`), applied after every sync merge (`goneApply`). A removal reaches all devices; re-earning later writes `on:false` (`goneBack` in `meetFriend`/`openPack`).
+- Stars already travel as per-device deltas (`own.net`), so removing stars syncs by itself.
+- Parent "Quitar a mano" and "Penalización" work with sync on and push immediately (`syncDo(false)`). Other devices drop the items at their next sync.
