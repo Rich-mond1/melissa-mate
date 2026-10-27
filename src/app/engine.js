@@ -66,7 +66,7 @@ function defaultState(){
     timer: { mode: 'free', minutes: 20, debtSeconds: 0 },
     streak: { count: 0, lastPlayDate: null },
     sessionLog: [], daily: { date: null, warmup: false, learn: false, boss: false, claimed: false, rounds: 0 },
-    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], welcomeGift: false, petAcc: {}, shopMult: 1, shopCat: {}, notes: [], puzzleCur: 0, puzzleBase: 0
+    focus: null, legacy: null, friend: 'ginger', lastBackup: null, avatar: defaultAvatar(), owned: [], met: [], gone: {}, welcomeGift: false, petAcc: {}, shopMult: 1, shopCat: {}, notes: [], puzzleCur: 0, puzzleBase: 0
   };
 }
 /* ---------- evidence (one dated record per answered question; capped so localStorage stays small) ---------- */
@@ -85,6 +85,25 @@ function recordEvidence(state, e){
 }
 
 /* ---------- guessing detector + parent penalty ---------- */
+/* ---------- removals that travel between devices ----------
+   gone['m:<friend id>'] / gone['s:<sticker id>'] = { at: ms, on: true } means "a grown-up removed it"; { on: false } means "she earned it again later".
+   Per key the newest entry wins, so a removal reaches every synced device and a later re-earn is not undone. */
+function cleanGone(g){
+  const out = {}; if(!g || typeof g !== 'object' || Array.isArray(g)) return out;
+  Object.keys(g).slice(0, 600).forEach(function(k){ const e = g[k]; if(/^[ms]:.{1,60}$/.test(k) && e && typeof e === 'object' && isFinite(Number(e.at))) out[k] = { at: Math.round(Number(e.at)), on: !!e.on }; });
+  return out;
+}
+function goneSet(state, key, on, now){ if(!state.gone) state.gone = {}; state.gone[key] = { at: now || Date.now(), on: !!on }; }
+function goneBack(state, key){ if(state.gone && state.gone[key] && state.gone[key].on) goneSet(state, key, false); }
+function goneMerge(a, b){ const out = cleanGone(a), rb = cleanGone(b); Object.keys(rb).forEach(function(k){ if(!out[k] || rb[k].at > out[k].at) out[k] = rb[k]; }); return out; }
+function goneApply(state){
+  const g = state.gone || {};
+  state.met = (state.met || []).filter(function(id){ return !(g['m:' + id] && g['m:' + id].on); });
+  state.stickers = (state.stickers || []).filter(function(s){ return !(g['s:' + s.id] && g['s:' + s.id].on); });
+}
+/* Parent removals (single friend / sticker) */
+function removeFriend(state, id, now){ if(state.met.indexOf(id) === -1) return false; state.met = state.met.filter(function(x){ return x !== id; }); goneSet(state, 'm:' + id, true, now); return true; }
+function removeSticker(state, id, now){ const n = state.stickers.length; state.stickers = state.stickers.filter(function(s){ return s.id !== id; }); if(state.stickers.length === n) return false; goneSet(state, 's:' + id, true, now); return true; }
 const GUESS_MS = 2500;   // answering faster than this (first try), or re-answering faster than this after a wrong one, looks like guessing
 /* gaps = ms between question shown / each submit. Returns 1 when the pattern looks like tap-and-hope. */
 function looksLikeGuess(gaps){ if(!gaps || !gaps.length) return 0; if(gaps[0] < GUESS_MS) return 1; for(let i = 1; i < gaps.length; i++) if(gaps[i] < GUESS_MS) return 1; return 0; }
@@ -103,8 +122,8 @@ function applyPenalty(state, o, rnd){
     for(let i = 0; i < n; i++){ out.push(a.splice(Math.floor(rnd() * a.length), 1)[0]); } return out; };
   const res = { stars: 0, friends: [], stickers: 0 };
   if(o.stars){ res.stars = state.starBalance; state.starBalance = 0; }
-  const fr = take(state.met || [], o.friends); state.met = (state.met || []).filter(function(x){ return fr.indexOf(x) === -1; }); res.friends = fr;
-  const st = take(state.stickers || [], o.stickers); state.stickers = (state.stickers || []).filter(function(x){ return st.indexOf(x) === -1; }); res.stickers = st.length;
+  const fr = take(state.met || [], o.friends); fr.forEach(function(id){ removeFriend(state, id); }); res.friends = fr;
+  const st = take(state.stickers || [], o.stickers); st.forEach(function(s){ removeSticker(state, s.id); }); res.stickers = st.length;
   return res;
 }
 const LEVEL_NAMES = ['Not started', 'Learning', 'Practising', 'Secure', 'Mastered'];
@@ -237,7 +256,7 @@ function mergeState(loaded){
   m.skills = L.skills || {}; m.errors = L.errors || {};
   m.evidence = cleanEvidence(L.evidence);
   m.placement.paid = Math.max(0, Math.min(40, Number(m.placement.paid) | 0)); m.welcomeGift = !!L.welcomeGift;
-  m.owned = cleanOwned(L.owned); m.avatar = cleanAvatar(L.avatar, m.owned); m.met = cleanMet(L.met);
+  m.owned = cleanOwned(L.owned); m.avatar = cleanAvatar(L.avatar, m.owned); m.met = cleanMet(L.met); m.gone = cleanGone(L.gone);
   m.petAcc = cleanPetAcc(L.petAcc, m.owned); m.shopMult = SHOP_MULTS.indexOf(Number(L.shopMult)) > -1 ? Number(L.shopMult) : 1; m.shopCat = cleanShopCat(L.shopCat); m.notes = cleanNotes(L.notes); m.puzzleCur = Math.max(0, Math.min(500, Number(L.puzzleCur) | 0));
   m.puzzleBase = isFinite(Number(L.puzzleBase)) && L.puzzleBase !== null && L.puzzleBase !== '' ? Math.max(0, Math.round(Number(L.puzzleBase))) : Math.max(0, Math.round(Number(L.totalStars) || 0));   // a save from before the puzzle: it starts from the stars she already has, never as a gift
   m.lastBackup = (typeof L.lastBackup === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(L.lastBackup)) ? L.lastBackup : null;
@@ -658,7 +677,7 @@ function openPack(state){
   state.packs--;
   const r = rollSticker(state.stickers);
   if(r.dupe){ const ex = state.stickers.filter(function(o){ return o.id === r.sticker.id; })[0]; ex.n = (ex.n || 1) + 1; state.starBalance += 3; state.totalStars += 3; return { sticker: ex, dupe: true, bonusStars: 3 }; }
-  state.stickers.push(r.sticker);
+  state.stickers.push(r.sticker); goneBack(state, 's:' + r.sticker.id);
   return { sticker: r.sticker, dupe: false, bonusStars: 0 };
 }
 
@@ -690,4 +709,4 @@ function checkBadges(state){
   return fresh;
 }
 
-if(typeof module !== 'undefined') module.exports = { looksLikeGuess, guessReport, applyPenalty, GUESS_MS, questPlan, PUZZLE_TILES, PUZZLE_STEP, PUZZLE_PICS, PUZZLE_ORDER, puzzleInfo, puzzleCollect, albumStats, CREATURES, NOTE_REPLIES, noteReplyById, cleanNotes, addNote, notesDue, noteById, answerNote, migrateQuestToDiag, starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };
+if(typeof module !== 'undefined') module.exports = { cleanGone, goneSet, goneBack, goneMerge, goneApply, removeFriend, removeSticker, looksLikeGuess, guessReport, applyPenalty, GUESS_MS, questPlan, PUZZLE_TILES, PUZZLE_STEP, PUZZLE_PICS, PUZZLE_ORDER, puzzleInfo, puzzleCollect, albumStats, CREATURES, NOTE_REPLIES, noteReplyById, cleanNotes, addNote, notesDue, noteById, answerNote, migrateQuestToDiag, starEconomy, WELCOME_STARS, LAND_STARS, claimWelcome, questLands, questPay, parentMetrics, summaryText, BACKUP_DAYS, struggling, weakestPrereq, yearGateOpen, rankOpen, nextMissionStage, MISSION_SECONDS, BACKOFF_ACC, GATE_SILVER, diagStart, diagActive, diagNextItem, diagRecord, diagSummary, diagBlocksFor, cleanEvidence, recordEvidence, masteryLevel, repeatedErrors, goldWaiting, LEVEL_NAMES, EVIDENCE_CAP, PET_IDS, PET_VARIANTS, STRANDS, THEMES, strandMeta, PRAISE, ENCOURAGE, PACK_COST, REVIEW_DAYS, defaultState, mergeState, migrateV3, importState, loadState, skillState, skillsOfStrand, strandsWithSkills, isUnlocked, medalOf, strandProgress, totalMedals, xpForLevel, levelFromXp, levelTitle, dueSkills, nextStepFor, recommend, buildItems, questionCredit, sessionStars, applySkillResult, recordError, topErrors, updateStreak, addXp, ensureDaily, placementNextItem, placementRecord, placementDone, placementSummary, openPack, rollSticker, checkBadges, todayStr, addDays, daysBetween, STICKER_BGS, CREATURES, ACCESSORIES, BADGES, STATE_KEY, V3_KEY };

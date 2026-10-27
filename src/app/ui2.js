@@ -478,15 +478,14 @@ SCREENS.manage = function(){
   h += '<div><h3 style="color:#fff;margin:14px 4px 0">🎴 Stickers (' + S.stickers.length + ')</h3>' + (S.stickers.length ? '<div class="sgrid">' + S.stickers.map(function(s, i){ return '<div style="position:relative">' + stickerHTML(s) + '<button class="icon-btn" style="position:absolute;top:-6px;right:-6px;background:#fff;border-radius:50%;width:30px;height:30px" aria-label="Quitar sticker" data-act="mgSticker" data-i="' + i + '">✕</button></div>'; }).join('') + '</div>' : '<p style="color:#fff">Ninguno.</p>') + '</div>';
   R(h);
 };
-function mgGuard(){ if(syncCfg()){ toast('Con la sincronización activa no se puede quitar nada (se volvería a copiar). Desactívala antes.'); return false; } return true; }
-ACT.mgStars = function(d){ if(!mgGuard()) return; const n = d.n === 'all' ? S.starBalance : Math.min(S.starBalance, +d.n); if(n <= 0) return toast('No tiene estrellas'); if(!confirm('¿Quitar ' + n + ' ⭐?')) return; keepPrevious(); S.starBalance -= n; save(); render(); };
-ACT.mgFriend = function(d){ if(!mgGuard()) return; const f = friendById(d.id); if(!confirm('¿Quitar a ' + (f ? f.name : d.id) + '?')) return; keepPrevious(); S.met = S.met.filter(function(x){ return x !== d.id; }); save(); render(); };
-ACT.mgSticker = function(d){ if(!mgGuard()) return; const i = +d.i; if(!S.stickers[i]) return; if(!confirm('¿Quitar este sticker?')) return; keepPrevious(); S.stickers.splice(i, 1); save(); render(); };
+function mgGuard(){ return true; }   // removals travel with the sync (tombstones), so they are allowed while syncing
+ACT.mgStars = function(d){ if(!mgGuard()) return; const n = d.n === 'all' ? S.starBalance : Math.min(S.starBalance, +d.n); if(n <= 0) return toast('No tiene estrellas'); if(!confirm('¿Quitar ' + n + ' ⭐?')) return; keepPrevious(); S.starBalance -= n; save(); render(); if(syncCfg()) syncDo(false); };
+ACT.mgFriend = function(d){ if(!mgGuard()) return; const f = friendById(d.id); if(!confirm('¿Quitar a ' + (f ? f.name : d.id) + '?')) return; keepPrevious(); removeFriend(S, d.id); save(); render(); if(syncCfg()) syncDo(false); };
+ACT.mgSticker = function(d){ if(!mgGuard()) return; const i = +d.i; if(!S.stickers[i]) return; if(!confirm('¿Quitar este sticker?')) return; keepPrevious(); removeSticker(S, S.stickers[i].id); save(); render(); if(syncCfg()) syncDo(false); };
 ACT.penalty = function(d){
-  if(syncCfg()) return toast('Con la sincronización activa no se puede quitar nada (se volvería a copiar). Desactívala antes.');
   const ff = d.f === '2' ? 1 / 2 : 1 / 3; const nf = Math.ceil(S.met.length * ff), ns = Math.ceil(S.stickers.length / 3);
   if(!confirm('Se quitarán: ' + S.starBalance + ' ⭐, ' + nf + ' de ' + S.met.length + ' amigos y ' + ns + ' de ' + S.stickers.length + ' stickers (al azar). Se guarda una copia para deshacerlo. ¿Seguro?')) return;
-  keepPrevious(); const r = applyPenalty(S, { stars: true, friends: ff, stickers: 1 / 3 }); save(); toast('Quitado: ' + r.stars + ' ⭐, ' + r.friends.length + ' amigos, ' + r.stickers + ' stickers'); render();
+  keepPrevious(); const r = applyPenalty(S, { stars: true, friends: ff, stickers: 1 / 3 }); save(); toast('Quitado: ' + r.stars + ' ⭐, ' + r.friends.length + ' amigos, ' + r.stickers + ' stickers'); render(); if(syncCfg()) syncDo(false);
 };
 ACT.tmode = function(d){ S.timer.mode = d.v; save(); render(); };
 ACT.plus10 = function(){ addUsed(-600); if(S.timer.used.sec < 0) S.timer.used.sec = 0; save(); toast('+10 min'); render(); };
