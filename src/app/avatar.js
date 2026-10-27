@@ -342,7 +342,17 @@ const FRIENDS = [
   { id: 'abra', name: 'Abra', theme: 'Fox magician', line: 'Pick a number, double it, add ten… ta-da! Maths is full of magic tricks.' },
   { id: 'bea', name: 'Bea', theme: 'Honeycomb bee', line: 'Every cell in my honeycomb has 6 sides. Spot the pattern with me!' },
   { id: 'zara', name: 'Zara', theme: 'Little pizza chef', line: 'I cut my pizza into 8 equal slices. If you eat 2, what fraction is left?' },
-  { id: 'dot', name: 'Dot', theme: 'Detective dalmatian', line: 'Every puzzle has a clue. Let us look closely and solve it together!' }
+  { id: 'dot', name: 'Dot', theme: 'Detective dalmatian', line: 'Every puzzle has a clue. Let us look closely and solve it together!' },
+  { id: 'hopper', name: 'Hopper', theme: 'Coin-collecting frog', line: 'I collect gold coins in fives: 5, 10, 15, 20. What comes next?' },
+  { id: 'mochi', name: 'Mochi Bunnies', theme: 'Pop-star bunnies', line: 'Our dance crew has 4 dancers with 2 light sticks each. 4 × 2 = 8 sticks!' },
+  { id: 'zippy', name: 'Zippy', theme: 'Cheeky space explorer', line: 'I have 3 eyes and 2 antennae. That is 5 things to count!' },
+  { id: 'gus', name: 'Gus', theme: 'Ice-cream bear', line: 'I sell 5 flavours and 2 cones of each. That is 10 treats!' },
+  { id: 'willow', name: 'Willow', theme: 'Apprentice wizard', line: 'Double 7 is 14. Spells love doubles!' },
+  { id: 'mira', name: 'Mira', theme: 'Mermaid measurer', line: 'My tape measure says 1 metre is 100 centimetres.' },
+  { id: 'juno', name: 'Juno', theme: 'Fruit-counting monkey', line: 'My fruit comes in groups of 3: 3, 6, 9, 12. Count with me!' },
+  { id: 'orbit', name: 'Orbit', theme: 'Astronaut chick', line: 'My rocket is 47 km away. Rounded to the nearest 10, that is 50!' },
+  { id: 'lola', name: 'Lola', theme: 'Llama weaver', line: 'I weave in lines of 10. Two lines make 20, three make 30. How many in 5 lines?' },
+  { id: 'sunny', name: 'Sunny', theme: 'Cool sunshine', line: 'It is quarter past 7. A quarter of an hour is 15 minutes!' }
 ];
 function friendById(id){ for(let i = 0; i < FRIENDS.length; i++) if(FRIENDS[i].id === id) return FRIENDS[i]; return null; }
 function cleanMet(a){ const out = []; if(!Array.isArray(a)) return out; a.forEach(function(x){ x = String(x); if(friendById(x) && out.indexOf(x) === -1) out.push(x); }); return out; }

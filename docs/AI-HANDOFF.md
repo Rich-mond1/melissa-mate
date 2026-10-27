@@ -131,3 +131,8 @@ Then: reproduce → minimal fix → `node tools/build.js` → suite → publish 
 
 ### "My plan" (Oct 2026)
 `questPlan(state)` (engine.js) is derived, not stored: skills the Explorer's Quest/diagnostic marked failed + skills currently `wobbly`. Order: refresh, core number skills (`PLAN_TIER`), new topics, logic. Done = silver. Hub card `.plancard` and `SCREENS.plan` (ui1.js). Test: `tools/plan-test.js`.
+
+## More friends and stickers (Oct 27)
+- Friends: 26 now (10 new originals: hopper, mochi, zippy, gus, willow, mira, juno, orbit, lola, sunny — inspired by Melissa's interests, NOT copies of real characters). Meeting odds lowered: 0.35 after a mission, 0.10 on opening a pack.
+- Pet stickers: `PET_VARIANTS = 25` per pet (75 total). Variants 1–16 are fun poses (skate, surf, K-pop idol…), 17–24 are Halloween. APPEND ONLY: saved ids are `pet:<pet>:<v>`.
+- Art pipeline: fal.ai nano-banana-2/edit → `tools/make-pets.py` logic (white→transparent, 176px webp) appended into `src/app/pets.js`; friends → `tools/art/friends/*.webp` → `node tools/make-friends-art.js`.
