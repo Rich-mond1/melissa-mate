@@ -283,7 +283,7 @@ function missionStageDone(kind, skillId, info, credits){
 ACT.missionEnd = function(){
   const m = MISSION; MISSION = null; if(!m || !m.done.length) return go('hub');
   const a = m.agg; if(a.n && a.sum / a.n >= 0.6){ S.packs++; a.packs++; }
-  const friend = meetFriend(S, 0.6);
+  const friend = meetFriend(S, 0.35);
   const stages = m.done.filter(function(d){ return d.kind !== 'learn'; }).length;
   save();
   go('results', { kind: 'mission', stars: a.stars, medals: a.medals, wobblyCleared: a.wobblyCleared, packs: a.packs, newBadges: a.newBadges, levelUp: a.levelUp, acc: a.n ? a.sum / a.n : 0, n: a.n, perfect: a.perfect && a.n >= 4, next: recommend(S), goldWaiting: a.goldWaiting, minutes: Math.max(1, Math.round((Date.now() - m.t0) / 60000)), stages: stages, friend: friend });
@@ -348,7 +348,7 @@ SCREENS.stickers = function(){
 ACT.buyPack = function(){ if(S.starBalance < PACK_COST) return; S.starBalance -= PACK_COST; S.packs++; save(); ACT.openPack(); };
 ACT.openPack = function(){
   const r = openPack(S); if(!r) return;
-  const friend = meetFriend(S, 0.15);
+  const friend = meetFriend(S, 0.10);
   checkBadges(S); save(); go('reveal', { s: r.sticker, dupe: r.dupe, bonus: r.bonusStars, friend: friend });
 };
 SCREENS.reveal = function(p){

@@ -594,7 +594,7 @@ const STICKER_BGS = [['#FFD1DC', '#FFB3C7'], ['#C7E9FF', '#9AD0FF'], ['#D4F5D0',
 const RARITIES = ['common', 'rare', 'epic', 'legendary'];
 function rollRarity(){ const r = rng(); return r < 0.62 ? 'common' : (r < 0.88 ? 'rare' : (r < 0.98 ? 'epic' : 'legendary')); }
 const PET_IDS = ['ginger', 'bimba', 'duck'];
-const PET_VARIANTS = 9;   // images per pet (variant 0 = mascot) -> 27 collectible pet stickers
+const PET_VARIANTS = 25;  // images per pet (variant 0 = mascot; append only; 17-24 = Halloween) -> 75 collectible pet stickers
 /* ---------- puzzle: every 5 stars she earns turns over one piece of a picture; 12 pieces = a finished picture and a sticker pack ---------- */
 const PUZZLE_TILES = 12, PUZZLE_STEP = 5, PUZZLE_PICS = 6, PUZZLE_ORDER = [5, 2, 9, 0, 7, 11, 3, 8, 1, 6, 10, 4];
 function puzzleInfo(state){

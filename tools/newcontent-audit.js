@@ -15,7 +15,7 @@ function wording(text, where){
   ok(!/\b(?!ha\b)(\w+) \1\b/i.test(t), where + ': repeated word: ' + t);
 }
 console.log('▶ friends: data');
-const ids = E.FRIENDS.map(f => f.id); ok(ids.length === 16 && new Set(ids).size === 16, '16 unique friends');
+const ids = E.FRIENDS.map(f => f.id); ok(ids.length === 26 && new Set(ids).size === 26, '26 unique friends');
 const art = src('src/app/friends-art.js'); const artIds = [...art.matchAll(/^ "([a-z]+)": "data:image\/webp;base64,/gm)].map(m => m[1]);
 ok(ids.every(i => artIds.includes(i)) && artIds.length === ids.length, 'every friend has art and no art is orphaned: ' + artIds.filter(a => !ids.includes(a)).join(','));
 const names = E.FRIENDS.map(f => f.name); ok(new Set(names).size === names.length, 'friend names are unique');
@@ -30,6 +30,16 @@ ok(/8 equal slices/.test(L('zara')) && /eat 2/.test(L('zara')) && 8 - 2 === 6, '
 ok(/3 pups|Three pups/.test(L('pups')) && /3 × 1/.test(L('pups')), 'Pups line is consistent');
 ok(/1, 2, 3, 4/.test(L('starbeat')), 'Star Beat counts 1 to 4');
 ok(/6 arms/.test(L('nevia')), 'Nevia: snowflakes have 6 arms');
+ok(/5, 10, 15, 20/.test(L('hopper')) && 20 + 5 === 25, 'Hopper: counting in fives');
+ok(/4 dancers/.test(L('mochi')) && /2 light sticks/.test(L('mochi')) && 4 * 2 === 8 && /= 8/.test(L('mochi')), 'Mochi: 4 x 2 = 8');
+ok(/3 eyes/.test(L('zippy')) && /2 antennae/.test(L('zippy')) && 3 + 2 === 5 && /5 things/.test(L('zippy')), 'Zippy: 3 + 2 = 5');
+ok(/5 flavours/.test(L('gus')) && /2 cones/.test(L('gus')) && 5 * 2 === 10 && /10 treats/.test(L('gus')), 'Gus: 5 x 2 = 10');
+ok(/Double 7 is 14/.test(L('willow')) && 7 * 2 === 14, 'Willow: double 7 is 14');
+ok(/1 metre is 100 centimetres/.test(L('mira')), 'Mira: 1 m = 100 cm');
+ok(/3, 6, 9, 12/.test(L('juno')) && 3 * 4 === 12, 'Juno: counting in threes');
+ok(/47/.test(L('orbit')) && /50/.test(L('orbit')) && Math.round(47 / 10) * 10 === 50, 'Orbit: 47 rounds to 50');
+ok(/20/.test(L('lola')) && /30/.test(L('lola')) && 10 * 2 === 20 && 10 * 3 === 30, 'Lola: lines of 10');
+ok(/quarter past 7/.test(L('sunny')) && /15 minutes/.test(L('sunny')) && 60 / 4 === 15, 'Sunny: quarter hour is 15 minutes');
 console.log('▶ note replies, puzzle, album');
 E.NOTE_REPLIES.forEach(r => { wording(r.text, 'reply ' + r.id); ok(r.text.length <= 24, r.id + ': fits on a button'); });
 const pn = /PUZZLE_NAMES = \[(.*?)\];/s.exec(src('src/app/ui3.js')); const puz = pn ? [...pn[1].matchAll(/'([^']+)'/g)].map(m => m[1]) : [];
