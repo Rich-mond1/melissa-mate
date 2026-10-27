@@ -20819,7 +20819,7 @@ SCREENS.question = function(){
     (placing ? '🗺️ ' + esc(strandMeta(sk.strand).name) : esc(sk.emoji + ' ' + (SESS.kind === 'review' ? 'Brain boost' : sk.name))) + '</h2><span class="pill nobtn">' + (placing ? (function(){ const L = questLands(S); return 'Land ' + Math.min(L.total, L.done + 1) + '/' + L.total; })() : (SESS.idx + 1) + '/' + SESS.items.length) + '</span></div>' + sessionDots();
   if(placing) h += trailHTML(true);
   h += '<div class="card qcard">' + (q.visual ? '<div class="qvis">' + q.visual + '</div>' : '') + '<div class="qprompt">' + q.prompt + '</div><button class="speak" data-act="sayq">🔊</button>';
-  const lock = fb;
+  const lock = fb || isLocked();
   if(q.type === 'mcq'){
     h += '<div class="opts' + (q.optionsAreVisual ? ' vis' : '') + (q.optionsWide ? ' wide' : '') + '">' + q.options.map(function(o, k){
       const isChosen = SESS.chosen.indexOf(o.key) > -1; let cls = 'opt' + (q.optionsAreVisual ? ' vis' : '');
@@ -20874,12 +20874,12 @@ ACT.quit = function(){
 ACT.hint = function(){ SESS.hint = true; render(); };
 ACT.pick = function(d){ const o = SESS.q.options[+d.k]; submit(o.key); };
 ACT.key = function(d){
-  if(SESS.phase !== 'ask') return;
+  if(SESS.phase !== 'ask' || isLocked()) return;
   let s = SESS.numStr;
   if(d.k === '⌫') s = s.slice(0, -1); else if(d.k === '.'){ if(s.indexOf('.') === -1) s = (s === '' ? '0' : s) + '.'; } else if(s.length < 7) s += d.k;
   SESS.numStr = s; render();
 };
-ACT.seg = function(d){ const k = +d.k; SESS.sel = (SESS.sel === k + 1) ? k : k + 1; render(); };
+ACT.seg = function(d){ if(isLocked()) return; const k = +d.k; SESS.sel = (SESS.sel === k + 1) ? k : k + 1; render(); };
 ACT.clk = function(d){
   const st = SESS.q.model.step || 5, c = SESS.clk;
   if(d.d === 'h+') c.h = c.h % 12 + 1; else if(d.d === 'h-') c.h = c.h === 1 ? 12 : c.h - 1;
@@ -20897,8 +20897,11 @@ ACT.check = function(){
 };
 ACT.idk = function(){ if(!SESS || SESS.phase !== 'ask') return; SESS.tries = 9; SESS.fbSkip = true; endQuestion(0, false, true); };
 
+/* After a wrong answer the buttons rest for 4 s and the hint opens by itself: read again instead of tapping on. */
+const COOLDOWN_MS = 4000;
+function isLocked(){ return !!(SESS && SESS.lockUntil && Date.now() < SESS.lockUntil && !window.__noGuard); }
 function submit(resp){
-  if(SESS.phase !== 'ask') return;
+  if(SESS.phase !== 'ask' || isLocked()) return;
   const q = SESS.q; const ok = resp === q.correctKey; const nowT = Date.now(); SESS.gaps.push(nowT - SESS.lastAt); SESS.lastAt = nowT;
   if(ok) return endQuestion(questionCredit(true, SESS.tries, SESS.hint), true);
   const why = (q.wrongWhy && q.wrongWhy(resp)) || '';
@@ -20910,8 +20913,9 @@ function submit(resp){
   if(q.type === 'num') SESS.numStr = '';
   if(q.type === 'shade') SESS.sel = 0;
   if(q.type === 'order') SESS.picked = [];
-  SESS.fb = '🤔 Not quite. ' + (why ? why + ' ' : '') + '<b>Try once more!</b>';
-  render();
+  SESS.hint = true; SESS.lockUntil = Date.now() + COOLDOWN_MS;
+  SESS.fb = '🤔 Not quite. ' + (why ? why + ' ' : '') + '<b>Look again 👀 — read the hint, then try once more!</b>';
+  render(); const qq = SESS.q; setTimeout(function(){ if(SESS && SESS.q === qq && SESS.phase === 'ask') render(); }, COOLDOWN_MS + 60);
 }
 function endQuestion(credit, ok, skipped){
   const q = SESS.q; const sk = skillById(SESS.skillId_);
@@ -21203,7 +21207,7 @@ SCREENS.parent = function(){
   const gr = guessReport(S, t, 7);
   h += '<div class="card"><h3>🎲 ¿Adivina?</h3><p class="muted">Últimos 7 días: ' + gr.g + ' de ' + gr.n + ' respuestas parecen adivinadas (' + gr.pct + '%). Cuenta como adivinada la que responde en menos de 2,5 s, o la que reintenta en menos de 2,5 s tras fallar. Solo aplica a partir de esta versión.</p>' +
     (gr.skills.length ? gr.skills.map(function(b){ const sk = skillById(b.id); return '<p>• ' + esc(sk ? sk.name : b.id) + ': ' + b.g + ' de ' + b.n + '</p>'; }).join('') : '<p class="muted">Ninguna habilidad destaca por ahora.</p>') + '</div>';
-  h += '<div class="card"><h3>⚖️ Penalización</h3><p class="muted">Quita todas las ⭐ sin gastar, ⅓ de los stickers y parte de los amigos (al azar). Se guarda una copia para poder deshacerlo (Datos → recuperar anterior).</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn" style="background:#ffe3e3;color:var(--ink)" data-act="penalty" data-f="3">Amigos ⅓</button><button class="seg-btn" style="background:#ffe3e3;color:var(--ink)" data-act="penalty" data-f="2">Amigos ½</button></div></div>';
+  h += '<div class="card"><h3>⚖️ Penalización</h3><p class="muted">Quita todas las ⭐ sin gastar, ⅓ de los stickers y parte de los amigos (al azar). Se guarda una copia para poder deshacerlo (Datos → recuperar anterior).</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn" style="background:#ffe3e3;color:var(--ink)" data-act="penalty" data-f="3">Amigos ⅓</button><button class="seg-btn" style="background:#ffe3e3;color:var(--ink)" data-act="penalty" data-f="2">Amigos ½</button></div><div class="row" style="margin-top:8px"><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="go" data-to="manage">🧹 Quitar a mano (⭐, amigos, stickers)</button></div></div>';
   h += '<div class="card"><h3>Ajustes</h3>' +
     '<p class="muted">Tiempo diario</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn' + (S.timer.mode === 'free' ? ' on' : '') + '" data-act="tmode" data-v="free" style="background:#e9ebf7;color:var(--ink)">Libre</button><button class="seg-btn' + (S.timer.mode === 'limit' ? ' on' : '') + '" data-act="tmode" data-v="limit" style="background:#e9ebf7;color:var(--ink)">Límite</button>' +
     (S.timer.mode === 'limit' ? '<input class="input" type="number" min="5" max="120" value="' + S.timer.minutes + '" data-chg="tmin" style="width:80px"> min <button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="plus10">+10 min hoy</button>' : '') + '</div>' +
@@ -21214,6 +21218,17 @@ SCREENS.parent = function(){
     '<p class="muted" style="margin-top:14px">Datos</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="export">⬇ Exportar</button><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="share">📤 Compartir copia</button><label class="seg-btn" style="background:#e9ebf7;color:var(--ink)">⬆ Importar<input type="file" accept="application/json" id="imp" style="display:none"></label><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="redoPlacement">Repetir diagnóstico</button><button class="seg-btn" style="background:#FFD1D1;color:#7a0000" data-act="reset">Borrar todo</button>' + (hasPrevious() ? '<button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="undoImport">↩ Deshacer importación o borrado</button>' : '') + '</div></div>';
   R(h);
 };
+SCREENS.manage = function(){
+  let h = topbar('🧹 Quitar a mano', 'parent');
+  h += '<div class="card"><h3>⭐ Estrellas</h3><p>Tiene <b>' + S.starBalance + ' ⭐</b> para gastar.</p><div class="row" style="flex-wrap:wrap"><button class="seg-btn" style="background:#ffe3e3;color:var(--ink)" data-act="mgStars" data-n="all">Quitar todas</button><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="mgStars" data-n="10">−10</button><button class="seg-btn" style="background:#e9ebf7;color:var(--ink)" data-act="mgStars" data-n="50">−50</button></div></div>';
+  h += '<div class="card"><h3>🤝 Amigos (' + S.met.length + ')</h3>' + (S.met.length ? '<div class="chips">' + S.met.map(function(id){ const f = friendById(id); return '<span class="chip">' + esc(f ? f.name : id) + ' <button class="icon-btn" aria-label="Quitar ' + esc(f ? f.name : id) + '" data-act="mgFriend" data-id="' + esc(id) + '">✕</button></span>'; }).join('') + '</div>' : '<p class="muted">Ninguno.</p>') + '</div>';
+  h += '<div><h3 style="color:#fff;margin:14px 4px 0">🎴 Stickers (' + S.stickers.length + ')</h3>' + (S.stickers.length ? '<div class="sgrid">' + S.stickers.map(function(s, i){ return '<div style="position:relative">' + stickerHTML(s) + '<button class="icon-btn" style="position:absolute;top:-6px;right:-6px;background:#fff;border-radius:50%;width:30px;height:30px" aria-label="Quitar sticker" data-act="mgSticker" data-i="' + i + '">✕</button></div>'; }).join('') + '</div>' : '<p style="color:#fff">Ninguno.</p>') + '</div>';
+  R(h);
+};
+function mgGuard(){ if(syncCfg()){ toast('Con la sincronización activa no se puede quitar nada (se volvería a copiar). Desactívala antes.'); return false; } return true; }
+ACT.mgStars = function(d){ if(!mgGuard()) return; const n = d.n === 'all' ? S.starBalance : Math.min(S.starBalance, +d.n); if(n <= 0) return toast('No tiene estrellas'); if(!confirm('¿Quitar ' + n + ' ⭐?')) return; keepPrevious(); S.starBalance -= n; save(); render(); };
+ACT.mgFriend = function(d){ if(!mgGuard()) return; const f = friendById(d.id); if(!confirm('¿Quitar a ' + (f ? f.name : d.id) + '?')) return; keepPrevious(); S.met = S.met.filter(function(x){ return x !== d.id; }); save(); render(); };
+ACT.mgSticker = function(d){ if(!mgGuard()) return; const i = +d.i; if(!S.stickers[i]) return; if(!confirm('¿Quitar este sticker?')) return; keepPrevious(); S.stickers.splice(i, 1); save(); render(); };
 ACT.penalty = function(d){
   if(syncCfg()) return toast('Con la sincronización activa no se puede quitar nada (se volvería a copiar). Desactívala antes.');
   const ff = d.f === '2' ? 1 / 2 : 1 / 3; const nf = Math.ceil(S.met.length * ff), ns = Math.ceil(S.stickers.length / 3);
